@@ -36,8 +36,9 @@ elseif (UNIX)
 	set(QUANTLIB_LIB_NAME "QuantLib.a")
 endif()
 
-# 2. Boost 라이브러리 연결 
+# 2. Boost, spdlog 라이브러리 연결 
 include_directories(${Boost_INCLUDE_DIR})							# Boost_INCLUDE_DIR 설정
+include_directories(${CMAKE_SOURCE_DIR}/include)					# 라이브러리 경로 설정
 set(Boost_USE_STATIC_LIBS ON) # 정적 링크 강제
 find_package(Boost REQUIRED COMPONENTS system filesystem)			# Boost 라이브러리 탐색
 

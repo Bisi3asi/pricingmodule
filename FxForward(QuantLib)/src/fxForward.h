@@ -12,7 +12,6 @@
     #define EXPORT
 #endif
 
-
 #pragma once
 
 // include
@@ -22,6 +21,8 @@
 #include <vector>
 #include <utility>
 #include <unordered_map>
+#include <spdlog/spdlog.h> // LOGGING 
+#include <spdlog/sinks/basic_file_sink.h> // LOGGING
 
 // incude (quantlib)
 #include <ql/time/date.hpp>

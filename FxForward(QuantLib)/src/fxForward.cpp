@@ -2,6 +2,7 @@
 
 using namespace QuantLib;
 using namespace std;
+using namespace spdlog;
 
 extern "C" void EXPORT pricing(
     // ===================================================================================================
@@ -28,15 +29,21 @@ extern "C" void EXPORT pricing(
     , const unsigned short* sellCurveTerm       // INPUT 17. 매도 커브 만기 기간 (Sell Curve Term)
     , const unsigned short* sellCurveUnit       // INPUT 18. 매도 커브 만기 기간 단위 (Sell Curve Unit) [Y = 1, M = 2, W = 3, D = 4]
     , const double* sellMarketData              // INPUT 19. 매도 커브 마켓 데이터 (Sell Curve Market Data) 
+	, short logYn                               // INPUT 20. 로그 파일 생성 여부 (0: No, 1: Yes)
     , double* result                            // OUTPUT : 결과값 (Net PV, FX sensitivity, GIRR Sensitivity)
     // ===================================================================================================
 ) {
+    if (logYn)
+
+
+
     TradeInformation tradeInfo{};
     BuySideValuationCashFlow bSideCashFlow{};
     SellSideValuationCashFlow sSideCashFlow{};
     vector<Curve> curves{};
     vector<Girr> girrs{};
     vector<DayCounter> dayCounters{};
+
 
     /* 기본 데이터 세팅 */
     // Trade inforamtion  데이터 생성
