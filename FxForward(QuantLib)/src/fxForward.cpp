@@ -3,7 +3,7 @@
 using namespace QuantLib;
 using namespace std;
 
-void pricing(
+extern "C" void EXPORT pricing(
     // ===================================================================================================
       long maturityDate                         // INPUT 1.  만기일 (Maturity Date) 
     , long revaluationDate                      // INPUT 2.  평가일 (Revaluation Date)
@@ -36,26 +36,30 @@ void pricing(
     SellSideValuationCashFlow sSideCashFlow{};
     vector<Curve> curves{};
     vector<Girr> girrs{};
+    vector<DayCounter> dayCounters{};
 
     /* 기본 데이터 세팅 */
     // Trade inforamtion  데이터 생성
     inputTradeInformation(maturityDate, revaluationDate, exchangeRate, tradeInfo);
+    // DCB Daycounter     데이터 생성
+    initDayCounters(dayCounters);
     // Buy Side CashFlow  데이터 생성
-    inputBuySideValuationCashFlow(buySideCurrency, notionalForeign, revaluationDate, maturityDate, buySideDCB, buySideDcCurve, bSideCashFlow);
+    inputBuySideValuationCashFlow(buySideCurrency, notionalForeign, revaluationDate, maturityDate, buySideDCB, buySideDcCurve, bSideCashFlow, dayCounters);
     // Sell side CashFlow 데이터 생성
-    inputSellSideValuationCashFlow(sellSideCurrency, notionalDomestic, revaluationDate, maturityDate, sellSideDCB, sellSideDcCurve, sSideCashFlow); 
+    inputSellSideValuationCashFlow(sellSideCurrency, notionalDomestic, revaluationDate, maturityDate, sellSideDCB, sellSideDcCurve, sSideCashFlow, dayCounters); 
     // GIRR curve         데이터 생성
     girrDeltaRiskFactor(buySideCurrency, buySideDcCurve, sellSideCurrency, sellSideDcCurve, girrs); 
 
 	/* NetPV, FX Sensitivity, GIRR Delta 산출 */
     for (unsigned int i= 0; i < girrs.size(); ++i) {
         auto& girr = girrs[i];
+        
         // 1. 커브별 데이터 초기화, 추가
         inputCurveData(buyCurveDataSize, buySideDcCurve, buyCurveTerm, buyCurveUnit, buySideDCB, buyMarketData, sellCurveDataSize, sellSideDcCurve, sellCurveTerm, sellCurveUnit, sellSideDCB, sellMarketData, curves);
         // 2. 커브별 maturity Date 생성
         curveMaturity(revaluationDate, curves);
         // 3. 커브별 yearFraction 생성
-        setYearFrac(tradeInfo.revaluationDate, curves);
+        setYearFrac(tradeInfo.revaluationDate, curves, dayCounters);
             
         if (i != 0) { // 최초 loop 시에는 커브 금리 조정 없이 NetPV 산출
             setDcRate(girr.irCurveId, girr.term, girr.unit, curves); // 4. 무위험금리 커브별로 기존 커브 금리(market data) 조정 
@@ -85,21 +89,21 @@ void inputTradeInformation(long maturityDateSerial, long revaluationDateSerial, 
     tradeInformation.exchangeRate = exchangeRate;
 }
 
-void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, BuySideValuationCashFlow& cashflow) {
+void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, BuySideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
     strncpy(cashflow.currency, currency, sizeof(cashflow.currency) - 1);
     cashflow.currency[sizeof(cashflow.currency) - 1] = '\0';
 
     cashflow.principalAmount = principalAmount;
     cashflow.cashFlowDate = Date(cashFlowDateSerial);
     cashflow.dcb = dcb;
-    cashflow.yearFrac = getDayCounterByDCB(dcb).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial));
+    cashflow.yearFrac = getDayCounterByDCB(dcb, dayCounters).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial));
 
     strncpy(cashflow.dcCurve, dcCurve, sizeof(cashflow.dcCurve) - 1);
     cashflow.dcCurve[sizeof(cashflow.dcCurve) - 1] = '\0';
     cashflow.domesticNetPV = 0.0;
 }
 
-void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, SellSideValuationCashFlow& cashflow) {
+void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, SellSideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
     strncpy(cashflow.currency, currency, sizeof(cashflow.currency) - 1);
     cashflow.currency[sizeof(cashflow.currency) - 1] = '\0';
 
@@ -107,7 +111,7 @@ void inputSellSideValuationCashFlow(const char* currency, double principalAmount
     cashflow.cashFlowDate = Date(cashFlowDateSerial);
 
     cashflow.dcb = dcb;
-	cashflow.yearFrac = getDayCounterByDCB(dcb).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial));
+	cashflow.yearFrac = getDayCounterByDCB(dcb, dayCounters).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial));
 
     strncpy(cashflow.dcCurve, dcCurve, sizeof(cashflow.dcCurve) - 1);
     cashflow.dcCurve[sizeof(cashflow.dcCurve) - 1] = '\0';
@@ -118,6 +122,7 @@ void inputCurveData(
     , unsigned int sellCurveDataSize, const char* sellSideDcCurve, const unsigned short* sellCurveTerm, const unsigned short* sellCurveUnit, unsigned short sellSideDcb, const double* sellMarketData
     , vector<Curve>& curves
 ){
+    curves.reserve(buyCurveDataSize + sellCurveDataSize); // capacity 확보
     curves.clear();  // 커브 데이터 초기화
 
     for (unsigned int i = 0; i < buyCurveDataSize; ++i) {
@@ -147,6 +152,18 @@ void inputCurveData(
 
         curves.push_back(curve);
     }
+}
+
+void initDayCounters(vector<DayCounter>& dayCounters) {
+    dayCounters.clear();
+    dayCounters.reserve(6);
+
+    dayCounters.emplace_back(Thirty360(Thirty360::USA));         // 0: 30U/360
+    dayCounters.emplace_back(ActualActual(ActualActual::ISDA));  // 1: Act/Act
+    dayCounters.emplace_back(Actual360());                       // 2: Act/360
+    dayCounters.emplace_back(Actual365Fixed());                  // 3: Act/365
+    dayCounters.emplace_back(Thirty360(Thirty360::European));    // 4: 30E/360
+    dayCounters.emplace_back();                                  // 5: ERR
 }
 
 void curveMaturity(long revaluationDateSerial, vector<Curve>& curves) {
@@ -192,9 +209,9 @@ void setDcRate(const char* irCurveId, const short term, const short unit, vector
     }
 }
 
-void setYearFrac(Date startDate, vector<Curve>& curves) {
+void setYearFrac(Date startDate, vector<Curve>& curves, vector<DayCounter> dayCounters) {
     for (auto& curve : curves) {
-        DayCounter dc = getDayCounterByDCB(curve.dcb);
+        DayCounter dc = getDayCounterByDCB(curve.dcb, dayCounters);
 
         switch (curve.unit) {
         case 1: // Year
@@ -343,21 +360,21 @@ Real calFxSensitivity(const Real buySidePV, const Real sellSidePV, const Real ex
     return (calNetPV(buySidePV, sellSidePV, exchangeRate * 1.01, buySideCurrency) - domesticNetPV) * 100;
 }
 
-DayCounter getDayCounterByDCB(unsigned short dcb) {
+DayCounter getDayCounterByDCB(unsigned short dcb, vector<DayCounter>& dayCounters) {
     switch (dcb) {
     case 0: // 30U/360
-        return Thirty360(Thirty360::USA);
+        return dayCounters[0];
     case 1: // Act/Act
-        return ActualActual(ActualActual::ISDA);
+        return dayCounters[1];
     case 2: // Act/360
-        return Actual360();
+        return dayCounters[2];
     case 3: // Act/365
-        return Actual365Fixed();
+        return dayCounters[3];
     case 4: // 30E/360
-        return Thirty360(Thirty360::European);
+        return dayCounters[4];
     default:
         cerr << "[getDayCounterByDCB] Unknown dcb: " << dcb << endl;
-        return DayCounter();
+        return dayCounters[5];
     }
 }
 

@@ -12,8 +12,10 @@
     #define EXPORT
 #endif
 
-// include
+
 #pragma once
+
+// include
 #include <iostream>
 #include <cstring>
 #include <string>
@@ -29,8 +31,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
-
-// namespace
 
 // dll export method
 extern "C" void EXPORT pricing(
@@ -117,9 +117,9 @@ struct Girr {
 /* function */
 void inputTradeInformation(long maturityDateSerial, long revaluationDateSerial, double exchangeRate, TradeInformation& tradeInformation);
 
-void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, BuySideValuationCashFlow& bSideCashFlow);
+void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, BuySideValuationCashFlow& bSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
 
-void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, SellSideValuationCashFlow& sSideCashFlow);
+void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, SellSideValuationCashFlow& sSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
 
 void inputCurveData(
       unsigned int buyCurveDataSize, const char* buySideDcCurve, const unsigned short* buyCurveTerm, const unsigned short* buyCurveUnit, unsigned short buySideDcb, const double* buyMarketData
@@ -127,11 +127,13 @@ void inputCurveData(
     , std::vector<Curve>& curves
 );
 
+void initDayCounters(std::vector<QuantLib::DayCounter>& dayCounters);
+
 void curveMaturity(long baseDateSerial, std::vector<Curve>& curves);
 
-QuantLib::DayCounter getDayCounterByDCB(unsigned short dcb);
+QuantLib::DayCounter getDayCounterByDCB(unsigned short dcb, std::vector<QuantLib::DayCounter>& dayCounters);
 
-void setYearFrac(QuantLib::Date startDate, std::vector<Curve>& curves);
+void setYearFrac(QuantLib::Date startDate, std::vector<Curve>& curves, std::vector<QuantLib::DayCounter> dayCounters);
 
 void setDcRate(const char* irCurveId, const short term, const short unit, std::vector<Curve>& curves);
 

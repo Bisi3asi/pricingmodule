@@ -31,7 +31,7 @@
         "name": "linux-release",
         "displayName": "Linux Release",
         "generator": "Ninja",
-        "binaryDir": "/home/ireoplus/shared_library/FxForward",
+        "binaryDir": "/home/ireoplus/shared_library/FxForward", /* Path to your project */
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release",
           "CMAKE_CXX_STANDARD": "17",
