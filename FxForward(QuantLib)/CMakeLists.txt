@@ -8,9 +8,10 @@ set(OUTPUT_FILE_NAME "fxForward")	# 3. 출력 라이브러리 파일명 설정 (
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 0. 컴파일러 최적화
+# 0. 빌드 운영체제 환경 별 컴파일러 설정 및 최적화
 if (WIN32)
-	set_property(GLOBAL PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>") 			# MSVC UTF-8 인코딩 설정 (for spdlog logging library)
+	set_property(GLOBAL PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")	# 정적 컴파일 설정
 elseif (UNIX)
 	set(CMAKE_BUILD_TYPE Release)	# 디버깅 정보 미포함, 용량 최적화
 	set(CMAKE_CXX_FLAGS_RELEASE "-g0 -O3")	
@@ -37,8 +38,8 @@ elseif (UNIX)
 endif()
 
 # 2. Boost, spdlog 라이브러리 연결 
-include_directories(${Boost_INCLUDE_DIR})							# Boost_INCLUDE_DIR 설정
-include_directories(${CMAKE_SOURCE_DIR}/include)					# 라이브러리 경로 설정
+include_directories(${Boost_INCLUDE_DIR})							# BOOST 라이브러리 경로 설정
+include_directories(${CMAKE_SOURCE_DIR}/include)					# spdlog 라이브러리 경로 설정 (로깅)
 set(Boost_USE_STATIC_LIBS ON) # 정적 링크 강제
 find_package(Boost REQUIRED COMPONENTS system filesystem)			# Boost 라이브러리 탐색
 
@@ -73,7 +74,7 @@ endif()
 #7. (Linux) so 파일 용량 최적화 - 디버깅 심볼 제거
 if(UNIX)
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-        COMMAND strip --strip-all $<TARGET_FILE:${OUTPUT_FILE_NAME}>
+        COMMAND strip --strip-all $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
         COMMENT "Stripping debug symbols from the library"
     )
 endif()

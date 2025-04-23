@@ -28,19 +28,22 @@ int main() {
 
     // 테스트 데이터 정의 (buy Curve)
     const unsigned int buyCurveDataSize = 10;
-    const unsigned short buyCurveTerm[buyCurveDataSize] = { 3, 6, 1, 2, 3, 5, 10, 15, 20, 30 };
-    const unsigned short buyCurveUnit[buyCurveDataSize] = { 2, 2, 1, 1, 1, 1, 1, 1, 1, 1 };
+    const double buyCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
     const double buyMarketData[buyCurveDataSize] = { 2.64438703, 2.38058648, 2.10763173, 1.97593133, 1.98563969, 2.07148214, 2.25037149, 2.36128877, 2.34768987, 2.2255283 };
 
     // 테스트 데이터 정의 (sell Curve)
     const unsigned int sellCurveDataSize = 10;
-    const unsigned short sellCurveTerm[buyCurveDataSize] = { 3, 6, 1, 2, 3, 5, 10, 15, 20, 30 };
-    const unsigned short sellCurveUnit[buyCurveDataSize] = { 2, 2, 1, 1, 1, 1, 1, 1, 1, 1 };
+    const double sellCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
     const double sellMarketData[buyCurveDataSize] = { 3.08, 2.58, 2.33, 2.19, 2.19, 2.23, 2.24, 2.12, 2.04, 2.04 };
 
+    // 테스트 데이터 정의 (cal Type, logYn)
+	const unsigned short calType = 2; // 1: NetPV, 2: GIRR Sensitivity
+	const unsigned short logYn = 1; // 0: No, 1: Yes
+
     // OUTPUT
-    double result[24];
-    
+    double resultNetPvFxSensitivity[2];
+	double resultGirrDelta[25];
+
     pricing(
          maturityDate
         , revaluationDate
@@ -50,36 +53,45 @@ int main() {
         , notionalForeign
         , buySideDCB
         , buySideDcCurve
-        , buyCurveDataSize
-        , buyCurveTerm
-        , buyCurveUnit
+        
+        , buyCurveDataSize 
+        , buyCurveYearFrac
         , buyMarketData
 
         , sellSideCurrency
         , notionalDomestic
         , sellSideDCB
         , sellSideDcCurve
-        , sellCurveDataSize
-        , sellCurveTerm
-        , sellCurveUnit
-        , sellMarketData
         
-        , result
+        , sellCurveDataSize
+        , sellCurveYearFrac
+        , sellMarketData
+
+        , calType
+        , logYn
+
+		, resultNetPvFxSensitivity
+        , resultGirrDelta
     );
 
     // 결과 출력
-    for (int i = 0; i < 24; ++i) {
-        if (i == 0) {
-            // Index 0: Net PV
-            std::cout << "Index " << i << " - Net PV: " << std::fixed << std::setprecision(2) << result[i] << std::endl;
+    if (calType == 1) {
+        // Index 0: Net PV
+        std::cout << "Net PV: " << std::fixed << std::setprecision(2) << resultNetPvFxSensitivity[0] << std::endl;
+        // Index 1: FX Sensitivity
+        std::cout << "FX Sensitivity: " << std::fixed << std::setprecision(2) << resultNetPvFxSensitivity[1] << std::endl;
+    }
+    else if (calType == 2) {
+        // index 0 : size
+        std::cout << "GIRR Delta Size: " << static_cast<int>(resultGirrDelta[0]) << std::endl;
+		
+        for (int i = 1; i < static_cast<int>(resultGirrDelta[0]) + 1; ++i) {
+	        // index 1 ~ size : GIRR Delta tenor
+	        std::cout <<  i << ". GIRR Delta tenor: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
         }
-        else if (i == 1) {
-            // Index 1: FX Sensitivity
-            std::cout << "Index " << i << " - FX Sensitivity: " << std::fixed << std::setprecision(2) << result[i] << std::endl;
-        }
-        else {
-            // Index 2-23: GIRR Delta
-            std::cout << "Index " << i << " - GIRR Delta " << i-1 << ": " << std::fixed << std::setprecision(2) << result[i] << std::endl;
+        for (int i = static_cast<int>(resultGirrDelta[0]) + 1; i < static_cast<int>(resultGirrDelta[0]) * 2 + 1; ++i) {
+            // size ~ end : GIRR Delta Sensitivity
+            std::cout <<  i - static_cast<int>(resultGirrDelta[0]) << ". GIRR Delta Sensitivity: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
         }
     }
 
