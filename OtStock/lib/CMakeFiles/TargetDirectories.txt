@@ -1,0 +1,4 @@
+C:/Users/icis/Desktop/Storage/1_Work/1_Dev/1_Repository/pricingmodule/OtStock/lib/CMakeFiles/OtStock.dir
+C:/Users/icis/Desktop/Storage/1_Work/1_Dev/1_Repository/pricingmodule/OtStock/lib/CMakeFiles/main.dir
+C:/Users/icis/Desktop/Storage/1_Work/1_Dev/1_Repository/pricingmodule/OtStock/lib/CMakeFiles/edit_cache.dir
+C:/Users/icis/Desktop/Storage/1_Work/1_Dev/1_Repository/pricingmodule/OtStock/lib/CMakeFiles/rebuild_cache.dir
