@@ -51,7 +51,8 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${OUTPUT_FILE
 
 # (Windows) pricing function 외부 노출
 if (WIN32) 
-    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE BUILD_LIBRARY) 
+	set(BUILD_LIBRARY ON)
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE BUILD_LIBRARY)
 endif()
 
 # 4. QuantLib - 동적 라이브러리 링크

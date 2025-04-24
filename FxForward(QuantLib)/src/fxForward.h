@@ -4,12 +4,12 @@
 // function 외부 인터페이스 export 정의
 #ifdef _WIN32
     #ifdef BUILD_LIBRARY
-        #define EXPORT __declspec(dllexport) __stdcall
+        #define EXPORT_API __declspec(dllexport) __stdcall
     #else
-        #define EXPORT __declspec(dllimport) __stdcall
+        #define EXPORT_API __declspec(dllimport) __stdcall
     #endif
-#elif defined(__linux__) || defined(__unix__)
-    #define EXPORT
+#else
+    #define EXPORT_API
 #endif
 
 #pragma once
@@ -36,37 +36,39 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
 // dll export method
-extern "C" void EXPORT pricing(
-    // ===================================================================================================
-    long maturityDate                           // INPUT 1.  만기일 (Maturity Date) 
-    , long revaluationDate                      // INPUT 2.  평가일 (Revaluation Date)
-    , double exchangeRate                       // INPUT 3.  현물환율 (DOM / FOR)  (Exchange Rate)
+extern "C" {
+    void EXPORT_API pricing(
+        // ===================================================================================================
+        long maturityDate                           // INPUT 1.  만기일 (Maturity Date) 
+        , long revaluationDate                      // INPUT 2.  평가일 (Revaluation Date)
+        , double exchangeRate                       // INPUT 3.  현물환율 (DOM / FOR)  (Exchange Rate)
 
-    , const char* buySideCurrency               // INPUT 4.  매입 통화 (Buy Side Currency)
-    , double notionalForeign                    // INPUT 5.  매입 외화기준 명목금액 (NotionalF)
-    , unsigned short buySideDCB                 // INPUT 6.  매입 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-    , const char* buySideDcCurve                // INPUT 7.  매입 기준 할인 커브 (Buy Side Discount Curve)
+        , const char* buySideCurrency               // INPUT 4.  매입 통화 (Buy Side Currency)
+        , double notionalForeign                    // INPUT 5.  매입 외화기준 명목금액 (NotionalF)
+        , unsigned short buySideDCB                 // INPUT 6.  매입 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        , const char* buySideDcCurve                // INPUT 7.  매입 기준 할인 커브 (Buy Side Discount Curve)
 
-    , unsigned int buyCurveDataSize             // INPUT 8.  매입 커브 데이터 사이즈
-    , const double* buyCurveYearFrac            // INPUT 9.  매입 커브 만기 기간 (Buy Curve Term)  
-    , const double* buyMarketData               // INPUT 10. 매입 커브 마켓 데이터 (Buy Curve Market Data)
+        , unsigned int buyCurveDataSize             // INPUT 8.  매입 커브 데이터 사이즈
+        , const double* buyCurveYearFrac            // INPUT 9.  매입 커브 만기 기간 (Buy Curve Term)  
+        , const double* buyMarketData               // INPUT 10. 매입 커브 마켓 데이터 (Buy Curve Market Data)
 
-    , const char* sellSideCurrency              // INPUT 11. 매도 통화 (sell Side Currency)
-    , double notionalDomestic                   // INPUT 12. 매도 원화기준 명목금액 (NotionalD)
-    , unsigned short sellSideDCB                // INPUT 13. 매도 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-    , const char* sellSideDcCurve               // INPUT 14. 매도 기준 할인 커브 (Buy Side Discount Curve)
+        , const char* sellSideCurrency              // INPUT 11. 매도 통화 (sell Side Currency)
+        , double notionalDomestic                   // INPUT 12. 매도 원화기준 명목금액 (NotionalD)
+        , unsigned short sellSideDCB                // INPUT 13. 매도 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        , const char* sellSideDcCurve               // INPUT 14. 매도 기준 할인 커브 (Buy Side Discount Curve)
 
-    , unsigned int sellCurveDataSize            // INPUT 15. 매도 커브 데이터 사이즈
-    , const double* sellCurveYearFrac		    // INPUT 16. 매도 커브 만기 기간 (Sell Curve Term)     
-    , const double* sellMarketData              // INPUT 17. 매도 커브 마켓 데이터 (Sell Curve Market Data) 
+        , unsigned int sellCurveDataSize            // INPUT 15. 매도 커브 데이터 사이즈
+        , const double* sellCurveYearFrac		    // INPUT 16. 매도 커브 만기 기간 (Sell Curve Term)     
+        , const double* sellMarketData              // INPUT 17. 매도 커브 마켓 데이터 (Sell Curve Market Data) 
 
-    , unsigned short calType                    // INPUT 18. 평가 타입 (1: NetPV, 2: GIRR Sensitivity)
-    , unsigned short logYn                      // INPUT 19. 로그 파일 생성 여부 (0: No, 1: Yes)
+        , unsigned short calType                    // INPUT 18. 평가 타입 (1: NetPV, 2: GIRR Sensitivity)
+        , unsigned short logYn                      // INPUT 19. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    , double* resultNetPvFxSensitivity          // OUTPUT 1. 결과값 ([index 0] Net PV, [index 1] FX sensitivity)
-    , double* resultGirrDelta 			        // OUTPUT 2. 결과값 ([index 0] array size, [index 1 ~ size -1] Girr Delta tenor, [size ~ end] Girr Delta Sensitivity)    
-    // ===================================================================================================
-);
+        , double* resultNetPvFxSensitivity          // OUTPUT 1. 결과값 ([index 0] Net PV, [index 1] FX sensitivity)
+        , double* resultGirrDelta 			        // OUTPUT 2. 결과값 ([index 0] array size, [index 1 ~ size -1] Girr Delta tenor, [size ~ end] Girr Delta Sensitivity)    
+        // ===================================================================================================
+    );
+}
 
 /* struct */
 struct TradeInformation {
