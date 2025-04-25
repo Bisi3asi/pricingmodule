@@ -3,3 +3,6 @@ build/
 out/
 bin/
 logs/
+.idea/
+.gradle/
+.iml
