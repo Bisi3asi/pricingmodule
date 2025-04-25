@@ -37,7 +37,7 @@ int main() {
     const double sellMarketData[buyCurveDataSize] = { 3.08, 2.58, 2.33, 2.19, 2.19, 2.23, 2.24, 2.12, 2.04, 2.04 };
 
     // 테스트 데이터 정의 (cal Type, logYn)
-	const unsigned short calType = 2; // 1: NetPV, 2: GIRR Sensitivity
+	const unsigned short calType = 1; // 1: NetPV, 2: GIRR Sensitivity
 	const unsigned short logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
@@ -77,9 +77,11 @@ int main() {
     // 결과 출력
     if (calType == 1) {
         // Index 0: Net PV
-        std::cout << "Net PV: " << std::fixed << std::setprecision(2) << resultNetPvFxSensitivity[0] << std::endl;
+        std::cout << "Net PV(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[0] << std::endl;
+        std::cout << "Net PV(raw Double): " << resultNetPvFxSensitivity[0] << std::endl;
         // Index 1: FX Sensitivity
-        std::cout << "FX Sensitivity: " << std::fixed << std::setprecision(2) << resultNetPvFxSensitivity[1] << std::endl;
+        std::cout << "FX Sensitivity(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[1] << std::endl;
+        std::cout << "FX Sensitivity(raw Double): " << resultNetPvFxSensitivity[1] << std::endl;
     }
     else if (calType == 2) {
         // index 0 : size

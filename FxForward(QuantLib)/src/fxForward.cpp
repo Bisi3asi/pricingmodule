@@ -87,8 +87,8 @@ extern "C" {
 
         /* CalType 1 or 2. NetPV, FX Sensitivity 산출 */
         if (calType == 1 || calType == 2) {
-            resultNetPvFxSensitivity[0] = processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves); // Net PV
-            resultNetPvFxSensitivity[1] = processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow); // FX Sensitivity
+            resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
+            resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
         }
 
         /* CalType 2. GIRR 커브별 Sensitivity 산출 */
@@ -103,8 +103,8 @@ extern "C" {
                 processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultGirrDelta, resultNetPvFxSensitivity);
 
                 // GiRR Delta 결과값을 resultGirrDelta에 저장
-                resultGirrDelta[i + 1] = girr.yearFrac; // GIRR Delta의 yearFrac (index 1 ~ size)
-                resultGirrDelta[i + 1 + girrs.size()] = girr.sensitivity; // GIRR Delta의 Sensitivity (index size + 1 ~ end)
+                resultGirrDelta[i + 1] = roundToDecimals(girr.yearFrac, 10); // GIRR Delta의 yearFrac (index 1 ~ size) (소수점 열째자리까지 반올림)
+                resultGirrDelta[i + 1 + girrs.size()] = roundToDecimals(girr.sensitivity, 10); // GIRR Delta의 Sensitivity (index size + 1 ~ end) (소수점 열째자리까지 반올림)
             }
         }
         // Output 데이터 로깅
@@ -429,13 +429,17 @@ vector<Real> getCurveZeroRate(const char* curveId, const vector<Curve>& curves) 
     return resultRange;
 }
 
+double roundToDecimals(double value, int n) {
+	double factor = pow(10.0, n);
+	return round(value * factor) / factor;
+}
+
 /* FOR DEBUG */
 string qDateToString(const Date& date) {
     ostringstream oss;
     oss << date;
     return oss.str();
 }
-
 
 void printAllInputData(
     long maturityDate,
@@ -503,8 +507,10 @@ void printAllInputData(
 void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrDelta) {
 
 	info("[Print All: Output Data]");
-	info("INDEX 0. Net PV : {:0.15f}", resultNetPvFxSensitivity[0]);
-	info("INDEX 1. Sensitivity : {:0.15f}", resultNetPvFxSensitivity[1]);
+	info("INDEX 0. Net PV (소수점 고정) : {:0.10f}", resultNetPvFxSensitivity[0]);
+	info("INDEX 0. Net PV (raw Double) : {}", resultNetPvFxSensitivity[0]);
+	info("INDEX 1. Sensitivity (소수점 고정) : {:0.10f}", resultNetPvFxSensitivity[1]);
+	info("INDEX 1. Sensitivity (raw Double) : {}", resultNetPvFxSensitivity[1]);
 	info("");
 	
     info("INDEX 0. resultGirrDelta Size : {}", static_cast<int>(resultGirrDelta[0]));
@@ -512,13 +518,12 @@ void printAllOutputData(const double* resultNetPvFxSensitivity, const double* re
 		info("INDEX {}. Girr Delta Tenor : {:0.4f}", i, resultGirrDelta[i]);
 	}
     for (int i = static_cast<int>(resultGirrDelta[0]) + 1; i < static_cast<int>(resultGirrDelta[0]) * 2 + 1; ++i) {
-		info("INDEX {}. Girr Delta Sensitivity : {:0.15f}", i, resultGirrDelta[i]);
+		info("INDEX {}. Girr Delta Sensitivity : {:0.10f}", i, resultGirrDelta[i]);
     }
     for (int i = static_cast<int>(resultGirrDelta[0]) * 2 + 1; i < 25; ++i) {
 		info("INDEX {}. Empty Value : ", i, resultGirrDelta[i]);
     }
 }
-
 
 void printAllData(const TradeInformation& tradeInfo, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, const vector<Curve>& curves, const vector<Girr>& girrs) {
 	

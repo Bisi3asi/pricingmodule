@@ -158,6 +158,8 @@ std::vector<QuantLib::Real> getCurveYearFrac(const char* curveId, const std::vec
 
 std::vector<QuantLib::Real> getCurveZeroRate(const char* curveId, const std::vector<Curve>& curves);
 
+double roundToDecimals(double value, int n);
+
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
 
