@@ -115,50 +115,38 @@ extern "C" {
 
 // 결과값 초기화
 void initResult(double* result, int size) {
-	
-    for (int i = 0; i < size; ++i) {
-		result[i] = 0.0;
-	}
+    fill_n(result, size, 0.0);
 }
 
 // 거래정보 입력
 void inputTradeInformation(long maturityDateSerial, long revaluationDateSerial, double exchangeRate, TradeInformation& tradeInformation) {
     
-    tradeInformation.maturityDate = Date(maturityDateSerial);
-    tradeInformation.revaluationDate = Date(revaluationDateSerial);
-    tradeInformation.exchangeRate = exchangeRate;
+    tradeInformation.maturityDate = Date(maturityDateSerial); // 만기일
+    tradeInformation.revaluationDate = Date(revaluationDateSerial); // 평가일
+    tradeInformation.exchangeRate = exchangeRate; // 환율
 }
 
 // 매입 통화 현금흐름 입력
 void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, BuySideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
     
-    strncpy(cashflow.currency, currency, sizeof(cashflow.currency) - 1);
-    cashflow.currency[sizeof(cashflow.currency) - 1] = '\0';
-
-    cashflow.principalAmount = principalAmount;
-    cashflow.cashFlowDate = Date(cashFlowDateSerial);
-    cashflow.dcb = dcb;
-    cashflow.yearFrac = getDayCounterByDCB(dcb, dayCounters).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial));
-
-    strncpy(cashflow.dcCurve, dcCurve, sizeof(cashflow.dcCurve) - 1);
-    cashflow.dcCurve[sizeof(cashflow.dcCurve) - 1] = '\0';
-    cashflow.domesticNetPV = 0.0;
+    snprintf(cashflow.currency, sizeof(cashflow.currency), "%s", currency); // 통화
+    cashflow.principalAmount = principalAmount; // 금액
+    cashflow.cashFlowDate = Date(cashFlowDateSerial); // 만기일
+    cashflow.dcb = dcb; // DCB
+    cashflow.yearFrac = getDayCounterByDCB(dcb, dayCounters).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial)); // 연도분수
+    snprintf(cashflow.dcCurve, sizeof(cashflow.dcCurve), "%s", dcCurve); // 커브
+    cashflow.domesticNetPV = 0.0; // Domestic Net PV
 }
 
 // 매도 통화 현금흐름 입력
 void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, unsigned short dcb, const char* dcCurve, SellSideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
     
-    strncpy(cashflow.currency, currency, sizeof(cashflow.currency) - 1);
-    cashflow.currency[sizeof(cashflow.currency) - 1] = '\0';
-
-    cashflow.principalAmount = principalAmount;
-    cashflow.cashFlowDate = Date(cashFlowDateSerial);
-
-    cashflow.dcb = dcb;
-	cashflow.yearFrac = getDayCounterByDCB(dcb, dayCounters).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial));
-
-    strncpy(cashflow.dcCurve, dcCurve, sizeof(cashflow.dcCurve) - 1);
-    cashflow.dcCurve[sizeof(cashflow.dcCurve) - 1] = '\0';
+    snprintf(cashflow.currency, sizeof(cashflow.currency), "%s", currency); // 통화
+    cashflow.principalAmount = principalAmount; // 금액
+    cashflow.cashFlowDate = Date(cashFlowDateSerial); // 만기일
+    cashflow.dcb = dcb; // DCB
+	cashflow.yearFrac = getDayCounterByDCB(dcb, dayCounters).yearFraction(Date(revaluationDateSerial), Date(cashFlowDateSerial)); // 연도분수
+    snprintf(cashflow.dcCurve, sizeof(cashflow.dcCurve), "%s", dcCurve); // 커브
 }
 
 // 커브 데이터 입력 및 초기화
@@ -170,11 +158,9 @@ void inputCurveData(unsigned int buyCurveDataSize, const char* buySideDcCurve, c
     for (unsigned int i = 0; i < buyCurveDataSize; ++i) {
         Curve curve{};
 
-        strncpy(curve.curveId, buySideDcCurve, sizeof(curve.curveId) - 1);
-        curve.curveId[sizeof(curve.curveId) - 1] = '\0';
-
-		curve.yearFrac = buyYearFrac[i];
-        curve.marketData = buyMarketData[i];
+        snprintf(curve.curveId, sizeof(curve.curveId), "%s", buySideDcCurve); // 커브 ID
+		curve.yearFrac = buyYearFrac[i]; // 연도분수
+        curve.marketData = buyMarketData[i]; // 마켓 데이터
 
         curves.push_back(curve);
     }
@@ -182,11 +168,9 @@ void inputCurveData(unsigned int buyCurveDataSize, const char* buySideDcCurve, c
     for (unsigned int i = 0; i < sellCurveDataSize; ++i) {
         Curve curve{};
 
-        strncpy(curve.curveId, sellSideDcCurve, sizeof(curve.curveId) - 1);
-        curve.curveId[sizeof(curve.curveId) - 1] = '\0';
-
-		curve.yearFrac = sellYearFrac[i];
-        curve.marketData = sellMarketData[i];
+        snprintf(curve.curveId, sizeof(curve.curveId), "%s", sellSideDcCurve); // 커브 ID
+		curve.yearFrac = sellYearFrac[i]; // 연도분수
+        curve.marketData = sellMarketData[i]; // 마켓 데이터
 
         curves.push_back(curve);
     }
@@ -259,7 +243,9 @@ void setDcRate(Girr& girr, vector<Curve>& curves) {
 // Buy Side, Sell Side의 yearFrac의 올림값 기간을 초과하지 않는 GIRR Delta Curve 생성
 void girrDeltaRiskFactor(BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, vector<Girr>& girrs, double* resultGIRRDelta) {
     
-    girrs.clear();
+    girrs.clear(); // GIRR Delta Sensirivity 초기화
+    girrs.reserve(22); // capacity 할당
+
     const array<double, 10> yearFracs = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
 
     auto processCurve = [&](const char* curveId, const char* currency, const double limitYearFrac) {
@@ -268,10 +254,8 @@ void girrDeltaRiskFactor(BuySideValuationCashFlow& bSideCashFlow, SellSideValuat
                 ++resultGIRRDelta[0]; // 유효한 GIRR 커브 수를 카운트 (리턴용)
                 
                 Girr girr{};
-                strncpy(girr.irCurveId, curveId, sizeof(girr.irCurveId));
-                girr.irCurveId[sizeof(girr.irCurveId) - 1] = '\0';
-
-                girr.yearFrac = yearFrac;
+                snprintf(girr.irCurveId, sizeof(girr.irCurveId), "%s", curveId); // 커브 ID
+                girr.yearFrac = yearFrac; // 연도 분수
                 girrs.push_back(girr);
             }
         }
@@ -283,9 +267,8 @@ void girrDeltaRiskFactor(BuySideValuationCashFlow& bSideCashFlow, SellSideValuat
             ++resultGIRRDelta[0]; // 유효한 GIRR 커브 수를 카운트 (리턴용)
             
 			Girr basis{};
-            snprintf(basis.irCurveId, sizeof(basis.irCurveId), "%s-Basis", curveId);
-            
-            basis.yearFrac = 0.0;
+            snprintf(basis.irCurveId, sizeof(basis.irCurveId), "%s-Basis", curveId); // 커브 
+            basis.yearFrac = 0.0; // 연도 분수
             girrs.push_back(basis);
         }
     };
