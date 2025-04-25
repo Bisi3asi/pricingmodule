@@ -37,7 +37,7 @@ int main() {
     const double sellMarketData[buyCurveDataSize] = { 3.08, 2.58, 2.33, 2.19, 2.19, 2.23, 2.24, 2.12, 2.04, 2.04 };
 
     // 테스트 데이터 정의 (cal Type, logYn)
-	const unsigned short calType = 1; // 1: NetPV, 2: GIRR Sensitivity
+	const unsigned short calType = 2; // 1: NetPV, 2: GIRR Sensitivity
 	const unsigned short logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT

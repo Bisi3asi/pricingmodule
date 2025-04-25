@@ -103,7 +103,7 @@ extern "C" {
                 processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultGirrDelta, resultNetPvFxSensitivity);
 
                 // GiRR Delta 결과값을 resultGirrDelta에 저장
-                resultGirrDelta[i + 1] = roundToDecimals(girr.yearFrac, 10); // GIRR Delta의 yearFrac (index 1 ~ size) (소수점 열째자리까지 반올림)
+                resultGirrDelta[i + 1] = girr.yearFrac; // GIRR Delta의 yearFrac (index 1 ~ size)
                 resultGirrDelta[i + 1 + girrs.size()] = roundToDecimals(girr.sensitivity, 10); // GIRR Delta의 Sensitivity (index size + 1 ~ end) (소수점 열째자리까지 반올림)
             }
         }
