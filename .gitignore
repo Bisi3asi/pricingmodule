@@ -1,8 +1,8 @@
-.vs/
-build/
-out/
-bin/
-logs/
-.idea/
-.gradle/
-.iml
+**/.vs/
+**/build/
+**/out/
+**/bin/
+**/logs/
+**/.idea/
+**/.gradle/
+**/.iml
