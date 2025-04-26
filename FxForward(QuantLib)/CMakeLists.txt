@@ -11,10 +11,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 0. 빌드 운영체제 환경 별 컴파일러 설정 및 최적화
 if (WIN32)
 	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>") 			# MSVC UTF-8 인코딩 설정 (for spdlog logging library)
-	set_property(GLOBAL PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")	# 정적 컴파일 설정
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set_property(GLOBAL PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreadedDebug") # 정적 컴파일 설정 (for debug)
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od")				# Debug 최적화 끔
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")				# 디버깅 심볼 생성
+	elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+		set_property(GLOBAL PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")		# 정적 컴파일 설정 (for release)
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")			# Release 최적화
+	endif()
 elseif (UNIX)
-	set(CMAKE_BUILD_TYPE Release)	# 디버깅 정보 미포함, 용량 최적화
-	set(CMAKE_CXX_FLAGS_RELEASE "-g0 -O3")	
+	set(CMAKE_CXX_FLAGS_RELEASE "-g0 -O3") # 디버깅 정보 미포함, 용량 최적화
 	add_compile_options(-ffunction-sections -fdata-sections)
 	add_link_options(-Wl,--gc-sections)
 endif()
@@ -22,12 +28,16 @@ endif()
 # 1. 플랫폼별 Boost, QuantLib 환경변수, 컴파일러 세팅
 if (WIN32)	
 	message(STATUS "Configuring for Windows")
-
-	add_compile_options("/MT")										# 정적 컴파일 설정
 	set(Boost_INCLUDE_DIR "C:/Program Files/boost_1_87_0")			# Boost 로컬 설치 경로
 	set(QUANTLIB_ROOT "C:/Program Files/QuantLib")					# QuantLib 로컬 설치 경로
-	set(QUANTLIB_LIB_NAME "QuantLib-x64-mt-s")						# QuantLib 라이브러리명 (Linux ↔ Windows 상이)
-
+	
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+		add_compile_options("/MTd")									# 정적 컴파일 설정(for debug)
+		set(QUANTLIB_LIB_NAME "QuantLib-x64-mt-sgd")				# QuantLib .lib 파일 (for debug)
+	elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+		add_compile_options("/MT")									# 정적 컴파일 설정 (for release)
+		set(QUANTLIB_LIB_NAME "QuantLib-x64-mt-s")					# QuantLib .lib 파일 (for release)
+	endif()
 elseif (UNIX)
 	message(STATUS "Configuring for Linux")
 
@@ -41,15 +51,15 @@ endif()
 include_directories(${Boost_INCLUDE_DIR})							# BOOST 라이브러리 경로 설정
 include_directories(${CMAKE_SOURCE_DIR}/include)					# spdlog 라이브러리 경로 설정 (로깅)
 set(Boost_USE_STATIC_LIBS ON) # 정적 링크 강제
-find_package(Boost REQUIRED COMPONENTS system filesystem)			# Boost 라이브러리 탐색
+find_package(Boost REQUIRED COMPONENTS system filesystem)			# BOOST 라이브러리 탐색
 
 # 3. 동적 라이브러리 FxForward 생성
 file(GLOB SOURCE_FILES "src/*.cpp")	# 소스 파일 수집
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCE_FILES})	# 동적 라이브러리 생성 정의
-set(CMAKE_SHARED_LIBRARY_PREFIX "")	# (Linux) 라이브러리 파일 생성 시 lib 접두사 제거
+set(CMAKE_SHARED_LIBRARY_PREFIX "")	# Linux .so 파일 생성 시 lib 접두사 제거
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${OUTPUT_FILE_NAME}) # 출력 파일명 정의
 
-# (Windows) pricing function 외부 노출
+# (Windows) function 외부 노출
 if (WIN32) 
 	set(BUILD_LIBRARY ON)
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE BUILD_LIBRARY)
