@@ -109,6 +109,9 @@ extern "C" {
         }
         // Output 데이터 로깅
         printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
+        printAllData(curves);
+        printAllData(bSideCashFlow);
+		printAllData(sSideCashFlow);
         info("==============[fxForward Logging Ended!]==============");
     }
 }
@@ -293,24 +296,35 @@ void bootstrapZeroCurveContinuous(vector<Curve>& curves) {
     for (unordered_map<string, vector<Curve*>>::iterator it = grouped.begin(); it != grouped.end(); ++it) {
         vector<Curve*>& group = it->second;
 
-        for (unsigned int j = 0; j < group.size(); ++j) {
-            Curve* curve = group[j];
+        unsigned int n = group.size();
+        vector<Real> discountFactors(n);
 
-            double rate = curve->marketData / 100.0;
-            double yf = curve->yearFrac;
-
-            // Discount Factor 계산 (연속 복리 기준)
-            double df = exp(-rate * yf);
-            if (df <= 0.0) {
-                df = 1e-7; // underflow 방지 (0.0000001)
+        for (unsigned int j = 0; j < n; ++j) {
+            Real rate = group[j]->marketData / 100.0; // 현재 커브의 할인율
+            Real yearFrac = group[j]->yearFrac; // 현재 커브의 연도 분수
+            Real sumDf = 0.0; // 누적 할인 계수
+            if (j == 0) {
+                // 첫번째 커브 기간의 할인계수(단순 할인채 가정) = 1 / (1 + r * t)
+                discountFactors[j] = 1.0 / (1.0 + rate * yearFrac);
+            }
+            else {
+                // 두번째 기간부터 쿠폰 누적 적용, 이전까지 부트스트랩된 누적 할인 계수를 이용하여 현재 커브의 할인계수를 역산
+                for (unsigned int k = 0; k < j; ++k) {
+                    Real prevYearFrac = group[k]->yearFrac; // 이전 커브의 연도 분수
+                    // 이전 쿠폰 지급 시점의 누계 할인계수 += 현재 커브의 할인율 * 이전 커브의 연도 분수 * 이전까지 부트스트랩된 누적 할인계수
+                    // 현재 커브 구간 r(j)의 할인율을 기준으로, 과거 k 구간의 할인 발생 기간에 지급된 쿠폰을 현재가치화
+                    sumDf += rate * prevYearFrac * discountFactors[k];
+                }
+                // 할인계수 = (1 - 누적 할인계수) / (1 + r * t)
+                discountFactors[j] = (1.0 - sumDf) / (1.0 + rate * yearFrac);
             }
 
-            // Zero Rate 계산 (연속복리 → % 변환)
-            double zeroRate = log(1.0 + rate) * 100.0;
-
-            // 결과 저장
-            curve->dcFactor = df;
-            curve->zeroRate = zeroRate;
+            // 연속 복리 기준 Zero Rate 계산
+			Real zeroRate = -log(discountFactors[j]) / yearFrac; 
+            
+			// 커브의 Discount Factor, Zero Rate 업데이트
+            group[j]->dcFactor = discountFactors[j];
+            group[j]->zeroRate = zeroRate * 100.0; // %로 변환
         }
     }
 }
@@ -507,12 +521,14 @@ void printAllInputData(
 void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrDelta) {
 
 	info("[Print All: Output Data]");
+    info("[resultnetPvFxSensitivity]");
 	info("INDEX 0. Net PV (소수점 고정) : {:0.10f}", resultNetPvFxSensitivity[0]);
 	info("INDEX 0. Net PV (raw Double) : {}", resultNetPvFxSensitivity[0]);
 	info("INDEX 1. Sensitivity (소수점 고정) : {:0.10f}", resultNetPvFxSensitivity[1]);
 	info("INDEX 1. Sensitivity (raw Double) : {}", resultNetPvFxSensitivity[1]);
 	info("");
 	
+    info("[resultGirrDelta]");
     info("INDEX 0. resultGirrDelta Size : {}", static_cast<int>(resultGirrDelta[0]));
 	for (int i = 1; i < static_cast<int>(resultGirrDelta[0]) + 1; ++i) {
 		info("INDEX {}. Girr Delta Tenor : {:0.4f}", i, resultGirrDelta[i]);
@@ -523,6 +539,7 @@ void printAllOutputData(const double* resultNetPvFxSensitivity, const double* re
     for (int i = static_cast<int>(resultGirrDelta[0]) * 2 + 1; i < 25; ++i) {
 		info("INDEX {}. Empty Value : ", i, resultGirrDelta[i]);
     }
+    info("");
 }
 
 void printAllData(const TradeInformation& tradeInfo, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, const vector<Curve>& curves, const vector<Girr>& girrs) {
@@ -577,11 +594,11 @@ void printAllData(const std::vector<Curve>& curves) {
     
     info("[Print All: Curves]");
     for (const auto& curve : curves) {
-        info("Curve ID       : {}", curve.curveId);
-        info("Year Fraction  : {}", curve.yearFrac);
-        info("Market Data    : {:0.15f}", curve.marketData);
-        info("Discount Factor: {}", curve.dcFactor);
-        info("Zero Rate      : {}", curve.zeroRate);
+        info("Curve ID          : {}", curve.curveId);
+        info("Year Fraction     : {}", curve.yearFrac);
+        info("Market Data       : {:0.15f}", curve.marketData);
+        info("Discount Factor   : {}", curve.dcFactor);
+        info("Zero Rate         : {}", curve.zeroRate);
         info("----------------------------------------------");
     }
     info("");
