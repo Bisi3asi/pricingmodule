@@ -1,0 +1,46 @@
+{
+	"_comment": "ex)1200,1000,1000,1.2,0",
+ 	"name" : "OtStock",
+	"product": "CST_REL",
+	"inputArguments":[
+			{ "field": "amt", "type": "double" },  
+		  	{ "field": "price", "type": "double" },
+		  	{ "field": "basePrice", "type": "double" },
+		  	{ "field": "beta", "type": "double" },
+		  	{ "field": "fx", "type": "double" }
+		],
+	"functions":[
+		{ 
+		  "name": "stockPricing", 
+		  "parameters": [
+		  	{ "field": "amt", "type": "double" },  
+		  	{ "field": "price", "type": "double" },
+		  	{ "field": "basePrice", "type": "double" },
+		  	{ "field": "beta", "type": "double" },
+		  	{ "field": "fx", "type": "double" },
+		  	{ "field": "p", "type": "double_ptr", "size": "5" },
+		  	{ "field": "ResultPrice", "type": "double_ptr", "size": "1" }
+		  ], 
+		  "returnType": "long"
+		}
+	],
+	"results" : {
+		"price": {
+			"callFunction": "stockPricing", "returnVariable": "%ResultPrice%", "variableIndex": 0
+		},
+		"delta": {
+			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 4
+		},
+		"gamma": {
+			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 1
+		},
+		"vega": {
+			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 2
+		},
+		"theta": {
+			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 3
+		},
+		"rho": {},
+		"cross": {}
+	}
+}

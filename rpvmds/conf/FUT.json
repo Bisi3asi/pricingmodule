@@ -1,0 +1,68 @@
+{
+	"_comment": "ex)FUT_REL@46164,45657,1532.578,EUR,4576279.99,3,IREUR-CRS,10,0.25|0.5|1|2|3|5|10|15|20|30,2.64438703|2.38058648|2.10763173|1.97593133|1.98563969|2.07148214|2.25037149|2.36128877|2.34768987|2.2255283,KRW,6820853800,3,IRKRW-CRS,10,0.25|0.5|1|2|3|5|10|15|20|30,3.08|2.58|2.33|2.19|2.19|2.23|2.24|2.12|2.04|2.04,2,1@1",
+ 	"name" : "fxForward",
+	"product": "FUT_REL",
+	"inputArguments":[
+			{ "field": "maturityDate",	"type": "long" },  
+		  	{ "field": "revaluationDate",	"type": "long" },
+		  	{ "field": "exchangeRate",	"type": "double" },
+		  	{ "field": "buySideCurrency",	"type": "char" },
+		  	{ "field": "notionalForeign",	"type": "double" },
+		  	{ "field": "buySideDCB",	"type": "int" },
+		  	{ "field": "buySideDcCurve",	"type": "char"},
+		  	{ "field": "buyCurveDataSize",	"type": "int" },
+		  	{ "field": "buyCurveYearFrac",	"type": "double_ptr"},
+		  	{ "field": "buyMarketData",	"type": "double_ptr"},
+			{ "field": "sellSideCurrency",	"type": "char"},
+		  	{ "field": "notionalDomestic",	"type": "double" },
+		  	{ "field": "sellSideDCB",	"type": "int" },
+		  	{ "field": "sellSideDcCurve",	"type": "char"},
+		  	{ "field": "sellCurveDataSize", "type": "int" },
+		  	{ "field": "sellCurveYearFrac", "type": "double_ptr"},
+		  	{ "field": "sellMarketData",	"type": "double_ptr"},
+			{ "field": "calType",		"type": "int"},
+			{ "field": "logYn",		"type": "int"}
+		],
+
+	"functions":[
+		{ 
+		  "name": "pricing", 
+		  "parameters": [
+			{ "field": "maturityDate"},  
+		  	{ "field": "revaluationDate"},
+		  	{ "field": "exchangeRate"},
+		  	{ "field": "buySideCurrency"},
+		  	{ "field": "notionalForeign"},
+		  	{ "field": "buySideDCB"},
+		  	{ "field": "buySideDcCurve"},
+		  	{ "field": "buyCurveDataSize"},
+		  	{ "field": "buyCurveYearFrac"},
+		  	{ "field": "buyMarketData"},
+			{ "field": "sellSideCurrency"},
+		  	{ "field": "notionalDomestic"},
+		  	{ "field": "sellSideDCB"},
+		  	{ "field": "sellSideDcCurve"},
+		  	{ "field": "sellCurveDataSize"},
+		  	{ "field": "sellCurveYearFrac"},
+		  	{ "field": "sellMarketData"},
+			{ "field": "calType"},
+			{ "field": "logYn"},
+		  	{ "field": "resultNetPvFxSensitivity",	"type": "double_ptr", "size": "2"},
+			{ "field": "resultGirrDelta",		"type": "double_ptr", "size": "25"}		  ], 
+		  "returnType": "void"
+		}
+	],
+	"results" : {
+		"price": {
+			"callFunction": "pricing", "returnVariable": "%resultNetPvFxSensitivity%", "variableIndex": 0
+		},
+		"delta": {
+			"callFunction": "pricing", "returnVariable": "%resultNetPvFxSensitivity%", "variableIndex": 1
+		},
+		"gamma": {},
+		"vega": {},
+		"theta": {},
+		"rho": {},
+		"cross": {}
+	}
+}

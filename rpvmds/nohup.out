@@ -1,0 +1,589 @@
+DEBUG[2025-04-16 09:55:04]set parameter port 15678
+DEBUG[2025-04-16 09:55:04]set parameter binding ip 192.168.0.100
+INFO [2025-04-16 09:55:04]----------------------------------------
+INFO [2025-04-16 09:55:04]*** RPVMds START ***
+DEBUG[2025-04-16 09:55:04]* IP [192.168.0.100]
+INFO [2025-04-16 09:55:04]----------------------------------------
+INFO [2025-04-16 09:55:04]* wait accept port [15678]
+INFO [2025-04-16 10:59:15]client Accepted[0]Wed Apr 16 10:59:15 KST 2025
+DEBUG[2025-04-16 10:59:15]java.nio.channels.SocketChannel[connected local=/192.168.0.100:15678 remote=/192.168.0.100:43392]
+DEBUG[2025-04-16 10:59:15]AnalDataRequestQ 생성
+DEBUG[2025-04-16 10:59:15]AnalDataResultQ 생성
+INFO [2025-04-16 10:59:15]* wait accept port [15678]
+DEBUG[2025-04-16 10:59:15][recv]프로세스 개수 : [1]
+INFO [2025-04-16 10:59:15]* Request an initial analysis of the data. data count[1]
+INFO [2025-04-16 10:59:15]======================================================
+INFO [2025-04-16 10:59:15]*** Pricing service start ***
+INFO [2025-04-16 10:59:15] Parallel 1 pricing processes
+INFO [2025-04-16 10:59:15]------------------------------------------------------
+DEBUG[2025-04-16 10:59:15]Waiting on the initial data count(1)
+WARN [2025-04-16 10:59:35]rpvm main server is delayed. timeOut 1 / 30(max)
+WARN [2025-04-16 10:59:45]rpvm main server is delayed. timeOut 2 / 30(max)
+DEBUG[2025-04-16 10:59:49]큐 대기 타임아웃(1min) 대기 1분 이상 입력 데이터 1건.
+INFO [2025-04-16 10:59:49]startProcess - InputQueue[1/10000]
+INFO [2025-04-16 10:59:49][startProcess]Pricing process[1]
+DEBUG[2025-04-16 10:59:49]ProcessAnalyser CLASSPATH = /home/ireoplus/rpvmds/lib/rpvmds-evaluater-0.0.1-jar-with-dependencies.jar
+DEBUG[2025-04-16 10:59:49]분석 결과 전송 프로세스 시작
+DEBUG[2025-04-16 10:59:50]Analysis Process - Start character[^___^] Transfer Received.
+DEBUG[2025-04-16 10:59:50]Received a letter to initiate communication with the child -> Start Analysis.
+INFO [2025-04-16 10:59:50][26554] 분석 시작
+INFO [2025-04-16 10:59:50]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-16 10:59:50][26554] line number[0] mehtod(1) start analysisRun().
+DEBUG[2025-04-16 10:59:50][26554]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-16 10:59:50][26554]line number[0] Result : TRUE@1200.0@stockPricing@0.002
+DEBUG[2025-04-16 10:59:50]PRICE> pricingOrgValue=1200.0 , pricingValue=
+DEBUG[2025-04-16 10:59:50]PRICE> pricingOrgValue=1200.0 , pricingValue=1200.0
+DEBUG[2025-04-16 10:59:50][26554] line number[0] end analysisRun(). [CST]Result Time[0.01 sec]
+DEBUG[2025-04-16 10:59:50]결과 전송[0]:CST@...@[RESULT],1200.0@0,0,0,0@stockPricing@0.002
+DEBUG[2025-04-16 10:59:59]Process[1] Result[0] InQ[0] OutQ[0]Memory[Total:32505856, Free:20058808]
+DEBUG[2025-04-16 10:59:59][26554] process isAlive = true
+DEBUG[2025-04-16 10:59:59]ph.getCurrentProcessCnt()=1, rsltSendCount=1, eCnt=0
+DEBUG[2025-04-16 11:00:09]Process[1] Result[1] InQ[0] OutQ[0]Memory[Total:32505856, Free:20058808]
+DEBUG[2025-04-16 11:00:09][26554] process isAlive = true
+DEBUG[2025-04-16 11:00:09]ph.getCurrentProcessCnt()=1, rsltSendCount=1, eCnt=0
+DEBUG[2025-04-16 11:00:19]Process[1] Result[1] InQ[0] OutQ[0]Memory[Total:32505856, Free:20058808]
+DEBUG[2025-04-16 11:00:19][26554] process isAlive = true
+DEBUG[2025-04-16 11:00:19]ph.getCurrentProcessCnt()=1, rsltSendCount=1, eCnt=1
+ERROR[2025-04-16 11:00:22]Socket close - End.
+DEBUG[2025-04-16 11:00:22]RpvmProcessHandler.exit() true
+DEBUG[2025-04-16 11:00:25][26554] ProcessAnalyser run looping end....
+DEBUG[2025-04-16 11:00:25]분석이 완료되어 보낼 데이터가 없음.(rData == null)
+DEBUG[2025-04-16 11:00:25][26554] Exit message sent to the analysis process.
+DEBUG[2025-04-16 11:00:25]분석 결과 전송 완료.
+DEBUG[2025-04-16 11:00:25][26554] Analysis Process End.
+DEBUG[2025-04-16 11:00:25][26554] Exit message sent to the analysis process.
+DEBUG[2025-04-16 11:00:25]------------프로세스 핸들러 종료 처리[메인 대기 해제]------------------
+DEBUG[2025-04-16 11:00:25]RpvmProcessHandler.exit() true
+DEBUG[2025-04-16 11:00:25][26554] 확실하게 프로세스 종료 시키자. KILL시그널
+DEBUG[2025-04-16 11:00:25]실행된 모든 분석 프로세스 종료 시그널을 보낸다.(프로세스 갯수 : 1)
+DEBUG[2025-04-16 11:00:25][26554] kill cmd=kill -9 26554
+DEBUG[2025-04-16 11:00:25]Sends a signal to shut down the pricing process[26554]
+DEBUG[2025-04-16 11:00:25][26554]ProcessAnalyser.exit(bKill=true)
+DEBUG[2025-04-16 11:00:25][26554]ProcessAnalyser.exit set bRunning = false
+DEBUG[2025-04-16 11:00:25]실행된 모든 분석 프로세스가 종료 될때까지 기다린다.(프로세스 갯수 : 1)
+INFO [2025-04-16 11:00:25][26554] Kill the analysis process.
+DEBUG[2025-04-16 11:00:25][26554] Analysis Process remove
+INFO [2025-04-16 11:00:25][removeProcess] Pricing process[PID=26554] start.
+INFO [2025-04-16 11:00:25]Do not restart the Pricing process.
+INFO [2025-04-16 11:00:25] [Request Queue size=0, State Finish=true]
+DEBUG[2025-04-16 11:00:25]* All Pricing completed.
+DEBUG[2025-04-16 11:00:25][removeProcess]Pricing process[PID=26554] end. [Remaining Process=0]
+DEBUG[2025-04-16 11:00:25][26554]ProcessStreamReader end
+WARN [2025-04-16 11:00:25][26554]call analyzer.exit()
+DEBUG[2025-04-16 11:00:25][26554]ProcessAnalyser.exit(bKill=true)
+DEBUG[2025-04-16 11:00:25][26554]ProcessAnalyser.exit set bRunning = false
+INFO [2025-04-16 11:00:26]======================================================
+INFO [2025-04-16 11:00:26]*** Pricing service result information ***
+INFO [2025-04-16 11:00:26]------------------------------------------------------
+INFO [2025-04-16 11:00:26]   CST-> Number of Processing = 1 , Success = 1 , Error = 0 , PerTime = 0.01(sec)
+INFO [2025-04-16 11:00:26]  >>Pricing process[PID=26554] Total count = 1
+INFO [2025-04-16 11:00:26]------------------------------------------------------
+INFO [2025-04-16 11:00:26] All Pricing input count = 1 , result output count = 1
+INFO [2025-04-16 11:00:26]------------------------------------------------------
+INFO [2025-04-16 11:00:26] Pricing service Elapsed time 10시59분15초 ~ 11시00분25초(69.637 sec)
+INFO [2025-04-16 11:00:26]======================================================
+INFO [2025-04-16 11:00:26]분석 프로세스 핸들러 종료 Process Count =0
+DEBUG[2025-04-16 11:00:26]process handler all closed.
+DEBUG[2025-04-16 11:00:26]removeHandler java.nio.channels.SocketChannel[closed]
+INFO [2025-04-16 11:00:26]----------------------------------------
+INFO [2025-04-16 11:00:26]RPVMds service End. connectCount=0
+INFO [2025-04-16 11:00:26]*** RPVMds END ***
+INFO [2025-04-16 11:00:26]----------------------------------------
+INFO [2025-04-16 11:00:26]* call RPVMds Restarting.
+INFO [2025-04-16 11:00:26]* Before RPVMds final.
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+DEBUG[2025-04-16 16:34:33]set parameter port 15678
+DEBUG[2025-04-16 16:34:33]set parameter binding ip 192.168.0.100
+INFO [2025-04-16 16:34:33]----------------------------------------
+INFO [2025-04-16 16:34:33]*** RPVMds START ***
+DEBUG[2025-04-16 16:34:33]* IP [192.168.0.100]
+INFO [2025-04-16 16:34:33]----------------------------------------
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-16 16:34:33]Server socket failed. Retry count[0]
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-16 16:34:34]Server socket failed. Retry count[1]
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-16 16:34:35]Server socket failed. Retry count[2]
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-16 16:34:36]Server socket failed. Retry count[3]
+INFO [2025-04-16 16:34:37]*** RPVMds Exception : The connection has failed 3 times. RPVMds Exit.
+INFO [2025-04-16 16:34:37]----------------------------------------
+INFO [2025-04-16 16:34:37]*** RPVMds END ***
+INFO [2025-04-16 16:34:37]----------------------------------------
+INFO [2025-04-16 16:34:37]* call RPVMds Restarting.
+INFO [2025-04-16 16:34:37]* Before RPVMds final.
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+DEBUG[2025-04-16 18:14:54]set parameter port 15678
+DEBUG[2025-04-16 18:14:54]set parameter binding ip 192.168.0.100
+INFO [2025-04-16 18:14:54]----------------------------------------
+INFO [2025-04-16 18:14:54]*** RPVMds START ***
+DEBUG[2025-04-16 18:14:54]* IP [192.168.0.100]
+INFO [2025-04-16 18:14:54]----------------------------------------
+INFO [2025-04-16 18:14:54]* wait accept port [15678]
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+DEBUG[2025-04-17 11:24:58]set parameter port 15678
+DEBUG[2025-04-17 11:24:58]set parameter binding ip 192.168.0.100
+INFO [2025-04-17 11:24:58]----------------------------------------
+INFO [2025-04-17 11:24:58]*** RPVMds START ***
+DEBUG[2025-04-17 11:24:58]* IP [192.168.0.100]
+INFO [2025-04-17 11:24:58]----------------------------------------
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-17 11:24:58]Server socket failed. Retry count[0]
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-17 11:24:59]Server socket failed. Retry count[1]
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-17 11:25:00]Server socket failed. Retry count[2]
+바인딩 실패 [/192.168.0.100:15678]Address already in use
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-17 11:25:01]Server socket failed. Retry count[3]
+INFO [2025-04-17 11:25:02]*** RPVMds Exception : The connection has failed 3 times. RPVMds Exit.
+INFO [2025-04-17 11:25:02]----------------------------------------
+INFO [2025-04-17 11:25:02]*** RPVMds END ***
+INFO [2025-04-17 11:25:02]----------------------------------------
+INFO [2025-04-17 11:25:02]* call RPVMds Restarting.
+INFO [2025-04-17 11:25:02]* Before RPVMds final.
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+DEBUG[2025-04-17 11:25:43]set parameter port 15678
+DEBUG[2025-04-17 11:25:43]set parameter binding ip 192.168.0.100
+INFO [2025-04-17 11:25:43]----------------------------------------
+INFO [2025-04-17 11:25:43]*** RPVMds START ***
+DEBUG[2025-04-17 11:25:43]* IP [192.168.0.100]
+INFO [2025-04-17 11:25:43]----------------------------------------
+INFO [2025-04-17 11:25:43]* wait accept port [15678]
+INFO [2025-04-17 13:10:41]client Accepted[0]Thu Apr 17 13:10:41 KST 2025
+DEBUG[2025-04-17 13:10:41]java.nio.channels.SocketChannel[connected local=/192.168.0.100:15678 remote=/192.168.0.100:56110]
+DEBUG[2025-04-17 13:10:41]AnalDataRequestQ 생성
+DEBUG[2025-04-17 13:10:41]AnalDataResultQ 생성
+INFO [2025-04-17 13:10:41]* wait accept port [15678]
+DEBUG[2025-04-17 13:10:41][recv]프로세스 개수 : [1]
+INFO [2025-04-17 13:10:41]* Request an initial analysis of the data. data count[1]
+INFO [2025-04-17 13:10:41]======================================================
+INFO [2025-04-17 13:10:41]*** Pricing service start ***
+INFO [2025-04-17 13:10:41] Parallel 1 pricing processes
+INFO [2025-04-17 13:10:41]------------------------------------------------------
+DEBUG[2025-04-17 13:10:41]Waiting on the initial data count(1)
+INFO [2025-04-17 13:10:59]startProcess - InputQueue[1/10000]
+INFO [2025-04-17 13:10:59][startProcess]Pricing process[1]
+DEBUG[2025-04-17 13:10:59]ProcessAnalyser CLASSPATH = /home/ireoplus/rpvmds/lib/rpvmds-evaluater-0.0.1-jar-with-dependencies.jar
+DEBUG[2025-04-17 13:10:59]분석 결과 전송 프로세스 시작
+DEBUG[2025-04-17 13:10:59]Analysis Process - Start character[^___^] Transfer Received.
+DEBUG[2025-04-17 13:10:59]Received a letter to initiate communication with the child -> Start Analysis.
+INFO [2025-04-17 13:10:59][591] 분석 시작
+INFO [2025-04-17 13:10:59]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-17 13:10:59][591] line number[0] mehtod(1) start analysisRun().
+DEBUG[2025-04-17 13:10:59][591]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-17 13:10:59][591]line number[0] Result : FALSE@000@ The number of CST parameters does not match.[5]
+DEBUG[2025-04-17 13:10:59]PRICE> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59][591:OUT]13:10:59.890 [Thread-0] ERROR com.icis.RPVMS.ProcessAnal - [591] The number of CST parameters does not match.[5]
+DEBUG[2025-04-17 13:10:59]PRICE> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]DELTA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]DELTA> calculator : 0.0=0
+DEBUG[2025-04-17 13:10:59]DELTA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]GAMMA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]GAMMA> calculator : 0.0=0
+DEBUG[2025-04-17 13:10:59]GAMMA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]VEGA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]VEGA> calculator : 0.0=0
+DEBUG[2025-04-17 13:10:59]VEGA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]THETA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]THETA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]RHO> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]RHO> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]CROSS> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]CROSS> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]VEGAFX> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]VEGAFX> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]REFUND> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]REFUND> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]CASHFLOW> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]CASHFLOW> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]PREMIUM> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]PREMIUM> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59]DEFAULT> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:10:59]DEFAULT> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:10:59][591] line number[0] end analysisRun(). [CST]Result Time[0.027 sec]
+DEBUG[2025-04-17 13:10:59]결과 전송[0]:CST@1200,1000,1000,1,2,0@[RESULT],0@0,0,0,0@ The number of CST parameters does not match.[5]@0
+DEBUG[2025-04-17 13:11:09]Process[1] Result[0] InQ[0] OutQ[0]Memory[Total:41418752, Free:29453344]
+DEBUG[2025-04-17 13:11:09][591] process isAlive = true
+DEBUG[2025-04-17 13:11:09]ph.getCurrentProcessCnt()=1, rsltSendCount=1, eCnt=0
+DEBUG[2025-04-17 13:11:19]Process[1] Result[1] InQ[0] OutQ[0]Memory[Total:41418752, Free:29453344]
+DEBUG[2025-04-17 13:11:19][591] process isAlive = true
+DEBUG[2025-04-17 13:11:19]ph.getCurrentProcessCnt()=1, rsltSendCount=1, eCnt=0
+INFO [2025-04-17 13:11:20]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-17 13:11:20][591] line number[0] mehtod(1) start analysisRun().
+DEBUG[2025-04-17 13:11:20][591]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-17 13:11:20][591]line number[0] Result : TRUE@1200.0@stockPricing@0.003
+DEBUG[2025-04-17 13:11:20]PRICE> pricingOrgValue=1200.0 , pricingValue=
+DEBUG[2025-04-17 13:11:20]PRICE> pricingOrgValue=1200.0 , pricingValue=1200.0
+DEBUG[2025-04-17 13:11:20][591] line number[0] end analysisRun(). [CST]Result Time[0.004 sec]
+DEBUG[2025-04-17 13:11:20]결과 전송[0]:CST@...@[RESULT],1200.0@0,0,0,0@stockPricing@0.003
+DEBUG[2025-04-17 13:11:29]Process[1] Result[1] InQ[0] OutQ[0]Memory[Total:41418752, Free:29453344]
+DEBUG[2025-04-17 13:11:29][591] process isAlive = true
+DEBUG[2025-04-17 13:11:29]ph.getCurrentProcessCnt()=1, rsltSendCount=2, eCnt=1
+INFO [2025-04-17 13:11:37]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-17 13:11:37][591] line number[0] mehtod(1) start analysisRun().
+DEBUG[2025-04-17 13:11:37][591]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-17 13:11:37][591:OUT]13:11:37.266 [Thread-0] ERROR com.icis.RPVMS.ProcessAnal - [591]product undefined.
+DEBUG[2025-04-17 13:11:37][591]line number[0] Result : FALSE@000@product undefined.
+DEBUG[2025-04-17 13:11:37]PRICE> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]PRICE> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]DELTA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]DELTA> calculator : 0.0=0
+DEBUG[2025-04-17 13:11:37]DELTA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]GAMMA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]GAMMA> calculator : 0.0=0
+DEBUG[2025-04-17 13:11:37]GAMMA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]VEGA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]VEGA> calculator : 0.0=0
+DEBUG[2025-04-17 13:11:37]VEGA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]THETA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]THETA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]RHO> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]RHO> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]CROSS> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]CROSS> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]VEGAFX> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]VEGAFX> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]REFUND> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]REFUND> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]CASHFLOW> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]CASHFLOW> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]PREMIUM> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]PREMIUM> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37]DEFAULT> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:37]DEFAULT> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:37][591] line number[0] end analysisRun(). [FUT]Result Time[0.006 sec]
+DEBUG[2025-04-17 13:11:37]결과 전송[0]:FUT@1000,1000,1000@[RESULT],0@0,0,0,0@product undefined.@0
+DEBUG[2025-04-17 13:11:39]Process[1] Result[2] InQ[0] OutQ[0]Memory[Total:41418752, Free:29274992]
+DEBUG[2025-04-17 13:11:39][591] process isAlive = true
+DEBUG[2025-04-17 13:11:39]ph.getCurrentProcessCnt()=1, rsltSendCount=3, eCnt=0
+INFO [2025-04-17 13:11:47]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-17 13:11:47][591] line number[0] mehtod(1) start analysisRun().
+DEBUG[2025-04-17 13:11:47][591]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-17 13:11:47][591:OUT]13:11:47.735 [Thread-0] ERROR com.icis.RPVMS.ProcessAnal - [591]product undefined.
+DEBUG[2025-04-17 13:11:47][591]line number[0] Result : FALSE@000@product undefined.
+DEBUG[2025-04-17 13:11:47]PRICE> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]PRICE> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]DELTA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]DELTA> calculator : 0.0=0
+DEBUG[2025-04-17 13:11:47]DELTA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]GAMMA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]GAMMA> calculator : 0.0=0
+DEBUG[2025-04-17 13:11:47]GAMMA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]VEGA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]VEGA> calculator : 0.0=0
+DEBUG[2025-04-17 13:11:47]VEGA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]THETA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]THETA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]RHO> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]RHO> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]CROSS> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]CROSS> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]VEGAFX> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]VEGAFX> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]REFUND> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]REFUND> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]CASHFLOW> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]CASHFLOW> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]PREMIUM> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]PREMIUM> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47]DEFAULT> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:11:47]DEFAULT> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:11:47][591] line number[0] end analysisRun(). [LSJ]Result Time[0.007 sec]
+DEBUG[2025-04-17 13:11:47]결과 전송[0]:LSJ@1000,1000,1000@[RESULT],0@0,0,0,0@product undefined.@0
+DEBUG[2025-04-17 13:11:49]Process[1] Result[3] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:11:49][591] process isAlive = true
+DEBUG[2025-04-17 13:11:49]ph.getCurrentProcessCnt()=1, rsltSendCount=4, eCnt=0
+DEBUG[2025-04-17 13:11:59]Process[1] Result[4] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:11:59][591] process isAlive = true
+DEBUG[2025-04-17 13:11:59]ph.getCurrentProcessCnt()=1, rsltSendCount=4, eCnt=0
+WARN [2025-04-17 13:12:07]rpvm main server is delayed. timeOut 1 / 30(max)
+DEBUG[2025-04-17 13:12:09]Process[1] Result[4] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:12:09][591] process isAlive = true
+DEBUG[2025-04-17 13:12:09]ph.getCurrentProcessCnt()=1, rsltSendCount=4, eCnt=1
+INFO [2025-04-17 13:12:15]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-17 13:12:15][591] line number[0] mehtod(1) start analysisRun().
+DEBUG[2025-04-17 13:12:15][591]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-17 13:12:15][591:OUT]13:12:15.770 [Thread-0] ERROR com.icis.RPVMS.ProcessAnal - [591]product undefined.
+DEBUG[2025-04-17 13:12:15][591]line number[0] Result : FALSE@000@product undefined.
+DEBUG[2025-04-17 13:12:15]PRICE> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]PRICE> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]DELTA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]DELTA> calculator : 0.0=0
+DEBUG[2025-04-17 13:12:15]DELTA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]GAMMA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]GAMMA> calculator : 0.0=0
+DEBUG[2025-04-17 13:12:15]GAMMA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]VEGA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]VEGA> calculator : 0.0=0
+DEBUG[2025-04-17 13:12:15]VEGA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]THETA> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]THETA> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]RHO> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]RHO> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]CROSS> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]CROSS> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]VEGAFX> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]VEGAFX> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]REFUND> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]REFUND> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]CASHFLOW> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]CASHFLOW> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]PREMIUM> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]PREMIUM> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15]DEFAULT> pricingOrgValue=0 , pricingValue=
+DEBUG[2025-04-17 13:12:15]DEFAULT> pricingOrgValue=0 , pricingValue=0.0
+DEBUG[2025-04-17 13:12:15][591] line number[0] end analysisRun(). [ibmath]Result Time[0.005 sec]
+DEBUG[2025-04-17 13:12:15]결과 전송[0]:ibmath@1000,1000,1000@[RESULT],0@0,0,0,0@product undefined.@0
+DEBUG[2025-04-17 13:12:19]Process[1] Result[4] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:12:19][591] process isAlive = true
+DEBUG[2025-04-17 13:12:19]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=2
+DEBUG[2025-04-17 13:12:29]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:12:29][591] process isAlive = true
+DEBUG[2025-04-17 13:12:29]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=0
+WARN [2025-04-17 13:12:35]rpvm main server is delayed. timeOut 1 / 30(max)
+DEBUG[2025-04-17 13:12:39]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:12:39][591] process isAlive = true
+DEBUG[2025-04-17 13:12:39]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=1
+WARN [2025-04-17 13:12:45]rpvm main server is delayed. timeOut 2 / 30(max)
+DEBUG[2025-04-17 13:12:49]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:12:49][591] process isAlive = true
+DEBUG[2025-04-17 13:12:49]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=2
+DEBUG[2025-04-17 13:12:59]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:12:59][591] process isAlive = true
+DEBUG[2025-04-17 13:12:59]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=3
+DEBUG[2025-04-17 13:13:09]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:13:09][591] process isAlive = true
+DEBUG[2025-04-17 13:13:09]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=4
+WARN [2025-04-17 13:13:15]rpvm main server is delayed. timeOut 3 / 30(max)
+DEBUG[2025-04-17 13:13:19]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:13:19][591] process isAlive = true
+DEBUG[2025-04-17 13:13:19]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=5
+WARN [2025-04-17 13:13:25]rpvm main server is delayed. timeOut 4 / 30(max)
+DEBUG[2025-04-17 13:13:29]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:13:29][591] process isAlive = true
+DEBUG[2025-04-17 13:13:29]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=6
+WARN [2025-04-17 13:13:35]rpvm main server is delayed. timeOut 5 / 30(max)
+DEBUG[2025-04-17 13:13:39]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:13:39][591] process isAlive = true
+DEBUG[2025-04-17 13:13:39]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=7
+DEBUG[2025-04-17 13:13:49]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:13:49][591] process isAlive = true
+DEBUG[2025-04-17 13:13:49]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=8
+DEBUG[2025-04-17 13:13:59]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:13:59][591] process isAlive = true
+DEBUG[2025-04-17 13:13:59]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=9
+WARN [2025-04-17 13:14:05]rpvm main server is delayed. timeOut 6 / 30(max)
+DEBUG[2025-04-17 13:14:09]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:14:09][591] process isAlive = true
+DEBUG[2025-04-17 13:14:09]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=10
+WARN [2025-04-17 13:14:15]rpvm main server is delayed. timeOut 7 / 30(max)
+DEBUG[2025-04-17 13:14:19]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:14:19][591] process isAlive = true
+DEBUG[2025-04-17 13:14:19]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=11
+WARN [2025-04-17 13:14:25]rpvm main server is delayed. timeOut 8 / 30(max)
+DEBUG[2025-04-17 13:14:29]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:14:29][591] process isAlive = true
+DEBUG[2025-04-17 13:14:29]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=12
+DEBUG[2025-04-17 13:14:39]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:14:39][591] process isAlive = true
+DEBUG[2025-04-17 13:14:39]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=13
+WARN [2025-04-17 13:14:45]rpvm main server is delayed. timeOut 9 / 30(max)
+DEBUG[2025-04-17 13:14:49]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:14:49][591] process isAlive = true
+DEBUG[2025-04-17 13:14:49]ph.getCurrentProcessCnt()=1, rsltSendCount=5, eCnt=14
+INFO [2025-04-17 13:14:58]Request count[1] RQ[0/10000]criticalCount[1] sendPacket200() call.
+DEBUG[2025-04-17 13:14:58][591] line number[0] mehtod(2) start analysisRun().
+DEBUG[2025-04-17 13:14:58][591]line number[0] Wait until the end of the analysis...
+DEBUG[2025-04-17 13:14:58][591]line number[0] Result : TRUE@4.0@stockPricing@0.001
+DEBUG[2025-04-17 13:14:58]PRICE> pricingOrgValue=4.0 , pricingValue=
+DEBUG[2025-04-17 13:14:58]PRICE> pricingOrgValue=4.0 , pricingValue=4.0
+WARN [2025-04-17 13:14:58]R_2 value is not found.
+DEBUG[2025-04-17 13:14:58][591] line number[0] end analysisRun(). [CST]Result Time[0.001 sec]
+DEBUG[2025-04-17 13:14:58]결과 전송[0]:CST@...@[RESULT],0@0,0,0,0@stockPricing@0.001
+DEBUG[2025-04-17 13:14:59]Process[1] Result[5] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:14:59][591] process isAlive = true
+DEBUG[2025-04-17 13:14:59]ph.getCurrentProcessCnt()=1, rsltSendCount=6, eCnt=15
+DEBUG[2025-04-17 13:15:09]Process[1] Result[6] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:15:09][591] process isAlive = true
+DEBUG[2025-04-17 13:15:09]ph.getCurrentProcessCnt()=1, rsltSendCount=6, eCnt=0
+WARN [2025-04-17 13:15:19]rpvm main server is delayed. timeOut 1 / 30(max)
+DEBUG[2025-04-17 13:15:19]Process[1] Result[6] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:15:19][591] process isAlive = true
+DEBUG[2025-04-17 13:15:19]ph.getCurrentProcessCnt()=1, rsltSendCount=6, eCnt=1
+DEBUG[2025-04-17 13:15:29]Process[1] Result[6] InQ[0] OutQ[0]Memory[Total:41418752, Free:29096704]
+DEBUG[2025-04-17 13:15:29][591] process isAlive = true
+DEBUG[2025-04-17 13:15:29]ph.getCurrentProcessCnt()=1, rsltSendCount=6, eCnt=2
+DEBUG[2025-04-17 13:15:39]Process[1] Result[6] InQ[0] OutQ[0]Memory[Total:41418752, Free:28918352]
+DEBUG[2025-04-17 13:15:39][591] process isAlive = true
+DEBUG[2025-04-17 13:15:39]ph.getCurrentProcessCnt()=1, rsltSendCount=6, eCnt=3
+ERROR[2025-04-17 13:15:48]Socket close - End.
+DEBUG[2025-04-17 13:15:48]RpvmProcessHandler.exit() true
+DEBUG[2025-04-17 13:15:48]분석이 완료되어 보낼 데이터가 없음.(rData == null)
+DEBUG[2025-04-17 13:15:48][591] ProcessAnalyser run looping end....
+DEBUG[2025-04-17 13:15:48]분석 결과 전송 완료.
+DEBUG[2025-04-17 13:15:48][591] Exit message sent to the analysis process.
+DEBUG[2025-04-17 13:15:48]------------프로세스 핸들러 종료 처리[메인 대기 해제]------------------
+DEBUG[2025-04-17 13:15:48]RpvmProcessHandler.exit() true
+DEBUG[2025-04-17 13:15:48][591] Analysis Process End.
+DEBUG[2025-04-17 13:15:48]실행된 모든 분석 프로세스 종료 시그널을 보낸다.(프로세스 갯수 : 1)
+DEBUG[2025-04-17 13:15:48]Sends a signal to shut down the pricing process[591]
+DEBUG[2025-04-17 13:15:48][591] Exit message sent to the analysis process.
+DEBUG[2025-04-17 13:15:48][591] 확실하게 프로세스 종료 시키자. KILL시그널
+DEBUG[2025-04-17 13:15:48][591] kill cmd=kill -9 591
+DEBUG[2025-04-17 13:15:49][591]ProcessAnalyser.exit(bKill=true)
+DEBUG[2025-04-17 13:15:49][591]ProcessAnalyser.exit set bRunning = false
+DEBUG[2025-04-17 13:15:49]실행된 모든 분석 프로세스가 종료 될때까지 기다린다.(프로세스 갯수 : 1)
+INFO [2025-04-17 13:15:49][591] Kill the analysis process.
+DEBUG[2025-04-17 13:15:49][591] Analysis Process remove
+INFO [2025-04-17 13:15:49][removeProcess] Pricing process[PID=591] start.
+INFO [2025-04-17 13:15:49]Do not restart the Pricing process.
+INFO [2025-04-17 13:15:49] [Request Queue size=0, State Finish=true]
+DEBUG[2025-04-17 13:15:49]* All Pricing completed.
+DEBUG[2025-04-17 13:15:49][removeProcess]Pricing process[PID=591] end. [Remaining Process=0]
+DEBUG[2025-04-17 13:15:49][591]ProcessStreamReader end
+WARN [2025-04-17 13:15:49][591]call analyzer.exit()
+DEBUG[2025-04-17 13:15:49][591]ProcessAnalyser.exit(bKill=true)
+DEBUG[2025-04-17 13:15:49][591]ProcessAnalyser.exit set bRunning = false
+INFO [2025-04-17 13:15:50]======================================================
+INFO [2025-04-17 13:15:50]*** Pricing service result information ***
+INFO [2025-04-17 13:15:50]------------------------------------------------------
+INFO [2025-04-17 13:15:50]   LSJ-> Number of Processing = 1 , Success = 0 , Error = 1 , PerTime = 0.0(sec)
+INFO [2025-04-17 13:15:50]   FUT-> Number of Processing = 1 , Success = 0 , Error = 1 , PerTime = 0.0(sec)
+INFO [2025-04-17 13:15:50]   CST-> Number of Processing = 3 , Success = 2 , Error = 1 , PerTime = 0.005(sec)
+INFO [2025-04-17 13:15:50]   ibm-> Number of Processing = 1 , Success = 0 , Error = 1 , PerTime = 0.0(sec)
+INFO [2025-04-17 13:15:50]  >>Pricing process[PID=591] Total count = 2
+INFO [2025-04-17 13:15:50]------------------------------------------------------
+INFO [2025-04-17 13:15:50] All Pricing input count = 2 , result output count = 6
+INFO [2025-04-17 13:15:50]------------------------------------------------------
+INFO [2025-04-17 13:15:50] Pricing service Elapsed time 13시10분41초 ~ 13시15분48초(307.812 sec)
+INFO [2025-04-17 13:15:50]======================================================
+INFO [2025-04-17 13:15:50]분석 프로세스 핸들러 종료 Process Count =0
+DEBUG[2025-04-17 13:15:50]process handler all closed.
+DEBUG[2025-04-17 13:15:50]removeHandler java.nio.channels.SocketChannel[closed]
+INFO [2025-04-17 13:15:50]----------------------------------------
+INFO [2025-04-17 13:15:50]*** RPVMds END ***
+INFO [2025-04-17 13:15:50]----------------------------------------
+INFO [2025-04-17 13:15:50]RPVMds service End. connectCount=0
+INFO [2025-04-17 13:15:50]* call RPVMds Restarting.
+INFO [2025-04-17 13:15:50]* Before RPVMds final.
+ERROR StatusConsoleListener RollingFileManager (/home/ireoplus/rpvmds/logs/rpvmds.log) java.io.FileNotFoundException: /home/ireoplus/rpvmds/logs/rpvmds.log (허가 거부)
+ java.io.FileNotFoundException: /home/ireoplus/rpvmds/logs/rpvmds.log (허가 거부)
+	at java.io.FileOutputStream.open0(Native Method)
+	at java.io.FileOutputStream.open(FileOutputStream.java:270)
+	at java.io.FileOutputStream.<init>(FileOutputStream.java:213)
+	at java.io.FileOutputStream.<init>(FileOutputStream.java:133)
+	at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$RollingFileManagerFactory.createManager(RollingFileManager.java:748)
+	at org.apache.logging.log4j.core.appender.rolling.RollingFileManager$RollingFileManagerFactory.createManager(RollingFileManager.java:718)
+	at org.apache.logging.log4j.core.appender.AbstractManager.getManager(AbstractManager.java:144)
+	at org.apache.logging.log4j.core.appender.OutputStreamManager.getManager(OutputStreamManager.java:100)
+	at org.apache.logging.log4j.core.appender.rolling.RollingFileManager.getFileManager(RollingFileManager.java:217)
+	at org.apache.logging.log4j.core.appender.RollingFileAppender$Builder.build(RollingFileAppender.java:135)
+	at org.apache.logging.log4j.core.appender.RollingFileAppender$Builder.build(RollingFileAppender.java:62)
+	at org.apache.logging.log4j.core.config.plugins.util.PluginBuilder.build(PluginBuilder.java:124)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createPluginObject(AbstractConfiguration.java:1138)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createConfiguration(AbstractConfiguration.java:1063)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createConfiguration(AbstractConfiguration.java:1055)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.doConfigure(AbstractConfiguration.java:664)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.initialize(AbstractConfiguration.java:258)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.start(AbstractConfiguration.java:304)
+	at org.apache.logging.log4j.core.LoggerContext.setConfiguration(LoggerContext.java:621)
+	at org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:694)
+	at org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:711)
+	at org.apache.logging.log4j.core.LoggerContext.start(LoggerContext.java:253)
+	at org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:155)
+	at org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:47)
+	at org.apache.logging.log4j.LogManager.getContext(LogManager.java:196)
+	at org.apache.logging.log4j.spi.AbstractLoggerAdapter.getContext(AbstractLoggerAdapter.java:137)
+	at org.apache.logging.slf4j.Log4jLoggerFactory.getContext(Log4jLoggerFactory.java:61)
+	at org.apache.logging.log4j.spi.AbstractLoggerAdapter.getLogger(AbstractLoggerAdapter.java:47)
+	at org.apache.logging.slf4j.Log4jLoggerFactory.getLogger(Log4jLoggerFactory.java:33)
+	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:358)
+	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:383)
+	at com.icis.RPVM.ds.RpvmMain.<clinit>(RpvmMain.java:35)
+ERROR StatusConsoleListener Could not create plugin of type class org.apache.logging.log4j.core.appender.RollingFileAppender for element RollingFile: java.lang.IllegalStateException: ManagerFactory [org.apache.logging.log4j.core.appender.rolling.RollingFileManager$RollingFileManagerFactory@2df32bf7] unable to create manager for [/home/ireoplus/rpvmds/logs/rpvmds.log] with data [org.apache.logging.log4j.core.appender.rolling.RollingFileManager$FactoryData@530612ba[pattern=/home/ireoplus/rpvmds/logs/${date:yyyyMMdd}/rpvmds-%d{-dd-MMMM-yyyy}-%i.log.gz, append=true, bufferedIO=true, bufferSize=8192, policy=CompositeTriggeringPolicy(policies=[SizeBasedTriggeringPolicy(size=104857600), TimeBasedTriggeringPolicy(nextRolloverMillis=0, interval=1, modulate=false)]), strategy=DefaultRolloverStrategy(min=1, max=7, useMax=true), advertiseURI=null, layout=%-5p[%d{yyyy-MM-dd HH:mm:ss}]%.10000m%n, filePermissions=null, fileOwner=null]]
+ java.lang.IllegalStateException: ManagerFactory [org.apache.logging.log4j.core.appender.rolling.RollingFileManager$RollingFileManagerFactory@2df32bf7] unable to create manager for [/home/ireoplus/rpvmds/logs/rpvmds.log] with data [org.apache.logging.log4j.core.appender.rolling.RollingFileManager$FactoryData@530612ba[pattern=/home/ireoplus/rpvmds/logs/${date:yyyyMMdd}/rpvmds-%d{-dd-MMMM-yyyy}-%i.log.gz, append=true, bufferedIO=true, bufferSize=8192, policy=CompositeTriggeringPolicy(policies=[SizeBasedTriggeringPolicy(size=104857600), TimeBasedTriggeringPolicy(nextRolloverMillis=0, interval=1, modulate=false)]), strategy=DefaultRolloverStrategy(min=1, max=7, useMax=true), advertiseURI=null, layout=%-5p[%d{yyyy-MM-dd HH:mm:ss}]%.10000m%n, filePermissions=null, fileOwner=null]]
+	at org.apache.logging.log4j.core.appender.AbstractManager.getManager(AbstractManager.java:146)
+	at org.apache.logging.log4j.core.appender.OutputStreamManager.getManager(OutputStreamManager.java:100)
+	at org.apache.logging.log4j.core.appender.rolling.RollingFileManager.getFileManager(RollingFileManager.java:217)
+	at org.apache.logging.log4j.core.appender.RollingFileAppender$Builder.build(RollingFileAppender.java:135)
+	at org.apache.logging.log4j.core.appender.RollingFileAppender$Builder.build(RollingFileAppender.java:62)
+	at org.apache.logging.log4j.core.config.plugins.util.PluginBuilder.build(PluginBuilder.java:124)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createPluginObject(AbstractConfiguration.java:1138)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createConfiguration(AbstractConfiguration.java:1063)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createConfiguration(AbstractConfiguration.java:1055)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.doConfigure(AbstractConfiguration.java:664)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.initialize(AbstractConfiguration.java:258)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.start(AbstractConfiguration.java:304)
+	at org.apache.logging.log4j.core.LoggerContext.setConfiguration(LoggerContext.java:621)
+	at org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:694)
+	at org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:711)
+	at org.apache.logging.log4j.core.LoggerContext.start(LoggerContext.java:253)
+	at org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:155)
+	at org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:47)
+	at org.apache.logging.log4j.LogManager.getContext(LogManager.java:196)
+	at org.apache.logging.log4j.spi.AbstractLoggerAdapter.getContext(AbstractLoggerAdapter.java:137)
+	at org.apache.logging.slf4j.Log4jLoggerFactory.getContext(Log4jLoggerFactory.java:61)
+	at org.apache.logging.log4j.spi.AbstractLoggerAdapter.getLogger(AbstractLoggerAdapter.java:47)
+	at org.apache.logging.slf4j.Log4jLoggerFactory.getLogger(Log4jLoggerFactory.java:33)
+	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:358)
+	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:383)
+	at com.icis.RPVM.ds.RpvmMain.<clinit>(RpvmMain.java:35)
+ERROR StatusConsoleListener Unable to invoke factory method in class org.apache.logging.log4j.core.appender.RollingFileAppender for element RollingFile: java.lang.IllegalStateException: No factory method found for class org.apache.logging.log4j.core.appender.RollingFileAppender
+ java.lang.IllegalStateException: No factory method found for class org.apache.logging.log4j.core.appender.RollingFileAppender
+	at org.apache.logging.log4j.core.config.plugins.util.PluginBuilder.findFactoryMethod(PluginBuilder.java:260)
+	at org.apache.logging.log4j.core.config.plugins.util.PluginBuilder.build(PluginBuilder.java:136)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createPluginObject(AbstractConfiguration.java:1138)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createConfiguration(AbstractConfiguration.java:1063)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.createConfiguration(AbstractConfiguration.java:1055)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.doConfigure(AbstractConfiguration.java:664)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.initialize(AbstractConfiguration.java:258)
+	at org.apache.logging.log4j.core.config.AbstractConfiguration.start(AbstractConfiguration.java:304)
+	at org.apache.logging.log4j.core.LoggerContext.setConfiguration(LoggerContext.java:621)
+	at org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:694)
+	at org.apache.logging.log4j.core.LoggerContext.reconfigure(LoggerContext.java:711)
+	at org.apache.logging.log4j.core.LoggerContext.start(LoggerContext.java:253)
+	at org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:155)
+	at org.apache.logging.log4j.core.impl.Log4jContextFactory.getContext(Log4jContextFactory.java:47)
+	at org.apache.logging.log4j.LogManager.getContext(LogManager.java:196)
+	at org.apache.logging.log4j.spi.AbstractLoggerAdapter.getContext(AbstractLoggerAdapter.java:137)
+	at org.apache.logging.slf4j.Log4jLoggerFactory.getContext(Log4jLoggerFactory.java:61)
+	at org.apache.logging.log4j.spi.AbstractLoggerAdapter.getLogger(AbstractLoggerAdapter.java:47)
+	at org.apache.logging.slf4j.Log4jLoggerFactory.getLogger(Log4jLoggerFactory.java:33)
+	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:358)
+	at org.slf4j.LoggerFactory.getLogger(LoggerFactory.java:383)
+	at com.icis.RPVM.ds.RpvmMain.<clinit>(RpvmMain.java:35)
+ERROR StatusConsoleListener Null object returned for RollingFile in Appenders.
+ERROR StatusConsoleListener Unable to locate appender "RollingFile" for logger config "root"
+ERROR StatusConsoleListener Unable to locate appender "RollingFile" for logger config "com.icis"
+DEBUG[2025-04-18 13:26:34]set parameter port 15678
+DEBUG[2025-04-18 13:26:34]set parameter binding ip 192.168.0.100
+INFO [2025-04-18 13:26:34]----------------------------------------
+INFO [2025-04-18 13:26:34]*** RPVMds START ***
+DEBUG[2025-04-18 13:26:34]* IP [192.168.0.100]
+INFO [2025-04-18 13:26:34]----------------------------------------
+바인딩 실패 [/192.168.0.100:15678]주소가 이미 사용 중입니다
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-18 13:26:34]Server socket failed. Retry count[0]
+바인딩 실패 [/192.168.0.100:15678]주소가 이미 사용 중입니다
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-18 13:26:35]Server socket failed. Retry count[1]
+바인딩 실패 [/192.168.0.100:15678]주소가 이미 사용 중입니다
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-18 13:26:36]Server socket failed. Retry count[2]
+바인딩 실패 [/192.168.0.100:15678]주소가 이미 사용 중입니다
+NIOServerSocket.initServerSocket() 실패...
+WARN [2025-04-18 13:26:37]Server socket failed. Retry count[3]
+INFO [2025-04-18 13:26:38]*** RPVMds Exception : The connection has failed 3 times. RPVMds Exit.
+INFO [2025-04-18 13:26:38]----------------------------------------
+INFO [2025-04-18 13:26:38]*** RPVMds END ***
+INFO [2025-04-18 13:26:38]----------------------------------------
+INFO [2025-04-18 13:26:38]* call RPVMds Restarting.
+INFO [2025-04-18 13:26:38]* Before RPVMds final.

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<Configuration>
+	<Properties>
+        <Property name="logNm">rpvmds</Property>
+        <property name="logPath" value="/home/ireoplus/rpvmds/logs" />
+        <Property name="layoutPattern">%-5p[%d{yyyy-MM-dd HH:mm:ss}]%.10000m%n</Property>
+    </Properties>
+	<Appenders> 
+		<Console name="Console" target="SYSTEM_OUT"> 
+			<PatternLayout pattern="${layoutPattern}" /> 
+		</Console> 
+		<RollingFile name="RollingFile" 
+		             fileName="${logPath}/${logNm}.log" 
+		             filePattern="${logPath}/$${date:yyyyMMdd}/${logNm}-%d{-dd-MMMM-yyyy}-%i.log.gz"
+		             ignoreExceptions="false"> 
+			<PatternLayout pattern="${layoutPattern}" />
+			
+			<Policies>  
+				<!-- <OnStartupTriggeringPolicy /> -->
+				<SizeBasedTriggeringPolicy size="100MB" /> 
+				<TimeBasedTriggeringPolicy /> 
+			</Policies> 
+			<DefaultRolloverStrategy>
+			  	<Delete basePath = "${logPath}" maxDepth = "1">
+			  		<IfFileName glob="${logNm}*.log.gz" />			  					  		
+			  		<IfLastModified age="P30D"/>
+			  	</Delete>
+			</DefaultRolloverStrategy>
+		</RollingFile>
+	</Appenders> 
+	
+	<Loggers> 
+		<!-- LOG everything at INFO level --> 
+		<Root level="INFO" additivity="false"> 
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingFile" />
+		</Root>
+		<!-- LOG TRACE level --> 
+		<Logger name="com.icis" level="DEBUG" additivity="false">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+	</Loggers> 
+</Configuration>
