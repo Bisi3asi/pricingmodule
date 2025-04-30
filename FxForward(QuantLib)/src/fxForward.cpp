@@ -109,9 +109,6 @@ extern "C" {
         }
         // Output 데이터 로깅
         printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
-        printAllData(curves);
-        printAllData(bSideCashFlow);
-		printAllData(sSideCashFlow);
         info("==============[fxForward Logging Ended!]==============");
     }
 }
@@ -366,7 +363,7 @@ Real linterp(const vector<Real>& yearFractions, const vector<Real>& zeroRates, R
     if (yearFractions.size() != zeroRates.size() || yearFractions.size() < 2) { 
         // zeroRates와 yearFractions의 크기가 다르거나, 2개 미만일 경우
 		error("[linterp] yearFractions size: {}, zeroRates size: {}", yearFractions.size(), zeroRates.size());
-		throw invalid_argument("input zero rates cnt is less then 2, can't iterpolate.");
+		throw invalid_argument("input zero rates cnt is less then 2, can't interpolate.");
     }
     // 보간기 생성
     LinearInterpolation interpolator(yearFractions.begin(), yearFractions.end(), zeroRates.begin());
@@ -553,40 +550,40 @@ void printAllData(const TradeInformation& tradeInfo, const BuySideValuationCashF
 
 void printAllData(const TradeInformation& tradeInfo) {
     
-    info("[Print All: Trade Information]");
-    info("Maturity Date     : {}", qDateToString(tradeInfo.maturityDate));
-    info("Revaluation Date  : {}", qDateToString(tradeInfo.revaluationDate));
-    info("Exchange Rate     : {:0.15f}", tradeInfo.exchangeRate);
+    info("[Print All : Trade Information]");
+    info("Maturity Date : {}", qDateToString(tradeInfo.maturityDate));
+    info("Revaluation Date : {}", qDateToString(tradeInfo.revaluationDate));
+    info("Exchange Rate : {:0.15f}", tradeInfo.exchangeRate);
     info("");
 }
 
 void printAllData(const BuySideValuationCashFlow& bSideCashFlow) {
     
-    info("[Print All: Buy Side Valuation Cash Flow]");
-    info("Currency          : {}", bSideCashFlow.currency);
-    info("Principal Amount  : {:0.15f}", bSideCashFlow.principalAmount);
-    info("Cash Flow Date    : {}", qDateToString(bSideCashFlow.cashFlowDate));
-    info("Day Count Basis   : {}", bSideCashFlow.dcb);
-    info("Discount Curve    : {}", bSideCashFlow.dcCurve);
-    info("Year Fraction     : {}", bSideCashFlow.yearFrac);
-    info("Discount Rate     : {}", bSideCashFlow.dcRate);
-    info("Discount Factor   : {}", bSideCashFlow.dcFactor);
-    info("Present Value     : {:0.15f}", bSideCashFlow.presentValue);
+    info("[Print All : Buy Side Valuation Cash Flow]");
+    info("Currency : {}", bSideCashFlow.currency);
+    info("Principal Amount : {:0.15f}", bSideCashFlow.principalAmount);
+    info("Cash Flow Date : {}", qDateToString(bSideCashFlow.cashFlowDate));
+    info("Day Count Basis : {}", bSideCashFlow.dcb);
+    info("Discount Curve : {}", bSideCashFlow.dcCurve);
+    info("Year Fraction : {}", bSideCashFlow.yearFrac);
+    info("Discount Rate : {}", bSideCashFlow.dcRate);
+    info("Discount Factor : {}", bSideCashFlow.dcFactor);
+    info("Present Value : {:0.15f}", bSideCashFlow.presentValue);
     info("");
 }
 
 void printAllData(const SellSideValuationCashFlow& sSideCashFlow) {
     
-    info("[Print All: Sell Side Valuation Cash Flow]");
-    info("Currency          : {}", sSideCashFlow.currency);
-    info("Principal Amount  : {:0.15f}", sSideCashFlow.principalAmount);
-    info("Cash Flow Date    : {}", qDateToString(sSideCashFlow.cashFlowDate));
-    info("Day Count Basis   : {}", sSideCashFlow.dcb);
-    info("Discount Curve    : {}", sSideCashFlow.dcCurve);
-    info("Year Fraction     : {}", sSideCashFlow.yearFrac);
-    info("Discount Rate     : {}", sSideCashFlow.dcRate);
-    info("Discount Factor   : {}", sSideCashFlow.dcFactor);
-    info("Present Value     : {:0.15f}", sSideCashFlow.presentValue);
+    info("[Print All : Sell Side Valuation Cash Flow]");
+    info("Currency : {}", sSideCashFlow.currency);
+    info("Principal Amount : {:0.15f}", sSideCashFlow.principalAmount);
+    info("Cash Flow Date : {}", qDateToString(sSideCashFlow.cashFlowDate));
+    info("Day Count Basis : {}", sSideCashFlow.dcb);
+    info("Discount Curve : {}", sSideCashFlow.dcCurve);
+    info("Year Fraction : {}", sSideCashFlow.yearFrac);
+    info("Discount Rate : {}", sSideCashFlow.dcRate);
+    info("Discount Factor : {}", sSideCashFlow.dcFactor);
+    info("Present Value : {:0.15f}", sSideCashFlow.presentValue);
     info("");
 }
 
@@ -594,11 +591,11 @@ void printAllData(const std::vector<Curve>& curves) {
     
     info("[Print All: Curves]");
     for (const auto& curve : curves) {
-        info("Curve ID          : {}", curve.curveId);
-        info("Year Fraction     : {}", curve.yearFrac);
-        info("Market Data       : {:0.15f}", curve.marketData);
-        info("Discount Factor   : {}", curve.dcFactor);
-        info("Zero Rate         : {}", curve.zeroRate);
+        info("Curve ID : {}", curve.curveId);
+        info("Year Fraction : {}", curve.yearFrac);
+        info("Market Data : {:0.15f}", curve.marketData);
+        info("Discount Factor : {}", curve.dcFactor);
+        info("Zero Rate : {}", curve.zeroRate);
         info("----------------------------------------------");
     }
     info("");
@@ -608,9 +605,9 @@ void printAllData(const std::vector<Girr>& girrs) {
     
     info("[Print All: GIRR Delta Risk Factors]");
     for (const auto& g : girrs) {
-        info("IR Curve       : {}", g.irCurveId);
-        info("Year Fraction  : {}", g.yearFrac);
-        info("Sensitivity    : {:0.15f}", g.sensitivity);
+        info("IR Curve : {}", g.irCurveId);
+        info("Year Fraction : {}", g.yearFrac);
+        info("Sensitivity : {:0.15f}", g.sensitivity);
         info("-----------------------------");
     }
     info("");
