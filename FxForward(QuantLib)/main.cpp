@@ -12,17 +12,17 @@
 
 int main() {
     // 테스트 데이터 정의 (TradeInformation)
-    const long maturityDate = 46164;
+    const long maturityDate = 45834;
     const long revaluationDate = 45657;
     const double exchangeRate = 1532.578;
 
     const char buySideCurrency[4] = "EUR";
-    const double notionalForeign = 4576279.99;
+    const double notionalForeign = 30000;
     const unsigned short buySideDCB = 3;    // Act/365
     const char buySideDcCurve[20] = "IREUR-CRS";
 
     const char sellSideCurrency[4] = "KRW";
-    const double notionalDomestic = 6820853799.5;
+    const double notionalDomestic = 45273000;
     const unsigned short sellSideDCB = 3;   // Act/365
     const char sellSideDcCurve[20] = "IRKRW-CRS";
 
@@ -34,10 +34,10 @@ int main() {
     // 테스트 데이터 정의 (sell Curve)
     const unsigned int sellCurveDataSize = 10;
     const double sellCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
-    const double sellMarketData[buyCurveDataSize] = { 3.08, 2.58, 2.33, 2.19, 2.19, 2.23, 2.24, 2.12, 2.04, 2.04 };
+    const double sellMarketData[buyCurveDataSize] = { 2.9931427, 2.5760797, 2.3328592, 2.1926168, 2.1934282, 2.23125, 2.2380958, 2.115366, 2.0361275, 2.0361275 };
 
     // 테스트 데이터 정의 (cal Type, logYn)
-	const unsigned short calType = 2; // 1: NetPV, 2: GIRR Sensitivity
+	const unsigned short calType = 1; // 1: NetPV, 2: GIRR Sensitivity
 	const unsigned short logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
