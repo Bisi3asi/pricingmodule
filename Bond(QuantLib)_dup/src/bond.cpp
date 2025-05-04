@@ -18,7 +18,7 @@ using namespace std;
 
 extern "C" double EXPORT ZeroBondTest(
     // ===================================================================================================
-    double notional,                // 채권 원금
+    double notional,                // 채권 원금 명목금액
     long evaluationDate,            // 평가일 (serial number, 예: 46164)
     long settlementDays,            // 결제일 offset (보통 2일)
     long issueDate,                 // 발행일

@@ -28,11 +28,11 @@
 
 // dll export method (extern "C", EXPORT 명시 필요)
 extern "C" double EXPORT ZeroBondTest(
+    double notional,                 // 채권 원금 명목금액
     long evaluationDate,             // 평가일 (serial number, 예: 46164)
     long settlementDays,             // 결제일 offset (보통 2일)
     long issueDate,                  // 발행일
     long maturityDate,               // 만기일
-    double notional,                 // 채권 원금
     double couponRate,              // 쿠폰 이율
     int couponDayCounter,           // DayCounter code (예: 5 = Actual/Actual(Bond))
     int numberOfCoupons,            // 쿠폰 개수
@@ -52,6 +52,5 @@ extern "C" double EXPORT ZeroBondTest(
     int numberOfCsrTenors,          // CSR 만기 수
     const long* csrTenorDays,       // CSR 만기 (startDate로부터의 일수)
     const double* csrSpreads        // CSR 스프레드 (금리 차이)
-
 );
 #endif
