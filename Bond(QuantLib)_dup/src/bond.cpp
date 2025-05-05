@@ -16,20 +16,20 @@
 using namespace QuantLib;
 using namespace std;
 
-extern "C" double EXPORT ZeroBondTest(
+extern "C" double EXPORT pricing(
     // ===================================================================================================
     double notional,                // 채권 원금 명목금액
-    long evaluationDate,            // 평가일 (serial number, 예: 46164)
-    long settlementDays,            // 결제일 offset (보통 2일)
     long issueDate,                 // 발행일
+    long revaluationDate,           // 평가일 (serial number, 예: 46164)
     long maturityDate,              // 만기일
+    long settlementDays,            // 결제일 offset (보통 2일)
     double couponRate,              // 쿠폰 이율
-    int couponDayCounter,           // DayCounter code (예: 5 = Actual/Actual(Bond))
-    int numberOfCoupons,            // 쿠폰 개수
-    const long* paymentDates,       // 지급일 배열
+    int couponDCB,                  // DayCounter code (예: 5 = Actual/Actual(Bond))
+    int couponCnt,                  // 쿠폰 개수
     const long* realStartDates,     // 각 구간 시작일
     const long* realEndDates,       // 각 구간 종료일
-    int numberOfGirrTenors,         // GIRR 만기 수
+    const long* paymentDates,       // 지급일 배열
+    int girrCnt,                    // GIRR 만기 수
     const long* girrTenorDays,      // GIRR 만기 (startDate로부터의 일수)
     const double* girrRates,        // GIRR 금리
     int girrDayCounter,             // GIRR DayCounter (예: 1 = Actual/365)
@@ -39,14 +39,12 @@ extern "C" double EXPORT ZeroBondTest(
     double spreadOverYield,         // 채권의 종목 Credit Spread
     int spreadOverYieldCompounding, // Continuous
     int spreadOverYieldDayCounter,  // Actual/365
-    int numberOfCsrTenors,          // CSR 만기 수
+    int csrCnt,          // CSR 만기 수
     const long* csrTenorDays,       // CSR 만기 (startDate로부터의 일수)
     const double* csrSpreads        // CSR 스프레드 (금리 차이)
     // ===================================================================================================
 ) {
-
-    std::cout.precision(15);
-    Date asOfDate_ = Date(evaluationDate);
+    Date asOfDate_ = Date(revaluationDate);
     Settings::instance().evaluationDate() = asOfDate_;
     Size settlementDays_ = settlementDays;
     Real notional_ = notional;
@@ -59,7 +57,7 @@ extern "C" double EXPORT ZeroBondTest(
                                       Period(20, Years), Period(30, Years) };
     girrDates_.emplace_back(asOfDate_);
     girrRates_.emplace_back(girrRates[0]);
-    for (Size dateNum = 0; dateNum < numberOfGirrTenors; ++dateNum) {
+    for (Size dateNum = 0; dateNum < girrCnt; ++dateNum) {
         //        girrDates_.emplace_back(asOfDate_ + girrTenorDays[dateNum]);
         girrDates_.emplace_back(asOfDate_ + girrPeriod[dateNum]);
         girrRates_.emplace_back(girrRates[dateNum] + spreadOverYield);
@@ -84,7 +82,7 @@ extern "C" double EXPORT ZeroBondTest(
     double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
     csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[0]));
     //    csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[0]+spreadOverYield_));
-    for (Size dateNum = 0; dateNum < numberOfCsrTenors; ++dateNum) {
+    for (Size dateNum = 0; dateNum < csrCnt; ++dateNum) {
         //        csrDates_.emplace_back(asOfDate_ + csrTenorDays[dateNum]);
         csrDates_.emplace_back(asOfDate_ + csrPeriod[dateNum]);
         spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, csrDates_.back()));
@@ -98,7 +96,7 @@ extern "C" double EXPORT ZeroBondTest(
     auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve);
     std::vector<Date> couponSch_;
     couponSch_.emplace_back(realStartDates[0]);
-    for (Size schNum = 0; schNum < numberOfCoupons; ++schNum) {
+    for (Size schNum = 0; schNum < couponCnt; ++schNum) {
         couponSch_.emplace_back(realEndDates[schNum]);
     }
     Schedule fixedBondSchedule_(couponSch_);
