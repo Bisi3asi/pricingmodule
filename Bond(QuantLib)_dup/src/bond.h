@@ -3,54 +3,77 @@
 
 // function 외부 인터페이스 export 정의
 #ifdef _WIN32
-	#ifdef BUILD_LIBRARY
-		#define EXPORT __declspec(dllexport) __stdcall
-	#else
-		#define EXPORT __declspec(dllimport) __stdcall
-#endif
-	#elif defined(__linux__) || defined(__unix__)
-		#define EXPORT
+    #ifdef BUILD_LIBRARY
+        #define EXPORT_API __declspec(dllexport) __stdcall
+    #else
+        #define EXPORT_API __declspec(dllimport) __stdcall
+    #endif
+#else
+    #define EXPORT_API
 #endif
 
 #pragma once
 
-// include
+// include (cpp)
 #include <iostream>
 
 // include (QuantLib)
-#include <ql/time/date.hpp>
-#include <ql/time/daycounter.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
+#include "ql/time/calendars/southkorea.hpp"
+#include "ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp"
+#include "ql/termstructures/yield/zerocurve.hpp"
+#include "ql/quotes/simplequote.hpp"
+#include "ql/pricingengines/bond/discountingbondengine.hpp"
+#include "ql/instruments/bonds/zerocouponbond.hpp"
+#include "ql/instruments/bonds/fixedratebond.hpp"
+#include "ql/time/schedule.hpp"
+#include "ql/time/daycounters/actualactual.hpp"
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/time/daycounter.hpp>
 
-// dll export method (extern "C", EXPORT 명시 필요)
-extern "C" double EXPORT pricing(
-    double notional,                // 채권 원금 명목금액
-    long issueDate,                 // 발행일
-    long revaluationDate,           // 평가일 (serial number, 예: 46164)
-    long maturityDate,              // 만기일
-    long settlementDays,            // 결제일 offset (보통 2일)
-    double couponRate,              // 쿠폰 이율
-    int couponDCB,                  // DayCounter code (예: 5 = Actual/Actual(Bond))
-    int couponCnt,                  // 쿠폰 개수
-    const long* paymentDates,       // 지급일 배열
-    const long* realStartDates,     // 각 구간 시작일
-    const long* realEndDates,       // 각 구간 종료일
-    int girrCnt,                    // GIRR 만기 수
-    const long* girrTenorDays,      // GIRR 만기 (startDate로부터의 일수)
-    const double* girrRates,        // GIRR 금리
-    int girrDayCounter,             // GIRR DayCounter (예: 1 = Actual/365)
-    int girrInterpolator,           // 보간법 (예: 1 = Linear)
-    int girrCompounding,            // 이자 계산 방식 (예: 1 = Continuous)
-    int girrFrequency,              // 이자 빈도 (예: 1 = Annual)
-    double spreadOverYield,         // 채권의 종목 Credit Spread
-    int spreadOverYieldCompounding, // Continuous
-    int spreadOverYieldDayCounter,  // Actual/365
-    int csrCnt,                     // CSR 만기 수
-    const long* csrTenorDays,       // CSR 만기 (startDate로부터의 일수)
-    const double* csrSpreads        // CSR 스프레드 (금리 차이)
-);
+// dll export method
+extern "C" {
+    double EXPORT_API pricing(
+        // ===================================================================================================
+        double notional,                    // 채권 원금 명목금액
+        long issueDateSerial,               // 발행일 (serial number)
+        long revaluationDateSerial,         // 평가일 (serial number)
+        long maturityDateSerial,            // 만기일 (serial number)
+        long settlementDays,                // 결제일 offset (보통 2일)
+        
+        int couponCnt,                      // 쿠폰 개수
+        double couponRate,                  // 쿠폰 이율
+        int couponDCB,                      // DayCounter code (예: 5 = Actual/Actual(Bond))
+        const long* realStartDatesSerial,   // 각 구간 시작일
+        const long* realEndDatesSerial,     // 각 구간 종료일
+        const long* paymentDatesSerial,     // 지급일 배열
+
+        int girrCnt,                        // GIRR 만기 수
+        const double* girrRates,            // GIRR 금리
+        int girrDCB,                           // GIRR DayCounter (예: 1 = Actual/365)
+        // int girrInterpolator,               // 보간법 (예: 1 = Linear) (고정)
+        // int girrCompounding,                // 이자 계산 방식 (예: 1 = Continuous) (고정)
+        // int girrFrequency,                  // 이자 빈도 (예: 1 = Annual) (고정)
+
+        double spreadOverYield,             // 채권의 종목 Credit Spread
+        // int spreadOverYieldCompounding,  // Continuous (고정)
+        int spreadOverYieldDCB,             // Credit Spread Day Count Basis
+
+        int csrCnt,                         // CSR 만기 수
+        const double* csrSpreads,           // CSR 스프레드 (금리 차이)
+
+        unsigned short logYn,               // 로그 파일 생성 여부 (0: No, 1: Yes)
+
+        double* resultGirrDelta,
+        double* resultCsrDelta
+        // ===================================================================================================
+    );
+}
+
+void initDayCounters(std::vector<QuantLib::DayCounter>& dayCounters);
+
+QuantLib::DayCounter getDayCounterByDCB(unsigned short dcb, std::vector<QuantLib::DayCounter>& dayCounters);
+
+
 #endif
