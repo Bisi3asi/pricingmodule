@@ -8,10 +8,10 @@
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
             "cacheVariables": {
-              "CMAKE_C_COMPILER": "cl.exe",
-              "CMAKE_CXX_COMPILER": "cl.exe",
-              "CMAKE_CXX_STANDARD": "17",
-              "CMAKE_CXX_EXTENSIONS": "OFF"
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "CMAKE_CXX_STANDARD": "17",
+                "CMAKE_CXX_EXTENSIONS": "OFF"
             },
             "condition": {
                 "type": "equals",
@@ -21,17 +21,25 @@
         },
         {
             "name": "x64-release",
-            "displayName": "x64 Release",
+            "displayName": "x64-Release",
             "inherits": "x64-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
+            "name": "x64-debug",
+            "displayName": "x64-Debug",
+            "inherits": "x64-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
             "name": "linux-release",
             "displayName": "Linux Release",
             "generator": "Ninja",
-            "binaryDir": "C:\\Users\\icis\\Desktop\\pricing-src\\Bond(QuantLib)_20250422", /* Change this to your project path */
+            "binaryDir": "/home/ireoplus/shared_library/FxForward", /* Path to your project */
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_STANDARD": "17",
