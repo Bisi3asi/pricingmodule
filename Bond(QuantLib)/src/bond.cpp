@@ -16,7 +16,6 @@
 using namespace QuantLib;
 using namespace std;
 
-
 extern "C" void EXPORT printSettlementDate(
 	long tradeDate,
 	long settlementDays
@@ -25,13 +24,12 @@ extern "C" void EXPORT printSettlementDate(
 	cout << "Settlement Date: " << Date(tradeDate + settlementDays) << endl;
 }
 
-
 extern "C" double EXPORT ZeroBondTest(
-    long evaluationDate,             // 평가일 (serial number, 예: 46164)
-    long settlementDays,             // 결제일 offset (보통 2일)
-    long issueDate,                  // 발행일
-    long maturityDate,               // 만기일
-    double notional,                 // 채권 원금
+    long evaluationDate,            // 평가일 (serial number, 예: 46164)
+    long settlementDays,            // 결제일 offset (보통 2일)
+    long issueDate,                 // 발행일
+    long maturityDate,              // 만기일
+    double notional,                // 채권 원금
     double couponRate,              // 쿠폰 이율
     int couponDayCounter,           // DayCounter code (예: 5 = Actual/Actual(Bond))
     int numberOfCoupons,            // 쿠폰 개수
@@ -77,7 +75,8 @@ extern "C" double EXPORT ZeroBondTest(
     DayCounter girrDayCounter_ = Actual365Fixed();
     Linear girrInterpolator_ = Linear();
     Compounding girrCompounding_ = Compounding::Continuous;
-    Frequency girrFrequency_ = Frequency::Annual;
+    //Frequency girrFrequency_ = Frequency::Annual;
+    Frequency girrFrequency_ = Frequency::Semiannual;                               /* 수정 1) 쿠폰지급 주기에 맞춰 Annual -> Semiannual로 변경했으나 값 차이 없음 */
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
         girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
     RelinkableHandle<YieldTermStructure> girrCurve;
@@ -130,7 +129,7 @@ extern "C" double EXPORT ZeroBondTest(
     //    }
     Real npv = fixedRateBond.NPV();
     std::cout << "NPV: " << npv << std::endl;
-    Real girrBump = 0.0001;
+    Real girrBump = 0.01;                                                           /* 수정 2) girrBump 1bp -> 100bp로 조정 */
     std::vector<Real> disCountingGirr;
     for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
         std::vector<Rate> bumpGirrRates = girrRates_;

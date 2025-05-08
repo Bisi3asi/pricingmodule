@@ -45,7 +45,7 @@ int main() {
     const long revaluationDateSerial = 45657;   // 채권 평가 기준일 (serial number)
     const long settlementDays = 0;              // 결제일 offset 
     
-    const long couponCnt = 6;                   // 쿠폰 개수
+    const long couponCnt = 7;                   // 쿠폰 개수
     const double couponRate = 0.055;            // 채권 쿠폰 이율 
     const int couponDCB = 1;                    // 쿠폰 Day Count Basis (1 = Actual/Actual(Bond))
     const int businessDayConvention = 1;        // 영업일 조정 Convention (1 = Modified Following) 
@@ -61,7 +61,7 @@ int main() {
     //const long girrFrequency = 1;             // 빈도 (Annual)
     
     // const double spreadOverYield = 0.001389; // 채권의 종목 Credit Spread
-    const double spreadOverYield = 0.0;
+    const double spreadOverYield = 0.00;
     // const int spreadOverYieldCompounding = 1;// Credit Spread 이자 계산 방식 (Continuous)
     const int spreadOverYieldDCB = 3;           // Credit Spread Day Count Basis  (3 = Actual/365)
     

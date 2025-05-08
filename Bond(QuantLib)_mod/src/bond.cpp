@@ -218,7 +218,7 @@ extern "C" {
             fixedRateBond.setPricingEngine(bumpBondEngine);
             
             // bump 후 NPV - 원래 NPV = 금리 민감도 (delta)
-            Real tmpGirr = fixedRateBond.NPV() - npv;
+            Real tmpGirr = (fixedRateBond.NPV() - npv) / 0.0001;
             
             // delta 저장
             discountingGirr.emplace_back(tmpGirr);
@@ -261,7 +261,7 @@ extern "C" {
             fixedRateBond.setPricingEngine(bumpBondEngine);
             
 			// bump 후 NPV - 원래 NPV = spread 민감도 (delta)
-            Real tmpCsr = fixedRateBond.NPV() - npv;
+            Real tmpCsr = (fixedRateBond.NPV() - npv) / 0.0001;
             discountingCsr.emplace_back(tmpCsr);
             // cout << "Csr[" << bumpNum << "]:" << tmpCsr * 10000.0 << endl;
         }
