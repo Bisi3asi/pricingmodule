@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "src/fxForward.h"
+#include "src/bond.h"
 
 // 분기문 처리
 #ifdef _WIN32
@@ -12,90 +12,74 @@
 
 int main() {
     // 테스트 데이터 정의 (TradeInformation)
-    const long maturityDate = 45834;
-    const long revaluationDate = 45657;
-    const double exchangeRate = 1532.578;
+    const double notional = 3000000.0;
+    const long issueDateSerial = 45504;
+    const long maturityDateSerial = 46599;
+    const long revaluationDateSerial = 45657;
+    const double couponRate = 0.0550;
+    const int couponFrequencyMonth = 6;
+    const int couponDcb = 1; // Act/Act
+    const int businessDayConvention = 1; // Modified Following
+    const int periodEndDateConvention = 0; // Adjusted
+    const int accuralDcb = 3; // Act/365
+    
+    // 테스트 데이터 정의 (Curve)
+    const char dcCurveId[20] = "IRUSD-RFR";
+    const int dcCurveDataSize = 10;
+    const double dcCurveYearFrac[dcCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
+    const double dcCurveMarketData[dcCurveDataSize] = { 4.34026344, 5.52167219, 5.39846356, 4.03908251, 5.27258415, 5.24191116, 5.26506237, 4.05914923, 4.03457538, 3.77604176 };
 
-    const char buySideCurrency[4] = "EUR";
-    const double notionalForeign = 30000;
-    const unsigned short buySideDCB = 3;    // Act/365
-    const char buySideDcCurve[20] = "IREUR-CRS";
+    // TODO CRS, CSR 구현
+    //const char crsCurveId[]
 
-    const char sellSideCurrency[4] = "KRW";
-    const double notionalDomestic = 45273000;
-    const unsigned short sellSideDCB = 3;   // Act/365
-    const char sellSideDcCurve[20] = "IRKRW-CRS";
-
-    // 테스트 데이터 정의 (buy Curve)
-    const unsigned int buyCurveDataSize = 10;
-    const double buyCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
-    const double buyMarketData[buyCurveDataSize] = { 2.64438703, 2.38058648, 2.10763173, 1.97593133, 1.98563969, 2.07148214, 2.25037149, 2.36128877, 2.34768987, 2.2255283 };
-
-    // 테스트 데이터 정의 (sell Curve)
-    const unsigned int sellCurveDataSize = 10;
-    const double sellCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
-    const double sellMarketData[buyCurveDataSize] = { 2.9931427, 2.5760797, 2.3328592, 2.1926168, 2.1934282, 2.23125, 2.2380958, 2.115366, 2.0361275, 2.0361275 };
-
-    // 테스트 데이터 정의 (cal Type, logYn)
-	const unsigned short calType = 1; // 1: NetPV, 2: GIRR Sensitivity
-	const unsigned short logYn = 1; // 0: No, 1: Yes
+    // 테스트 데이터 정의 (logYn)
+	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
-    double resultNetPvFxSensitivity[2];
-	double resultGirrDelta[25];
+	//double resultGirrDelta[25];
 
-    pricing(
-         maturityDate
-        , revaluationDate
-        , exchangeRate
+    double result = pricing(
+        notional
+        , issueDateSerial
+        , maturityDateSerial
+        , revaluationDateSerial
+        , couponRate
+        , couponFrequencyMonth
+        , couponDcb
+        , businessDayConvention
+        , periodEndDateConvention
+        , accuralDcb
 
-        , buySideCurrency
-        , notionalForeign
-        , buySideDCB
-        , buySideDcCurve
-        
-        , buyCurveDataSize 
-        , buyCurveYearFrac
-        , buyMarketData
+        , dcCurveId
+        , dcCurveDataSize
+        , dcCurveYearFrac
+        , dcCurveMarketData
 
-        , sellSideCurrency
-        , notionalDomestic
-        , sellSideDCB
-        , sellSideDcCurve
-        
-        , sellCurveDataSize
-        , sellCurveYearFrac
-        , sellMarketData
-
-        , calType
         , logYn
-
-		, resultNetPvFxSensitivity
-        , resultGirrDelta
     );
 
     // 결과 출력
-    if (calType == 1) {
-        // Index 0: Net PV
-        std::cout << "Net PV(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[0] << std::endl;
-        std::cout << "Net PV(raw Double): " << resultNetPvFxSensitivity[0] << std::endl;
-        // Index 1: FX Sensitivity
-        std::cout << "FX Sensitivity(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[1] << std::endl;
-        std::cout << "FX Sensitivity(raw Double): " << resultNetPvFxSensitivity[1] << std::endl;
-    }
-    else if (calType == 2) {
-        // index 0 : size
-        std::cout << "GIRR Delta Size: " << static_cast<int>(resultGirrDelta[0]) << std::endl;
+    //if (calType == 1) {
+    //    // Index 0: Net PV
+    //    std::cout << "Net PV(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[0] << std::endl;
+    //    std::cout << "Net PV(raw Double): " << resultNetPvFxSensitivity[0] << std::endl;
+    //    // Index 1: FX Sensitivity
+    //    std::cout << "FX Sensitivity(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[1] << std::endl;
+    //    std::cout << "FX Sensitivity(raw Double): " << resultNetPvFxSensitivity[1] << std::endl;
+    //}
+    //else if (calType == 2) {
+    //    // index 0 : size
+    //    std::cout << "GIRR Delta Size: " << static_cast<int>(resultGirrDelta[0]) << std::endl;
 		
-        for (int i = 1; i < static_cast<int>(resultGirrDelta[0]) + 1; ++i) {
-	        // index 1 ~ size : GIRR Delta tenor
-	        std::cout <<  i << ". GIRR Delta tenor: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
-        }
-        for (int i = static_cast<int>(resultGirrDelta[0]) + 1; i < static_cast<int>(resultGirrDelta[0]) * 2 + 1; ++i) {
-            // size ~ end : GIRR Delta Sensitivity
-            std::cout <<  i - static_cast<int>(resultGirrDelta[0]) << ". GIRR Delta Sensitivity: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
-        }
-    }
+    //    for (int i = 1; i < static_cast<int>(resultGirrDelta[0]) + 1; ++i) {
+	   //     // index 1 ~ size : GIRR Delta tenor
+	   //     std::cout <<  i << ". GIRR Delta tenor: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
+    //    }
+    //    for (int i = static_cast<int>(resultGirrDelta[0]) + 1; i < static_cast<int>(resultGirrDelta[0]) * 2 + 1; ++i) {
+    //        // size ~ end : GIRR Delta Sensitivity
+    //        std::cout <<  i - static_cast<int>(resultGirrDelta[0]) << ". GIRR Delta Sensitivity: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
+    //    }
+    //}
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
     #ifdef _WIN32
