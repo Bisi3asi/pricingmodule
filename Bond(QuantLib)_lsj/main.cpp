@@ -13,14 +13,15 @@
 int main() {
     // 테스트 데이터 정의 (TradeInformation)
     const double notional = 3000000.0;
+    const double exchangeRate = 1.0;
     const long issueDateSerial = 45504;
     const long maturityDateSerial = 46599;
     const long revaluationDateSerial = 45657;
-    const double couponRate = 0.0550;
+    const double couponRate = 0.055;
     const int couponFrequencyMonth = 6;
     const int couponDcb = 1; // Act/Act
     const int businessDayConvention = 1; // Modified Following
-    const int periodEndDateConvention = 0; // Adjusted
+    const int periodEndDateConvention = 1; // Adjusted
     const int accuralDcb = 3; // Act/365
     
     // 테스트 데이터 정의 (Curve)
@@ -36,10 +37,11 @@ int main() {
 	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
-	//double resultGirrDelta[25];
+	double resultGirrDelta[25];
 
-    double result = pricing(
+    double netPV = pricing(
         notional
+        , exchangeRate
         , issueDateSerial
         , maturityDateSerial
         , revaluationDateSerial
@@ -56,18 +58,14 @@ int main() {
         , dcCurveMarketData
 
         , logYn
+
+        , resultGirrDelta
     );
 
     // 결과 출력
-    //if (calType == 1) {
-    //    // Index 0: Net PV
-    //    std::cout << "Net PV(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[0] << std::endl;
-    //    std::cout << "Net PV(raw Double): " << resultNetPvFxSensitivity[0] << std::endl;
-    //    // Index 1: FX Sensitivity
-    //    std::cout << "FX Sensitivity(소수점 고정): " << std::fixed << std::setprecision(10) << resultNetPvFxSensitivity[1] << std::endl;
-    //    std::cout << "FX Sensitivity(raw Double): " << resultNetPvFxSensitivity[1] << std::endl;
-    //}
-    //else if (calType == 2) {
+    // Return Value : Net PV
+    std::cout << "Net PV(소수점 고정): " << std::fixed << std::setprecision(10) << netPV << std::endl;
+    std::cout << "Net PV(raw Double): " << netPV << std::endl;
     //    // index 0 : size
     //    std::cout << "GIRR Delta Size: " << static_cast<int>(resultGirrDelta[0]) << std::endl;
 		
