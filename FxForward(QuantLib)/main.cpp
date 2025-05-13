@@ -12,8 +12,8 @@
 
 int main() {
     // 테스트 데이터 정의 (TradeInformation)
-    const long maturityDate = 45834;
-    const long revaluationDate = 45657;
+    const long maturityDateSerial = 45834;
+    const long revaluationDateSerial = 45657;
     const double exchangeRate = 1532.578;
 
     const char buySideCurrency[4] = "EUR";
@@ -45,8 +45,8 @@ int main() {
 	double resultGirrDelta[25];
 
     pricing(
-         maturityDate
-        , revaluationDate
+         maturityDateSerial
+        , revaluationDateSerial
         , exchangeRate
 
         , buySideCurrency

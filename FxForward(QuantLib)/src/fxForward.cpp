@@ -10,8 +10,8 @@ using namespace spdlog;
 extern "C" {
     void EXPORT_API pricing(
         // ===================================================================================================
-        long maturityDate                           // INPUT 1.  만기일 (Maturity Date) 
-        , long revaluationDate                      // INPUT 2.  평가일 (Revaluation Date)
+        long maturityDateSerial                     // INPUT 1.  만기일 (Maturity Date) 
+        , long revaluationDateSerial                // INPUT 2.  평가일 (Revaluation Date)
         , double exchangeRate                       // INPUT 3.  현물환율 (DOM / FOR)  (Exchange Rate)
 
         , const char* buySideCurrency               // INPUT 4.  매입 통화 (Buy Side Currency)
@@ -46,7 +46,7 @@ extern "C" {
             initLogger("fxForward.log"); // 생성 파일명 지정
             info("==============[fxForward Logging Started!]==============");
             printAllInputData( // Input 데이터 로깅
-                maturityDate, revaluationDate, exchangeRate,
+                maturityDateSerial, revaluationDateSerial, exchangeRate,
                 buySideCurrency, notionalForeign, buySideDCB, buySideDcCurve,
                 buyCurveDataSize, buyCurveYearFrac, buyMarketData,
                 sellSideCurrency, notionalDomestic, sellSideDCB, sellSideDcCurve,
@@ -70,11 +70,11 @@ extern "C" {
         // Day Counter 데이터 생성
         initDayCounters(dayCounters);
         // Trade inforamtion  데이터 생성
-        inputTradeInformation(maturityDate, revaluationDate, exchangeRate, tradeInfo);
+        inputTradeInformation(maturityDateSerial, revaluationDateSerial, exchangeRate, tradeInfo);
         // Buy Side CashFlow  데이터 생성
-        inputBuySideValuationCashFlow(buySideCurrency, notionalForeign, revaluationDate, maturityDate, buySideDCB, buySideDcCurve, bSideCashFlow, dayCounters);
+        inputBuySideValuationCashFlow(buySideCurrency, notionalForeign, revaluationDateSerial, maturityDateSerial, buySideDCB, buySideDcCurve, bSideCashFlow, dayCounters);
         // Sell side CashFlow 데이터 생성
-        inputSellSideValuationCashFlow(sellSideCurrency, notionalDomestic, revaluationDate, maturityDate, sellSideDCB, sellSideDcCurve, sSideCashFlow, dayCounters);
+        inputSellSideValuationCashFlow(sellSideCurrency, notionalDomestic, revaluationDateSerial, maturityDateSerial, sellSideDCB, sellSideDcCurve, sSideCashFlow, dayCounters);
         // GIRR curve         데이터 생성 및 GIRR Sensitiity 리턴 개수 정의
         girrDeltaRiskFactor(bSideCashFlow, sSideCashFlow, girrs, resultGirrDelta);
         // Curve              데이터 생성 

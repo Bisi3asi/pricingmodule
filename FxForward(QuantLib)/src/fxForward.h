@@ -39,8 +39,8 @@
 extern "C" {
     void EXPORT_API pricing(
         // ===================================================================================================
-        long maturityDate                           // INPUT 1.  만기일 (Maturity Date) 
-        , long revaluationDate                      // INPUT 2.  평가일 (Revaluation Date)
+        long maturityDateSerial                     // INPUT 1.  만기일 (Maturity Date) 
+        , long revaluationDateSerial                // INPUT 2.  평가일 (Revaluation Date)
         , double exchangeRate                       // INPUT 3.  현물환율 (DOM / FOR)  (Exchange Rate)
 
         , const char* buySideCurrency               // INPUT 4.  매입 통화 (Buy Side Currency)
