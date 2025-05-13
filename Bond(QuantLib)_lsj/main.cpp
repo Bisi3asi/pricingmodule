@@ -1,9 +1,9 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <iomanip>
 
 #include "src/bond.h"
 
-// ºĞ±â¹® Ã³¸®
+// ë¶„ê¸°ë¬¸ ì²˜ë¦¬
 #ifdef _WIN32
     #include <windows.h>
 #elif defined(__linux__) || defined(__unix__)
@@ -11,7 +11,7 @@
 #endif
 
 int main() {
-    // Å×½ºÆ® µ¥ÀÌÅÍ Á¤ÀÇ (TradeInformation)
+    // í…ŒìŠ¤íŠ¸ ë°ì´í„° ì •ì˜ (TradeInformation)
     const double notional = 3000000.0;
     const double exchangeRate = 1.0;
     const long issueDateSerial = 45504;
@@ -21,19 +21,19 @@ int main() {
     const int couponFrequencyMonth = 6;
     const int couponDcb = 1; // Act/Act
     const int businessDayConvention = 1; // Modified Following
-    const int periodEndDateConvention = 1; // Adjusted
+    const int periodEndDateConvention = 0; // Adjusted
     const int accuralDcb = 3; // Act/365
     
-    // Å×½ºÆ® µ¥ÀÌÅÍ Á¤ÀÇ (Curve)
+    // í…ŒìŠ¤íŠ¸ ë°ì´í„° ì •ì˜ (Curve)
     const char dcCurveId[20] = "IRUSD-RFR";
     const int dcCurveDataSize = 10;
     const double dcCurveYearFrac[dcCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
     const double dcCurveMarketData[dcCurveDataSize] = { 4.34026344, 5.52167219, 5.39846356, 4.03908251, 5.27258415, 5.24191116, 5.26506237, 4.05914923, 4.03457538, 3.77604176 };
 
-    // TODO CRS, CSR ±¸Çö
+    // TODO CRS, CSR êµ¬í˜„
     //const char crsCurveId[]
 
-    // Å×½ºÆ® µ¥ÀÌÅÍ Á¤ÀÇ (logYn)
+    // í…ŒìŠ¤íŠ¸ ë°ì´í„° ì •ì˜ (logYn)
 	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
@@ -62,24 +62,24 @@ int main() {
         , resultGirrDelta
     );
 
-    // °á°ú Ãâ·Â
+    // ê²°ê³¼ ì¶œë ¥
     // Return Value : Net PV
-    std::cout << "Net PV(¼Ò¼öÁ¡ °íÁ¤): " << std::fixed << std::setprecision(10) << netPV << std::endl;
+    std::cout << "Net PV(ì†Œìˆ˜ì  ê³ ì •): " << std::fixed << std::setprecision(10) << netPV << std::endl;
     std::cout << "Net PV(raw Double): " << netPV << std::endl;
-    //    // index 0 : size
-    //    std::cout << "GIRR Delta Size: " << static_cast<int>(resultGirrDelta[0]) << std::endl;
+        
+    // index 0 : size
+    std::cout << "GIRR Delta Size: " << static_cast<int>(resultGirrDelta[0]) << std::endl;
 		
-    //    for (int i = 1; i < static_cast<int>(resultGirrDelta[0]) + 1; ++i) {
-	   //     // index 1 ~ size : GIRR Delta tenor
-	   //     std::cout <<  i << ". GIRR Delta tenor: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
-    //    }
-    //    for (int i = static_cast<int>(resultGirrDelta[0]) + 1; i < static_cast<int>(resultGirrDelta[0]) * 2 + 1; ++i) {
-    //        // size ~ end : GIRR Delta Sensitivity
-    //        std::cout <<  i - static_cast<int>(resultGirrDelta[0]) << ". GIRR Delta Sensitivity: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
-    //    }
-    //}
+    for (int i = 1; i < static_cast<int>(resultGirrDelta[0]) + 1; ++i) {
+	    // index 1 ~ size : GIRR Delta tenor
+	    std::cout <<  i << ". GIRR Delta tenor: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
+    }
+    for (int i = static_cast<int>(resultGirrDelta[0]) + 1; i < static_cast<int>(resultGirrDelta[0]) * 2 + 1; ++i) {
+        // size ~ end : GIRR Delta Sensitivity
+        std::cout <<  i - static_cast<int>(resultGirrDelta[0]) << ". GIRR Delta Sensitivity: " << std::fixed << std::setprecision(2) << resultGirrDelta[i] << std::endl;
+    }
 
-    // È­¸é Á¾·á ¹æÁö (À©µµ¿ì¿Í ¸®´ª½º È£È¯)
+    // í™”ë©´ ì¢…ë£Œ ë°©ì§€ (ìœˆë„ìš°ì™€ ë¦¬ëˆ…ìŠ¤ í˜¸í™˜)
     #ifdef _WIN32
         system("pause");
     #else

@@ -1,10 +1,10 @@
-#include "logger.h"
+ï»¿#include "logger.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <filesystem>
 
-/* ÆÄÀÏ ·Î°Å¸¦ »ı¼ºÇÑ´Ù. */
+/* íŒŒì¼ ë¡œê±°ë¥¼ ìƒì„±í•œë‹¤. */
 void initLogger(const std::string& filename) {
     std::filesystem::create_directories("../logs");
 
