@@ -19,12 +19,12 @@ int main() {
     const char buySideCurrency[4] = "EUR";
     const double notionalForeign = 30000;
     const unsigned short buySideDCB = 3;    // Act/365
-    const char buySideDcCurve[20] = "IREUR-CRS";
+    const char buySideDcCurveId[20] = "IREUR-CRS";
 
     const char sellSideCurrency[4] = "KRW";
     const double notionalDomestic = 45273000;
     const unsigned short sellSideDCB = 3;   // Act/365
-    const char sellSideDcCurve[20] = "IRKRW-CRS";
+    const char sellSideDcCurveId[20] = "IRKRW-CRS";
 
     // 테스트 데이터 정의 (buy Curve)
     const unsigned int buyCurveDataSize = 10;
@@ -52,7 +52,7 @@ int main() {
         , buySideCurrency
         , notionalForeign
         , buySideDCB
-        , buySideDcCurve
+        , buySideDcCurveId
         
         , buyCurveDataSize 
         , buyCurveYearFrac
@@ -61,7 +61,7 @@ int main() {
         , sellSideCurrency
         , notionalDomestic
         , sellSideDCB
-        , sellSideDcCurve
+        , sellSideDcCurveId
         
         , sellCurveDataSize
         , sellCurveYearFrac

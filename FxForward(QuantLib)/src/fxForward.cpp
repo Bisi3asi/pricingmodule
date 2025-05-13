@@ -17,7 +17,7 @@ extern "C" {
         , const char* buySideCurrency               // INPUT 4.  매입 통화 (Buy Side Currency)
         , double notionalForeign                    // INPUT 5.  매입 외화기준 명목금액 (NotionalF)
         , unsigned short buySideDCB                 // INPUT 6.  매입 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        , const char* buySideDcCurve                // INPUT 7.  매입 기준 할인 커브 (Buy Side Discount Curve)
+        , const char* buySideDcCurveId                // INPUT 7.  매입 기준 할인 커브 (Buy Side Discount Curve)
 
         , unsigned int buyCurveDataSize             // INPUT 8.  매입 커브 데이터 사이즈
         , const double* buyCurveYearFrac            // INPUT 9.  매입 커브 만기 기간 (Buy Curve Term)  
@@ -26,7 +26,7 @@ extern "C" {
         , const char* sellSideCurrency              // INPUT 11. 매도 통화 (sell Side Currency)
         , double notionalDomestic                   // INPUT 12. 매도 원화기준 명목금액 (NotionalD)
         , unsigned short sellSideDCB                // INPUT 13. 매도 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        , const char* sellSideDcCurve               // INPUT 14. 매도 기준 할인 커브 (Buy Side Discount Curve)
+        , const char* sellSideDcCurveId               // INPUT 14. 매도 기준 할인 커브 (Buy Side Discount Curve)
 
         , unsigned int sellCurveDataSize            // INPUT 15. 매도 커브 데이터 사이즈
         , const double* sellCurveYearFrac		    // INPUT 16. 매도 커브 만기 기간 (Sell Curve Term)     
@@ -47,9 +47,9 @@ extern "C" {
             info("==============[fxForward Logging Started!]==============");
             printAllInputData( // Input 데이터 로깅
                 maturityDateSerial, revaluationDateSerial, exchangeRate,
-                buySideCurrency, notionalForeign, buySideDCB, buySideDcCurve,
+                buySideCurrency, notionalForeign, buySideDCB, buySideDcCurveId,
                 buyCurveDataSize, buyCurveYearFrac, buyMarketData,
-                sellSideCurrency, notionalDomestic, sellSideDCB, sellSideDcCurve,
+                sellSideCurrency, notionalDomestic, sellSideDCB, sellSideDcCurveId,
                 sellCurveDataSize, sellCurveYearFrac, sellMarketData,
                 calType, logYn
             );
@@ -72,13 +72,13 @@ extern "C" {
         // Trade inforamtion  데이터 생성
         inputTradeInformation(maturityDateSerial, revaluationDateSerial, exchangeRate, tradeInfo);
         // Buy Side CashFlow  데이터 생성
-        inputBuySideValuationCashFlow(buySideCurrency, notionalForeign, revaluationDateSerial, maturityDateSerial, buySideDCB, buySideDcCurve, bSideCashFlow, dayCounters);
+        inputBuySideValuationCashFlow(buySideCurrency, notionalForeign, revaluationDateSerial, maturityDateSerial, buySideDCB, buySideDcCurveId, bSideCashFlow, dayCounters);
         // Sell side CashFlow 데이터 생성
-        inputSellSideValuationCashFlow(sellSideCurrency, notionalDomestic, revaluationDateSerial, maturityDateSerial, sellSideDCB, sellSideDcCurve, sSideCashFlow, dayCounters);
+        inputSellSideValuationCashFlow(sellSideCurrency, notionalDomestic, revaluationDateSerial, maturityDateSerial, sellSideDCB, sellSideDcCurveId, sSideCashFlow, dayCounters);
         // GIRR curve         데이터 생성 및 GIRR Sensitiity 리턴 개수 정의
         girrDeltaRiskFactor(bSideCashFlow, sSideCashFlow, girrs, resultGirrDelta);
         // Curve              데이터 생성 
-        inputCurveData(buyCurveDataSize, buySideDcCurve, buyCurveYearFrac, buyMarketData, sellCurveDataSize, sellSideDcCurve, sellCurveYearFrac, sellMarketData, curves);
+        inputCurveData(buyCurveDataSize, buySideDcCurveId, buyCurveYearFrac, buyMarketData, sellCurveDataSize, sellSideDcCurveId, sellCurveYearFrac, sellMarketData, curves);
 
         if (calType != 1 && calType != 2) {
             error("[pricing] Unknown calType");
@@ -97,7 +97,7 @@ extern "C" {
                 auto& girr = girrs[i];
 
                 // GIRR Delta 산출 간 커브 데이터 초기화 (커브 MarKet Data Value 변경하며 Delta 산출)
-                inputCurveData(buyCurveDataSize, buySideDcCurve, buyCurveYearFrac, buyMarketData, sellCurveDataSize, sellSideDcCurve, sellCurveYearFrac, sellMarketData, curves);
+                inputCurveData(buyCurveDataSize, buySideDcCurveId, buyCurveYearFrac, buyMarketData, sellCurveDataSize, sellSideDcCurveId, sellCurveYearFrac, sellMarketData, curves);
 
                 // GIRR Delta Sensitivity 산출
                 processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultGirrDelta, resultNetPvFxSensitivity);
