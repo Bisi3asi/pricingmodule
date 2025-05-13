@@ -22,7 +22,7 @@ int main() {
     const int couponDcb = 1; // Act/Act
     const int businessDayConvention = 1; // Modified Following
     const int periodEndDateConvention = 0; // Adjusted
-    const int accuralDcb = 3; // Act/365
+    const int accrualDcb = 3; // Act/365
     
     // 테스트 데이터 정의 (Curve)
     const char dcCurveId[20] = "IRUSD-RFR";
@@ -48,9 +48,9 @@ int main() {
         , couponRate
         , couponFrequencyMonth
         , couponDcb
+		, accrualDcb
         , businessDayConvention
         , periodEndDateConvention
-        , accuralDcb
 
         , dcCurveId
         , dcCurveDataSize

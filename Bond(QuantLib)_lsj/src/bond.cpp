@@ -18,7 +18,7 @@ extern "C" {
         , double couponRate                         // INPUT 6.  쿠폰 금리
         , int couponFrequencyMonth                  // INPUT 7.  쿠폰 지급 주기 (month)
         , int couponDcb                             // INPUT 8.  쿠폰 지급일자 산출간 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        , int accuralDcb                            // INPUT 9.  쿠폰 가격 산출간 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        , int accrualDcb                            // INPUT 9.  쿠폰 가격 산출간 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
         , int businessDayConvention                 // INPUT 10.  영업일 계산방법 [Following = 0, Modified Following = 1, Preceding = 2, Modified Preceding = 3]
         , int periodEndDateConvention               // INPUT 11.  기간 월말 계산방법 [Adjusted = 0, UnAdjusted = 1]
 
@@ -39,13 +39,13 @@ extern "C" {
         // , double* resultCsrDelta                         // OUTPUT 3. 결과값 ([index 0] array size, [index 1 ~ size] Girr Delta tenor, [size + 1 ~ end] Girr Delta Sensitivity)
 ) {
 
-        /* 로거 초기화 */
+        /* 0. 로거 초기화 */
         // 디버그용 메소드는 아래 for debug 메소드를 참고
         if (logYn == 1) initLogger("bond.log"); // 생성 파일명 지정
 
         info("==============[bond Logging Started!]==============");
         // Input 데이터 로깅
-        printAllInputData(notional, exchangeRate, issueDateSerial, maturityDateSerial, revaluationDateSerial, couponRate, couponFrequencyMonth, couponDcb, accuralDcb, businessDayConvention, periodEndDateConvention, dcCurveId, dcCurveDataSize, dcCurveYearFrac, dcCurveMarketData);
+        printAllInputData(notional, exchangeRate, issueDateSerial, maturityDateSerial, revaluationDateSerial, couponRate, couponFrequencyMonth, couponDcb, accrualDcb, businessDayConvention, periodEndDateConvention, dcCurveId, dcCurveDataSize, dcCurveYearFrac, dcCurveMarketData);
 
         TradeInformation tradeInfo{}; // 기본 상품 정보
         vector<CouponCashflow> cashflows{}; // 쿠폰 현금흐름
@@ -71,7 +71,7 @@ extern "C" {
         initDayConventions(dayConventions);
 
         // Trade inforamtion 데이터 생성
-        inputTradeInformation(notional, exchangeRate, issueDateSerial, maturityDateSerial, revaluationDateSerial, couponRate, couponFrequencyMonth, couponDcb, accuralDcb, businessDayConvention, periodEndDateConvention, dcCurveId, /* crsCurveId, */ tradeInfo, dayCounters, dayConventions);
+        inputTradeInformation(notional, exchangeRate, issueDateSerial, maturityDateSerial, revaluationDateSerial, couponRate, couponFrequencyMonth, couponDcb, accrualDcb, businessDayConvention, periodEndDateConvention, dcCurveId, /* crsCurveId, */ tradeInfo, dayCounters, dayConventions);
         // Coupon CashFlow 데이터 생성
         inputCouponCashFlow(tradeInfo, cashflows);
         // GIRR curve 데이터 생성(Curve Id, Tenor), GIRR Sensitiity 리턴 개수 정의
@@ -103,9 +103,11 @@ extern "C" {
             //resultCsrDelta[i + 1 + csrs.size()] = roundToDecimals(csr.sensitivity, 10); // CSR Delta의 Sensitivity (index size + 1 ~ end) (소수점 열째자리까지 반올림)
         }
         
-        // Output 데이터 로깅
-		printAllData(tradeInfo, cashflows, curves, girrs); // 모든 Struct 출력
-		printAllOutputData(netPV, resultGirrDelta /* ,resultCsrDelta */); // 모든 결과값 출력
+        /* Output 데이터 로깅 */
+        // 모든 Struct 출력
+		printAllData(tradeInfo, cashflows, curves, girrs); 
+        // 모든 결과값 출력
+		printAllOutputData(netPV, resultGirrDelta /* ,resultCsrDelta */); 
         info("==============[bond Logging Ended!]==============");
 
         return netPV;
@@ -147,7 +149,7 @@ void initDayConventions(vector<BusinessDayConvention>& dayConventions) {
 // 거래정보 입력
 void inputTradeInformation(
     const long notional, const long exchangeRate, const long issueDateSerial, const long maturityDateSerial, const long revaluationDateSerial,
-    const double couponRate, const double couponFrequencyMonth, const int couponDcb, const int accuralDcb, const int businessDayConvention, const int periodEndDateConvention,
+    const double couponRate, const double couponFrequencyMonth, const int couponDcb, const int accrualDcb, const int businessDayConvention, const int periodEndDateConvention,
     const char* dcCurveId, /* const char* crsCurveId, */
     TradeInformation& tradeInfo, /* vector<Frequency> frequencies, */ 
     const vector<DayCounter>& dayCounters, const vector<BusinessDayConvention>& dayConventions
@@ -163,7 +165,7 @@ void inputTradeInformation(
     //tradeInfo.couponFrequency = getFrequencyByMonth(couponFrequencyMonth, frequencies); // 쿠폰 지급주기
     tradeInfo.couponFrequencyMonth = couponFrequencyMonth; // 쿠폰 지급주기
     tradeInfo.couponDcb = getDayConterByCode(couponDcb, dayCounters); // 쿠폰 지급일자 Day Count Basis
-    tradeInfo.accuralDcb = getDayConterByCode(accuralDcb, dayCounters); // 쿠폰 지급일자 Day Count Basis
+    tradeInfo.accrualDcb = getDayConterByCode(accrualDcb, dayCounters); // 쿠폰 지급일자 Day Count Basis
     tradeInfo.dayConvention = getDayConventionByCode(businessDayConvention, dayConventions);
     tradeInfo.periodEndDateConvention = periodEndDateConvention;
     
@@ -202,7 +204,7 @@ void inputCouponCashFlow(const TradeInformation& tradeInfo, vector<CouponCashflo
             cashflow.coupon = tradeInfo.notional * tradeInfo.couponRate * tradeInfo.couponDcb.yearFraction(startDate, endDate); // 지급금액
             
             // 평가 기준일자 이전의 기지급된 현금흐름은 계산하지 않음
-            cashflow.yearFrac = (paymentDate < tradeInfo.revaluationDate) ? 0.0 : tradeInfo.accuralDcb.yearFraction(tradeInfo.revaluationDate, paymentDate); // 연도분수
+            cashflow.yearFrac = (paymentDate < tradeInfo.revaluationDate) ? 0.0 : tradeInfo.accrualDcb.yearFraction(tradeInfo.revaluationDate, paymentDate); // 연도분수
 
             // cashflow vector에 현금흐름 추가
             cashflows.push_back(cashflow);
@@ -476,7 +478,7 @@ void printAllInputData(
     , const double couponRate
     , const int couponFrequencyMonth
     , const int couponDcb
-    , const int accuralDcb
+    , const int accrualDcb
     , const int businessDayConvention
     , const int periodEndDateConvention
 
@@ -496,7 +498,7 @@ void printAllInputData(
     info("couponRate : {:0.4f}", couponRate);
     info("couponFrequencyMonth : {}", couponFrequencyMonth);
     info("couponDcb : {}", couponDcb);
-    info("accuralDcb : {}", accuralDcb);
+    info("accrualDcb : {}", accrualDcb);
     info("businessDayConvention : {}", businessDayConvention);
     info("periodEndDateConvention : {}", periodEndDateConvention);
     info("");
@@ -553,7 +555,7 @@ void printAllData(const TradeInformation& tradeInfo) {
     info("Coupon Rate: {:0.4f}", tradeInfo.couponRate);
     info("Coupon Frequency Month: {}", static_cast<int>(tradeInfo.couponFrequencyMonth));
     info("Coupon DCB: {}", tradeInfo.couponDcb.name());
-    info("Accrual DCB: {}", tradeInfo.accuralDcb.name());
+    info("Accrual DCB: {}", tradeInfo.accrualDcb.name());
     info("Day Convention: {}", static_cast<int>(tradeInfo.dayConvention));
     info("Period End Convention: {}", tradeInfo.periodEndDateConvention == 0 ? "Adjusted" : "UnAdjusted");
     info("Discount Curve ID: {}", tradeInfo.dcCurveId);

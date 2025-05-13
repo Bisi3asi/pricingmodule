@@ -48,7 +48,7 @@ extern "C" {
         , double couponRate                         // INPUT 6.  쿠폰 금리
         , int couponFrequencyMonth                  // INPUT 7.  쿠폰 지급 주기 (month)
         , int couponDcb                             // INPUT 8.  쿠폰 지급일자 산출간 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        , int accuralDcb                            // INPUT 9.  쿠폰 가격 산출간 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        , int accrualDcb                            // INPUT 9.  쿠폰 가격 산출간 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
         , int businessDayConvention                 // INPUT 10.  영업일 계산방법 [Following = 0, Modified Following = 1, Preceding = 2, Modified Preceding = 3]
         , int periodEndDateConvention               // INPUT 11.  기간 월말 계산방법 [Adjusted = 0, UnAdjusted = 1]
 
@@ -82,7 +82,7 @@ struct TradeInformation {
     int couponFrequencyMonth;
     // QuantLib::Frequency couponFrequency;
     QuantLib::DayCounter couponDcb;
-    QuantLib::DayCounter accuralDcb;
+    QuantLib::DayCounter accrualDcb;
     QuantLib::BusinessDayConvention dayConvention;
     int periodEndDateConvention;
     char dcCurveId[20];
@@ -129,7 +129,7 @@ void initDayCounters(std::vector<QuantLib::DayCounter>& dayCounters);
 
 void initDayConventions(std::vector<QuantLib::BusinessDayConvention>& dayConventions);
 
-void inputTradeInformation(const long notional, const long exchangeRate, const long issueDateSerial, const long maturityDateSerial, const long revaluationDateSerial, const double couponRate, const double couponFrequencyMonth, const int couponDcb, const int accuralDcb, const int businessDayConvention, const int periodEndDateConvention, const char* dcCurveId, /* const char* crsCurveId, */ TradeInformation& tradeInfo, /* std::vector<QuantLib::Frequency> frequencies, */ const std::vector<QuantLib::DayCounter>& dayCounters, const std::vector<QuantLib::BusinessDayConvention>& dayConventions);
+void inputTradeInformation(const long notional, const long exchangeRate, const long issueDateSerial, const long maturityDateSerial, const long revaluationDateSerial, const double couponRate, const double couponFrequencyMonth, const int couponDcb, const int accrualDcb, const int businessDayConvention, const int periodEndDateConvention, const char* dcCurveId, /* const char* crsCurveId, */ TradeInformation& tradeInfo, /* std::vector<QuantLib::Frequency> frequencies, */ const std::vector<QuantLib::DayCounter>& dayCounters, const std::vector<QuantLib::BusinessDayConvention>& dayConventions);
 
 void inputCouponCashFlow(const TradeInformation& tradeInfo, std::vector<CouponCashflow>& cashflows);
 
@@ -166,7 +166,7 @@ double roundToDecimals(const double value, const int n);
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
 
-void printAllInputData(const double notional, const double exchangeRate, const long issueDateSerial, const long maturityDateSerial, const long revaluationDateSerial, const double couponRate, const int couponFrequencyMonth, const int couponDcb, const int accuralDcb, const int businessDayConvention, const int periodEndDateConvention, const char* dcCurveId, const int dcCurveDataSize, const double* dcCurveYearFrac, const double* dcCurveMarketData);
+void printAllInputData(const double notional, const double exchangeRate, const long issueDateSerial, const long maturityDateSerial, const long revaluationDateSerial, const double couponRate, const int couponFrequencyMonth, const int couponDcb, const int accrualDcb, const int businessDayConvention, const int periodEndDateConvention, const char* dcCurveId, const int dcCurveDataSize, const double* dcCurveYearFrac, const double* dcCurveMarketData);
 
 void printAllOutputData(const double netPV, const double* resultGirrDelta);
 
