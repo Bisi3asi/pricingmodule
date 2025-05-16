@@ -1,0 +1,83 @@
+{
+	"_comment": "ex)FRB_REL@45657,0,44175,47827,6000000000.0,0.015,5,12,45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644|47827,45636|45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644,45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644|47827,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0337|0.0317|0.0285|0.0272|0.0269|0.0271|0.0278|0.0272|0.0254|0.0222,1,1,1,1,0.001389,1,1,5,183|365|1095|1825|3650,0.0|0.0|0.0|0.0005|0.001,1@1",
+ 	"name" : "bond",
+	"product": "FRB_REL",
+	"inputArguments":[
+			{ "field": "evaluationDate", "type": "long" },  
+		  	{ "field": "settlementDays", "type": "long" },
+		  	{ "field": "issueDate", "type": "long" },
+		  	{ "field": "maturityDate", "type": "long" },
+		  	{ "field": "notional", "type": "double" },
+		  	{ "field": "couponRate", "type": "double" },
+		  	{ "field": "couponDayCounter", "type": "int" },
+		  	{ "field": "numberOfCoupons", "type": "int" },
+		  	{ "field": "paymentDates", "type": "long_ptr" },
+		  	{ "field": "realStartDates", "type": "long_ptr" },
+		  	{ "field": "realEndDates", "type": "long_ptr" },
+			{ "field": "numberOfGirrTenors", "type": "int" },
+		  	{ "field": "girrTenorDays",	"type": "long_ptr" },
+		  	{ "field": "girrRates",	"type": "double_ptr" },
+		  	{ "field": "girrDayCounter", "type": "int" },
+		  	{ "field": "girrInterpolator", "type": "int" },
+		  	{ "field": "girrCompounding", "type": "int" },
+		  	{ "field": "girrFrequency", "type": "int" },
+		  	{ "field": "spreadOverYield", "type": "double" },
+			{ "field": "spreadOverYieldCompounding", "type": "int" },
+			{ "field": "spreadOverYieldDayCounter",	"type": "int" },
+			{ "field": "numberOfCsrTenors",	"type": "int" },
+			{ "field": "csrTenorDays", "type": "long_ptr" },
+			{ "field": "csrRates", "type": "double_ptr" },
+			{ "field": "logYn", "type": "int"}
+		],
+
+	"functions":[
+		{ 
+		  "name": "pricing", 
+		  "parameters": [
+			{ "field": "evaluationDate" },  
+		  	{ "field": "settlementDays" },
+		  	{ "field": "issueDate" },
+		  	{ "field": "maturityDate" },
+		  	{ "field": "notional" },
+		  	{ "field": "couponRate" },
+		  	{ "field": "couponDayCounter" },
+		  	{ "field": "numberOfCoupons" },
+		  	{ "field": "paymentDates" },
+		  	{ "field": "realStartDates" },
+		  	{ "field": "realEndDates" },
+			{ "field": "numberOfGirrTenors" },
+		  	{ "field": "girrTenorDays" },
+		  	{ "field": "girrRates" },
+		  	{ "field": "girrDayCounter" },
+		  	{ "field": "girrInterpolator" },
+		  	{ "field": "girrCompounding" },
+		  	{ "field": "girrFrequency" },
+		  	{ "field": "spreadOverYield" },
+			{ "field": "spreadOverYieldCompounding" },
+			{ "field": "spreadOverYieldDayCounter" },
+			{ "field": "numberOfCsrTenors" },
+			{ "field": "csrTenorDays" },
+			{ "field": "csrRates" },
+			{ "field": "logYn" },
+			{ "field": "resultGirrDelta", "type": "double_ptr", "size": "21" },
+			{ "field": "resultCsrDelta", "type": "double_ptr", "size": "21" }
+		], 
+		  "returnType": "double"
+		}
+	],
+	"results" : {
+		"price": {
+			"callFunction": "pricing", "returnVariable": "%return%"
+		},
+		"delta": {
+			"callFunction": "pricing", "returnVariable": "%resultGirrDelta%", "variableIndex": 0
+		},
+		"gamma": {
+			"callFunction": "pricing", "returnVariable": "%resultCsrDelta%", "variableIndex": 0
+		},
+		"vega": {},
+		"theta": {},
+		"rho": {},
+		"cross": {}
+	}
+}
