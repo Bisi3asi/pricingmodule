@@ -1,9 +1,9 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <iomanip>
 
 #include "src/bond.h"
 
-// ºĞ±â¹® Ã³¸®
+// ë¶„ê¸°ë¬¸ ì²˜ë¦¬
 #ifdef _WIN32
 #include <windows.h>
 #elif defined(__linux__) || defined(__unix__)
@@ -11,8 +11,8 @@
 #endif
 
 int main() {
-    // QuantLib ¶óÀÌºê·¯¸® »ç¿ë ¿¹Á¦
-    /* ºÎ»çÀå´Ô Algo Bond ÀÔ¼ö µ¥ÀÌÅÍ */
+    // QuantLib ë¼ì´ë¸ŒëŸ¬ë¦¬ ì‚¬ìš© ì˜ˆì œ
+    /* ë¶€ì‚¬ì¥ë‹˜ Algo Bond ì…ìˆ˜ ë°ì´í„° */
     const long evaluationDate = 45657;          // 2024-12-31
     const long settlementDays = 0;
     const long issueDate = 44175;
@@ -25,7 +25,7 @@ int main() {
     const long realStartDates[] = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
     const long realEndDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
     const long numberOfGirrTenors = 10;
-    const long girrDates[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
+    const long girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
     const long girrDayCounter = 1; // Actual/365
     const long girrInterpolator = 1; // Linear
@@ -35,10 +35,10 @@ int main() {
     const int spreadOverYieldCompounding = 1; // Continuous
     const int spreadOverYieldDayCounter = 1; // Actual/365
     const long numberOfCsrTenors = 5;
-    const long csrDates[] = { 183, 365, 1095, 1825, 3650 };
+    const long csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
     const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
 
-    /* Å×½ºÆ® µ¥ÀÌÅÍ */
+    /* í…ŒìŠ¤íŠ¸ ë°ì´í„° */
     /*
     const long evaluationDate = 45657;          // 2024-12-31
     const long settlementDays = 0;              // 0
@@ -46,7 +46,7 @@ int main() {
     const long maturityDate = 46599;            // 2027-07-31
     const double notional = 3000000.0;          
     const double couponRate = 0.055;
-    const int couponDayCounter = 7; // 30U/360 BASIS (¹Ì±¸Çö, bond.cpp¿¡¼­ º¯°æ)
+    const int couponDayCounter = 7; // 30U/360 BASIS (ë¯¸êµ¬í˜„, bond.cppì—ì„œ ë³€ê²½)
     const long numberOfCpnSch = 6;
     const long paymentDates[] = { 45688, 45869, 46052, 46234, 46416, 46598 };
     const long realStartDates[] = { 45504, 45688, 45869, 46052, 46234, 46416 };
@@ -54,21 +54,25 @@ int main() {
     const long numberOfGirrTenors = 10;
     const long girrDates[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double girrRates[] = { 0.0434026344, 0.042590633, 0.041358547, 0.040390825, 0.040099753, 0.039793023, 0.040024535, 0.040591492, 0.040345754, 0.037760418 };
-    const long girrDayCounter = 1; // Actual/365 (¹Ì±¸Çö, bond.cpp¿¡¼­ º¯°æ)
-    const long girrInterpolator = 1; // Linear, ¿Ü»ğ Çã¿ë
-    const long girrCompounding = 1; // Continuous (¹Ì±¸Çö, bond.cpp¿¡¼­ º¯°æ)
-    const long girrFrequency = 1; // Annual (¹Ì±¸Çö, bond.cpp¿¡¼­ º¯°æ)
+    const long girrDayCounter = 1; // Actual/365 (ë¯¸êµ¬í˜„, bond.cppì—ì„œ ë³€ê²½)
+    const long girrInterpolator = 1; // Linear, ì™¸ì‚½ í—ˆìš©
+    const long girrCompounding = 1; // Continuous (ë¯¸êµ¬í˜„, bond.cppì—ì„œ ë³€ê²½)
+    const long girrFrequency = 1; // Annual (ë¯¸êµ¬í˜„, bond.cppì—ì„œ ë³€ê²½)
     
     const double spreadOverYield = 0.0;
-    const int spreadOverYieldCompounding = 1; // Continuous (¹Ì±¸Çö, bond.cpp¿¡¼­ º¯°æ)
-    const int spreadOverYieldDayCounter = 1; // Actual/365 (¹Ì±¸Çö, bond.cpp¿¡¼­ º¯°æ)
+    const int spreadOverYieldCompounding = 1; // Continuous (ë¯¸êµ¬í˜„, bond.cppì—ì„œ ë³€ê²½)
+    const int spreadOverYieldDayCounter = 1; // Actual/365 (ë¯¸êµ¬í˜„, bond.cppì—ì„œ ë³€ê²½)
     const long numberOfCsrTenors = 5; 
     const long csrDates[] = { 183, 365, 1095, 1825, 3650 };
     const double csrRates[] = { 0.012626089, 0.012626089, 0.012626089, 0.012626089, 0.012626089 };
     */
+    
+    const int logYn = 1;
 
-    //printSettlementDate(date, settlementDays);
-    ZeroBondTest(
+    double resultGirrDelta[21] = { 0 };
+    double resultCsrDelta[21] = { 0 };
+
+    double resultNetPV = pricing(
         evaluationDate,
         settlementDays,
         issueDate,
@@ -81,7 +85,7 @@ int main() {
         realStartDates,
         realEndDates,
         numberOfGirrTenors,
-        girrDates,
+        girrTenorDays,
         girrRates,
         girrDayCounter,
         girrInterpolator,
@@ -91,12 +95,45 @@ int main() {
         spreadOverYieldCompounding,
         spreadOverYieldDayCounter,
         numberOfCsrTenors,
-        csrDates,
-        csrRates
+        csrTenorDays,
+        csrRates,
+        
+        logYn,
+
+        resultGirrDelta,
+        resultCsrDelta
     );
 
-    // È­¸é Á¾·á ¹æÁö (À©µµ¿ì¿Í ¸®´ª½º È£È¯)
+	// OUTPUT1. Net PV
+	std::cout << "Net PV: " << std::setprecision(20 ) << resultNetPV << std::endl;
+	
+	// OUTPUT2. GIRR Delta
+    int girrSize = static_cast<int>(resultGirrDelta[0]);
+    std::cout << "0. size : " << girrSize << std::endl;     // index 0: size
+    for (int i = 0; i < girrSize; ++i) {
+        std::cout << (i + 1) << ". tenorDay : " << resultGirrDelta[i + 1] << std::endl; // index 1 ~ size: tenorDay
+    }
+    for (int i = 0; i < girrSize; ++i) {
+        std::cout << (i + 1 + girrSize) << ". GIRR Delta : " << std::setprecision(20) << resultGirrDelta[i + 1 + girrSize] << std::endl; // index size + 1 ~ 2 * size: GIRR Delta
+    }
+    for (int i = girrSize * 2 + 1; i < 21; ++i) {
+        std::cout << i << ". Empty : " << resultGirrDelta[i] << std::endl; // Empty
+    }
 
+	// OUTPUT3. CSR Delta
+    int csrSize = static_cast<int>(resultCsrDelta[0]);
+    std::cout << "0. size : " << csrSize << std::endl;     // index 0: size
+    for (int i = 0; i < csrSize; ++i) {
+        std::cout << (i + 1) << ". tenorDay : " << resultCsrDelta[i + 1] << std::endl; // index 1 ~ size: tenorDay
+    }
+    for (int i = 0; i < csrSize; ++i) {
+        std::cout << (i + 1 + csrSize) << ". CSR Delta : " << std::setprecision(20) << resultCsrDelta[i + 1 + csrSize] << std::endl; // index size + 1 ~ 2 * size: CSR Delta
+    }
+	for (int i = csrSize * 2 + 1; i < 21; ++i) {
+		std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
+	}
+
+    // í™”ë©´ ì¢…ë£Œ ë°©ì§€ (ìœˆë„ìš°ì™€ ë¦¬ëˆ…ìŠ¤ í˜¸í™˜)
     #ifdef _WIN32
     system("pause");
     #else

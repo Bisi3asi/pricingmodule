@@ -1,56 +1,79 @@
-#include <iostream>
+ï»¿#include "bond.h"
+#include "logger.h"
 
-#include "ql/time/calendars/southkorea.hpp"
-#include "ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp"
-#include "ql/termstructures/yield/zerocurve.hpp"
-#include "ql/quotes/simplequote.hpp"
-#include "ql/pricingengines/bond/discountingbondengine.hpp"
-#include "ql/instruments/bonds/zerocouponbond.hpp"
-#include "ql/instruments/bonds/fixedratebond.hpp"
-#include "ql/time/schedule.hpp"
-#include "ql/time/daycounters/actualactual.hpp"
-
-#include "bond.h"
+#include <spdlog/spdlog.h>
 
 // namespace
 using namespace QuantLib;
 using namespace std;
+using namespace spdlog;
 
-extern "C" void EXPORT printSettlementDate(
-	long tradeDate,
-	long settlementDays
-) {
-	// space where to create business logic using QuantLib
-	cout << "Settlement Date: " << Date(tradeDate + settlementDays) << endl;
-}
-
-extern "C" double EXPORT ZeroBondTest(
-    long evaluationDate,            // Æò°¡ÀÏ (serial number, ¿¹: 46164)
-    long settlementDays,            // °áÁ¦ÀÏ offset (º¸Åë 2ÀÏ)
-    long issueDate,                 // ¹ßÇàÀÏ
-    long maturityDate,              // ¸¸±âÀÏ
-    double notional,                // Ã¤±Ç ¿ø±İ
-    double couponRate,              // ÄíÆù ÀÌÀ²
-    int couponDayCounter,           // DayCounter code (¿¹: 5 = Actual/Actual(Bond))
-    int numberOfCoupons,            // ÄíÆù °³¼ö
-    const long* paymentDates,       // Áö±ŞÀÏ ¹è¿­
-    const long* realStartDates,     // °¢ ±¸°£ ½ÃÀÛÀÏ
-    const long* realEndDates,       // °¢ ±¸°£ Á¾·áÀÏ
-    int numberOfGirrTenors,         // GIRR ¸¸±â ¼ö
-    const long* girrTenorDays,      // GIRR ¸¸±â (startDate·ÎºÎÅÍÀÇ ÀÏ¼ö)
-    const double* girrRates,        // GIRR ±İ¸®
-    int girrDayCounter,             // GIRR DayCounter (¿¹: 1 = Actual/365)
-    int girrInterpolator,           // º¸°£¹ı (¿¹: 1 = Linear)
-    int girrCompounding,            // ÀÌÀÚ °è»ê ¹æ½Ä (¿¹: 1 = Continuous)
-    int girrFrequency,              // ÀÌÀÚ ºóµµ (¿¹: 1 = Annual)
-    double spreadOverYield,         // Ã¤±ÇÀÇ Á¾¸ñ Credit Spread
+extern "C" double EXPORT pricing(
+    long evaluationDate,            // í‰ê°€ì¼ (serial number, ì˜ˆ: 46164)
+    long settlementDays,            // ê²°ì œì¼ offset (ë³´í†µ 2ì¼)
+    long issueDate,                 // ë°œí–‰ì¼
+    long maturityDate,              // ë§Œê¸°ì¼
+    double notional,                // ì±„ê¶Œ ì›ê¸ˆ
+    double couponRate,              // ì¿ í° ì´ìœ¨
+    int couponDayCounter,           // DayCounter code (ì˜ˆ: 5 = Actual/Actual(Bond))
+    int numberOfCoupons,            // ì¿ í° ê°œìˆ˜
+    const long* paymentDates,       // ì§€ê¸‰ì¼ ë°°ì—´
+    const long* realStartDates,     // ê° êµ¬ê°„ ì‹œì‘ì¼
+    const long* realEndDates,       // ê° êµ¬ê°„ ì¢…ë£Œì¼
+    int numberOfGirrTenors,         // GIRR ë§Œê¸° ìˆ˜
+    const long* girrTenorDays,      // GIRR ë§Œê¸° (startDateë¡œë¶€í„°ì˜ ì¼ìˆ˜)
+    const double* girrRates,        // GIRR ê¸ˆë¦¬
+    int girrDayCounter,             // GIRR DayCounter (ì˜ˆ: 1 = Actual/365)
+    int girrInterpolator,           // ë³´ê°„ë²• (ì˜ˆ: 1 = Linear)
+    int girrCompounding,            // ì´ì ê³„ì‚° ë°©ì‹ (ì˜ˆ: 1 = Continuous)
+    int girrFrequency,              // ì´ì ë¹ˆë„ (ì˜ˆ: 1 = Annual)
+    double spreadOverYield,         // ì±„ê¶Œì˜ ì¢…ëª© Credit Spread
     int spreadOverYieldCompounding, // Continuous
     int spreadOverYieldDayCounter,  // Actual/365
-    int numberOfCsrTenors,          // CSR ¸¸±â ¼ö
-    const long* csrTenorDays,       // CSR ¸¸±â (startDate·ÎºÎÅÍÀÇ ÀÏ¼ö)
-    const double* csrSpreads        // CSR ½ºÇÁ·¹µå (±İ¸® Â÷ÀÌ)
+    int numberOfCsrTenors,          // CSR ë§Œê¸° ìˆ˜
+    const long* csrTenorDays,       // CSR ë§Œê¸° (startDateë¡œë¶€í„°ì˜ ì¼ìˆ˜)
+    const double* csrRates,         // CSR ìŠ¤í”„ë ˆë“œ (ê¸ˆë¦¬ ì°¨ì´)
 
+    const int logYn,                // ë¡œê¹…ì—¬ë¶€ (0: No, 1: Yes)
+
+                                    // OUTPUT1. Net PV
+    double* resultGirrDelta,        // OUTPUT2. GIRR Delta
+	double* resultCsrDelta			// OUTPUT3. CSR Delta
 ) {
+    /* ë¡œê±° ì´ˆê¸°í™” */
+    if (logYn == 1) {
+        initLogger("bond.log"); // ìƒì„± íŒŒì¼ëª… ì§€ì •
+    }
+    info("==============[bond Logging Started!]==============");
+    printAllInputData(evaluationDate,
+        settlementDays,
+        issueDate,
+        maturityDate,
+        notional,
+        couponRate,
+        couponDayCounter,
+        numberOfCoupons,
+        paymentDates,
+        realStartDates,
+        realEndDates,
+        numberOfGirrTenors,
+        girrTenorDays,
+        girrRates,
+        girrDayCounter,
+        girrInterpolator,
+        girrCompounding,
+        girrFrequency,
+        spreadOverYield,
+        spreadOverYieldCompounding,
+        spreadOverYieldDayCounter,
+        numberOfCsrTenors,
+        csrTenorDays,
+        csrRates
+    );
+
+
+	initResult(resultGirrDelta, 11);
+    initResult(resultCsrDelta, 11);
 
     std::cout.precision(15);
     Date asOfDate_ = Date(evaluationDate);
@@ -58,7 +81,7 @@ extern "C" double EXPORT ZeroBondTest(
     Size settlementDays_ = settlementDays;
     Real notional_ = notional;
     std::vector<Rate> couponRate_ = std::vector<Rate>(1, couponRate);
-    DayCounter couponDayCounter_ = ActualActual(ActualActual::ISDA); // TODO º¯È¯ ÇÔ¼ö Àû¿ë (DayCounter)
+    DayCounter couponDayCounter_ = ActualActual(ActualActual::ISDA); // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš© (DayCounter)
     std::vector<Date> girrDates_;
     std::vector<Real> girrRates_;
     std::vector<Period> girrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
@@ -71,31 +94,31 @@ extern "C" double EXPORT ZeroBondTest(
         girrDates_.emplace_back(asOfDate_ + girrPeriod[dateNum]);
         girrRates_.emplace_back(girrRates[dateNum] + spreadOverYield);
     }
-    // TODO º¯È¯ ÇÔ¼ö Àû¿ë
+    // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš©
     DayCounter girrDayCounter_ = Actual365Fixed();
-    Linear girrInterpolator_ = Linear(); // TODO º¯È¯ ÇÔ¼ö Àû¿ë (Interpolator)
-    Compounding girrCompounding_ = Compounding::Continuous; // TODO º¯È¯ ÇÔ¼ö Àû¿ë (Compounding)
+    Linear girrInterpolator_ = Linear(); // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš© (Interpolator)
+    Compounding girrCompounding_ = Compounding::Continuous; // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš© (Compounding)
     Frequency girrFrequency_ = Frequency::Annual;
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
         girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
     RelinkableHandle<YieldTermStructure> girrCurve;
     girrCurve.linkTo(girrTermstructure);
     double tmpSpreadOverYield = spreadOverYield;
-    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // TODO º¯È¯ ÇÔ¼ö Àû¿ë (Compounding)
-    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // TODO º¯È¯ ÇÔ¼ö Àû¿ë (DayCounter)
+    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš© (Compounding)
+    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš© (DayCounter)
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
     std::vector<Date> csrDates_;
     std::vector<Period> csrPeriod = { Period(6, Months), Period(1, Years), Period(3, Years), Period(5, Years), Period(10, Years) };
     csrDates_.emplace_back(asOfDate_);
     std::vector<Handle<Quote>> csrSpreads_;
     double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
-    csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[0]));
+    csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[0]));
     //    csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[0]+spreadOverYield_));
     for (Size dateNum = 0; dateNum < numberOfCsrTenors; ++dateNum) {
         //        csrDates_.emplace_back(asOfDate_ + csrTenorDays[dateNum]);
         csrDates_.emplace_back(asOfDate_ + csrPeriod[dateNum]);
         spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, csrDates_.back()));
-        csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[dateNum]));
+        csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[dateNum]));
         //        csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[dateNum] + spreadOverYield_));
     }
     ext::shared_ptr<ZeroYieldStructure> discountingTermStructure =
@@ -115,10 +138,10 @@ extern "C" double EXPORT ZeroBondTest(
         fixedBondSchedule_,
         couponRate_,
         couponDayCounter_,
-        ModifiedFollowing, // TODO º¯È¯ ÇÔ¼ö Àû¿ë (DayConvention)
+        ModifiedFollowing, // TODO ë³€í™˜ í•¨ìˆ˜ ì ìš© (DayConvention)
         100.0);
     fixedRateBond.setPricingEngine(bondEngine);
-    //    //µğ¹ö±ë¿ë ¹è¿­
+    //    //ë””ë²„ê¹…ìš© ë°°ì—´
     //    const Leg& tmpLeg = fixedRateBond.cashflows();
     //    std::vector<Real> tmpCf;
     //    std::vector<DiscountFactor> tmpDf;
@@ -127,7 +150,8 @@ extern "C" double EXPORT ZeroBondTest(
     //        tmpDf.emplace_back(discountingCurve->discount(cf->date()));
     //    }
     Real npv = fixedRateBond.NPV();
-    std::cout << "NPV: " << npv << std::endl;
+    //std::cout << "NPV: " << npv << std::endl;
+   
     Real girrBump = 0.0001;
     std::vector<Real> disCountingGirr;
     for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
@@ -145,9 +169,22 @@ extern "C" double EXPORT ZeroBondTest(
         auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
         fixedRateBond.setPricingEngine(bumpBondEngine);
         Real tmpGirr = fixedRateBond.NPV() - npv;
-        disCountingGirr.emplace_back(tmpGirr);
-        std::cout << "Girr[" << bumpNum << "]:" << tmpGirr * 10000.0 << std::endl;
+
+        if (tmpGirr != 0.0) {
+            disCountingGirr.emplace_back(tmpGirr);
+            //std::cout << "Girr[" << bumpNum << "]:" << tmpGirr * 10000.0 << std::endl;
+        }
     }
+
+	//OUTPUT2. GIRR Delta
+    resultGirrDelta[0] = disCountingGirr.size(); // index 0 : size
+    for (Size i = 0; i < disCountingGirr.size(); ++i) {
+		resultGirrDelta[i + 1] = girrTenorDays[i]; // index 1 ~ size : girrTenorDays
+	}
+	for (Size i = 0; i < disCountingGirr.size(); ++i) {
+		resultGirrDelta[i + 1 + disCountingGirr.size()] = disCountingGirr[i] * 10000.0; // index size + 1 ~ size + size : GIRR Delta
+	}
+
     Real csrBump = 0.0001;
     std::vector<Real> disCountingCsr;
     for (Size bumpNum = 1; bumpNum < csrSpreads_.size(); ++bumpNum) {
@@ -175,12 +212,142 @@ extern "C" double EXPORT ZeroBondTest(
         auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
         fixedRateBond.setPricingEngine(bumpBondEngine);
         Real tmpCsr = fixedRateBond.NPV() - npv;
-        disCountingCsr.emplace_back(tmpCsr);
-        std::cout << "Csr[" << bumpNum << "]:" << tmpCsr * 10000.0 << std::endl;
+        if (tmpCsr != 0.0) {
+            disCountingCsr.emplace_back(tmpCsr);
+            //std::cout << "Csr[" << bumpNum << "]:" << tmpCsr * 10000.0 << std::endl;
+        }
     }
+
+    resultCsrDelta[0] = disCountingCsr.size(); // index 0 : size
+    for (Size i = 0; i < disCountingCsr.size(); ++i) {
+		resultCsrDelta[i + 1] = csrTenorDays[i]; // index 1 ~ size : csrTenorDays
+    }
+    for (Size i = 0; i < disCountingCsr.size(); ++i) {
+		resultCsrDelta[i + 1 + disCountingCsr.size()] = disCountingCsr[i] * 10000.0; // index size + 1 ~ size + size : CSR Delta
+    }
+
     Real cleanPrice = fixedRateBond.cleanPrice() / 100.0 * notional;
     Real dirtyPrice = fixedRateBond.dirtyPrice() / 100.0 * notional;
     Real accruedInterest = fixedRateBond.accruedAmount() / 100.0 * notional;
-    return npv;
+    
+    printAllOutputData(npv, resultGirrDelta, resultCsrDelta);
+
+	return npv; // OUTPUT1. Net PV
 }
 
+void initResult(double* result, const int size) {
+	fill_n(result, size, 0.0);
+}
+
+void printAllInputData(
+    long evaluationDate,
+    long settlementDays,
+    long issueDate,
+    long maturityDate,
+    double notional,
+    double couponRate,
+    int couponDayCounter,
+    int numberOfCoupons,
+    const long* paymentDates,
+    const long* realStartDates,
+    const long* realEndDates,
+    int numberOfGirrTenors,
+    const long* girrTenorDays,
+    const double* girrRates,
+    int girrDayCounter,
+    int girrInterpolator,
+    int girrCompounding,
+    int girrFrequency,
+    double spreadOverYield,
+    int spreadOverYieldCompounding,
+    int spreadOverYieldDayCounter,
+    int numberOfCsrTenors,
+    const long* csrTenorDays,
+    const double* csrRates
+) {
+    info("------------------------------------------------------------");
+    info("[Print All: Input Data]");
+
+    info("evaluationDate : {}", evaluationDate);
+    info("settlementDays : {}", settlementDays);
+    info("issueDate : {}", issueDate);
+    info("maturityDate : {}", maturityDate);
+    info("notional : {:0.4f}", notional);
+    info("couponRate : {:0.6f}", couponRate);
+    info("couponDayCounter : {}", couponDayCounter);
+    info("numberOfCoupons : {}", numberOfCoupons);
+
+    for (int i = 0; i < numberOfCoupons; ++i) {
+        info("paymentDates[{}] : {}", i, paymentDates[i]);
+        info("realStartDates[{}] : {}", i, realStartDates[i]);
+        info("realEndDates[{}] : {}", i, realEndDates[i]);
+    }
+
+    info("numberOfGirrTenors : {}", numberOfGirrTenors);
+    for (int i = 0; i < numberOfGirrTenors; ++i) {
+        info("girrTenorDays[{}] : {}", i, girrTenorDays[i]);
+        info("girrRates[{}] : {:0.8f}", i, girrRates[i]);
+    }
+
+    info("girrDayCounter : {}", girrDayCounter);
+    info("girrInterpolator : {}", girrInterpolator);
+    info("girrCompounding : {}", girrCompounding);
+    info("girrFrequency : {}", girrFrequency);
+
+    info("spreadOverYield : {:0.8f}", spreadOverYield);
+    info("spreadOverYieldCompounding : {}", spreadOverYieldCompounding);
+    info("spreadOverYieldDayCounter : {}", spreadOverYieldDayCounter);
+
+    info("numberOfCsrTenors : {}", numberOfCsrTenors);
+    for (int i = 0; i < numberOfCsrTenors; ++i) {
+        info("csrTenorDays[{}] : {}", i, csrTenorDays[i]);
+        info("csrRates[{}] : {:0.8f}", i, csrRates[i]);
+    }
+    info("------------------------------------------------------------\n");
+    info("");
+}
+
+void printAllOutputData(
+    const double resultNetPV,
+    const double* resultGirrDelta,
+    const double* resultCsrDelta
+) {
+    info("[Print All: Output Data]");
+
+    // Net PV
+    info("[Net PV]");
+    info("Net Present Value : {:.15f}", resultNetPV);
+    info("");
+
+    // GIRR Delta
+    int girrSize = static_cast<int>(resultGirrDelta[0]);
+    info("[GIRR Delta]");
+    info("0. size : {}", girrSize);
+    for (int i = 0; i < girrSize; ++i) {
+        info("{}. tenorDay : {}", i + 1, static_cast<long>(resultGirrDelta[i + 1]));
+    }
+    for (int i = 0; i < girrSize; ++i) {
+        info("{}. GIRR Delta : {:.15f}", i + 1 + girrSize, resultGirrDelta[i + 1 + girrSize]);
+    }
+    for (int i = girrSize * 2 + 1; i < 21; ++i) {
+        info("{}. Empty : {}", i, resultGirrDelta[i]);
+    }
+
+    // CSR Delta
+    int csrSize = static_cast<int>(resultCsrDelta[0]);
+    info("");
+    info("[CSR Delta]");
+    info("0. size : {}", csrSize);
+    for (int i = 0; i < csrSize; ++i) {
+        info("{}. tenorDay : {}", i + 1, static_cast<long>(resultCsrDelta[i + 1]));
+    }
+    for (int i = 0; i < csrSize; ++i) {
+        info("{}. CSR Delta : {:.15f}", i + 1 + csrSize, resultCsrDelta[i + 1 + csrSize]);
+    }
+    for (int i = csrSize * 2 + 1; i < 21; ++i) {
+        info("{}. Empty : {}", i, resultCsrDelta[i]);
+    }
+
+    info("------------------------------------------------------------");
+    info("");
+}

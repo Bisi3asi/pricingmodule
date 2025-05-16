@@ -1,7 +1,7 @@
-#ifndef BOND_H
+ï»¿#ifndef BOND_H
 #define BOND_H
 
-// function ¿ÜºÎ ÀÎÅÍÆäÀÌ½º export Á¤ÀÇ
+// function ì™¸ë¶€ ì¸í„°í˜ì´ìŠ¤ export ì •ì˜
 #ifdef _WIN32
 	#ifdef BUILD_LIBRARY
 		#define EXPORT __declspec(dllexport) __stdcall
@@ -18,50 +18,84 @@
 #include <iostream>
 
 // include (QuantLib)
-#include <ql/time/date.hpp>
-#include <ql/time/daycounter.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/daycounters/actual360.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/time/daycounters/thirty360.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
+#include "ql/time/calendars/southkorea.hpp"
+#include "ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp"
+#include "ql/termstructures/yield/zerocurve.hpp"
+#include "ql/quotes/simplequote.hpp"
+#include "ql/pricingengines/bond/discountingbondengine.hpp"
+#include "ql/instruments/bonds/zerocouponbond.hpp"
+#include "ql/instruments/bonds/fixedratebond.hpp"
+#include "ql/time/schedule.hpp"
+#include "ql/time/daycounters/actualactual.hpp"
 
-// dll export method (extern "C", EXPORT ¸í½Ã ÇÊ¿ä)
-extern "C" void EXPORT printSettlementDate (
-	/* define function of the parameter here and also .cpp files */
-	long tradeDate,
-	long settlementDays
-);
-
-
-extern "C" double EXPORT ZeroBondTest(
-    long evaluationDate,             // Æò°¡ÀÏ (serial number, ¿¹: 46164)
-    long settlementDays,             // °áÁ¦ÀÏ offset (º¸Åë 2ÀÏ)
-    long issueDate,                  // ¹ßÇàÀÏ
-    long maturityDate,               // ¸¸±âÀÏ
-    double notional,                 // Ã¤±Ç ¿ø±İ
-    double couponRate,              // ÄíÆù ÀÌÀ²
-    int couponDayCounter,           // DayCounter code (¿¹: 5 = Actual/Actual(Bond))
-    int numberOfCoupons,            // ÄíÆù °³¼ö
-    const long* paymentDates,       // Áö±ŞÀÏ ¹è¿­
-    const long* realStartDates,     // °¢ ±¸°£ ½ÃÀÛÀÏ
-    const long* realEndDates,       // °¢ ±¸°£ Á¾·áÀÏ
-    int numberOfGirrTenors,         // GIRR ¸¸±â ¼ö
-    const long* girrTenorDays,      // GIRR ¸¸±â (startDate·ÎºÎÅÍÀÇ ÀÏ¼ö)
-    const double* girrRates,        // GIRR ±İ¸®
-    int girrDayCounter,             // GIRR DayCounter (¿¹: 1 = Actual/365)
-    int girrInterpolator,           // º¸°£¹ı (¿¹: 1 = Linear)
-    int girrCompounding,            // ÀÌÀÚ °è»ê ¹æ½Ä (¿¹: 1 = Continuous)
-    int girrFrequency,              // ÀÌÀÚ ºóµµ (¿¹: 1 = Annual)
-    double spreadOverYield,         // Ã¤±ÇÀÇ Á¾¸ñ Credit Spread
+// dll export method (extern "C", EXPORT ëª…ì‹œ í•„ìš”)
+extern "C" double EXPORT pricing(
+    long evaluationDate,            // í‰ê°€ì¼ (serial number, ì˜ˆ: 46164)
+    long settlementDays,            // ê²°ì œì¼ offset (ë³´í†µ 2ì¼)
+    long issueDate,                 // ë°œí–‰ì¼
+    long maturityDate,              // ë§Œê¸°ì¼
+    double notional,                // ì±„ê¶Œ ì›ê¸ˆ
+    double couponRate,              // ì¿ í° ì´ìœ¨
+    int couponDayCounter,           // DayCounter code (ì˜ˆ: 5 = Actual/Actual(Bond))
+    int numberOfCoupons,            // ì¿ í° ê°œìˆ˜
+    const long* paymentDates,       // ì§€ê¸‰ì¼ ë°°ì—´
+    const long* realStartDates,     // ê° êµ¬ê°„ ì‹œì‘ì¼
+    const long* realEndDates,       // ê° êµ¬ê°„ ì¢…ë£Œì¼
+    int numberOfGirrTenors,         // GIRR ë§Œê¸° ìˆ˜
+    const long* girrTenorDays,      // GIRR ë§Œê¸° (startDateë¡œë¶€í„°ì˜ ì¼ìˆ˜)
+    const double* girrRates,        // GIRR ê¸ˆë¦¬
+    int girrDayCounter,             // GIRR DayCounter (ì˜ˆ: 1 = Actual/365)
+    int girrInterpolator,           // ë³´ê°„ë²• (ì˜ˆ: 1 = Linear)
+    int girrCompounding,            // ì´ì ê³„ì‚° ë°©ì‹ (ì˜ˆ: 1 = Continuous)
+    int girrFrequency,              // ì´ì ë¹ˆë„ (ì˜ˆ: 1 = Annual)
+    double spreadOverYield,         // ì±„ê¶Œì˜ ì¢…ëª© Credit Spread
     int spreadOverYieldCompounding, // Continuous
     int spreadOverYieldDayCounter,  // Actual/365
-    int numberOfCsrTenors,          // CSR ¸¸±â ¼ö
-    const long* csrTenorDays,       // CSR ¸¸±â (startDate·ÎºÎÅÍÀÇ ÀÏ¼ö)
-    const double* csrSpreads        // CSR ½ºÇÁ·¹µå (±İ¸® Â÷ÀÌ)
+    int numberOfCsrTenors,          // CSR ë§Œê¸° ìˆ˜
+    const long* csrTenorDays,       // CSR ë§Œê¸° (startDateë¡œë¶€í„°ì˜ ì¼ìˆ˜)
+    const double* csrRates,         // CSR ìŠ¤í”„ë ˆë“œ (ê¸ˆë¦¬ ì°¨ì´)
+    
+	const int logYn,                // ë¡œê¹…ì—¬ë¶€ (0: No, 1: Yes)
 
+                                    // OUTPUT1. Net PV
+    double* resultGirrDelta,        // OUTPUT2. GIRR Delta
+    double* resultCsrDelta			// OUTPUT3. CSR Delta
 );
 
+void initResult(double* result, const int size);
 
+/* for debug */
+void printAllInputData(
+    long evaluationDate,
+    long settlementDays,
+    long issueDate,
+    long maturityDate,
+    double notional,
+    double couponRate,
+    int couponDayCounter,
+    int numberOfCoupons,
+    const long* paymentDates,
+    const long* realStartDates,
+    const long* realEndDates,
+    int numberOfGirrTenors,
+    const long* girrTenorDays,
+    const double* girrRates,
+    int girrDayCounter,
+    int girrInterpolator,
+    int girrCompounding,
+    int girrFrequency,
+    double spreadOverYield,
+    int spreadOverYieldCompounding,
+    int spreadOverYieldDayCounter,
+    int numberOfCsrTenors,
+    const long* csrTenorDays,
+    const double* csrRates
+);
+
+void printAllOutputData(
+    const double resultNetPV,
+    const double* resultGirrDelta,
+    const double* resultCsrDelta
+);
 
 #endif
