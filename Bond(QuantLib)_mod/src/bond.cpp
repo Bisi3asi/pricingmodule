@@ -19,24 +19,25 @@ extern "C" {
         
         int couponCnt,                      // 쿠폰 개수
         double couponRate,                  // 쿠폰 이율
-        int couponDCB,                      // 쿠폰 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        int businessDayConvention,          // 영업일 조정 Convention [Following = 0, Modified Following = 1, Preceding = 2, Modified Preceding = 3] 
+        int couponDcb,                      // 쿠폰 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        int businessDayConventionCode,          // 영업일 조정 Convention [Following = 0, Modified Following = 1, Preceding = 2, Modified Preceding = 3] 
         const long* realStartDatesSerial,   // 각 구간 시작일
         const long* realEndDatesSerial,     // 각 구간 종료일
         const long* paymentDatesSerial,     // 지급일 배열
         
         int girrCnt,                        // GIRR 만기 수
         const double* girrRates,            // GIRR 금리
-        int girrDCB,                        // GIRR 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        // int girrInterpolator,               // 보간법 (Linear) (고정)
-        // int girrCompounding,                // 이자 계산 방식 (Continuous) (고정)
-        // int girrFrequency,                  // 이자 빈도 (Annual) (고정)
+        int girrDcb,                        // GIRR 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        int girrInterpolatorCode,               // 보간법 (Linear) (고정)
+        int girrCompoundingCode,                // 이자 계산 방식 (Continuous) (고정)
+        int girrFrequencyCode,                  // 이자 빈도 (Annual) (고정)
         
         double spreadOverYield,             // 채권의 종목 Credit Spread
-        // int spreadOverYieldCompounding,     // Continuous (고정)
-        int spreadOverYieldDCB,             // Credit Spread Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        int spreadOverYieldCompoundingCode,     // Continuous (고정)
+        int spreadOverYieldDcb,             // Credit Spread Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
         
         int csrCnt,                         // CSR 만기 수
+		const long* csrDates,               // CSR 만기 (startDate로부터의 일수)
         const double* csrSpreads,           // CSR 스프레드 (금리 차이)
 
 		unsigned short logYn,               // 로그 파일 생성 여부 (0: No, 1: Yes)
@@ -50,18 +51,19 @@ extern "C" {
         // 디버그용 메소드는 아래 for debug 메소드를 참고
         if (logYn == 1) {
             initLogger("Bond.log"); // 생성 파일명 지정
-            info("==============[Bond Logging Started!]==============");
-            /*
-            printAllInputData( // Input 데이터 로깅
-                maturityDate, revaluationDate, exchangeRate,
-                buySideCurrency, notionalForeign, buySideDCB, buySideDcCurve,
-                buyCurveDataSize, buyCurveYearFrac, buyMarketData,
-                sellSideCurrency, notionalDomestic, sellSideDCB, sellSideDcCurve,
-                sellCurveDataSize, sellCurveYearFrac, sellMarketData,
-                calType, logYn
-            );
-            */
         }
+
+        info("==============[Bond Logging Started!]==============");
+        /*
+        printAllInputData( // Input 데이터 로깅
+            maturityDate, revaluationDate, exchangeRate,
+            buySideCurrency, notionalForeign, buySideDCB, buySideDcCurve,
+            buyCurveDataSize, buyCurveYearFrac, buyMarketData,
+            sellSideCurrency, notionalDomestic, sellSideDCB, sellSideDcCurve,
+            sellCurveDataSize, sellCurveYearFrac, sellMarketData,
+            calType, logYn
+        );
+        */
 
         // 결과 데이터 초기화
         initResult(resultGirrDelta, 25);
@@ -69,10 +71,13 @@ extern "C" {
         
         // DayCounter 데이터 (캐시용 집합) 생성
         vector<DayCounter> dayCounters{};
-        initDayCounters(dayCounters);
+        vector<BusinessDayConvention> dayConventions{};
+		vector<Frequency> frequencies{};
 
-        vector<BusinessDayConvention> bdcs{};
-        initBDCs(bdcs);
+        initDayCounters(dayCounters);
+        initDayConventions(dayConventions);
+		initFrequencies(frequencies);
+
 
         // revaluationDateSerial -> revaluationDate
         Date revaluationDate = Date(revaluationDateSerial);
@@ -84,7 +89,7 @@ extern "C" {
         vector<Rate> couponRate_ = vector<Rate>(1, couponRate);
         
         // 쿠폰 이자 계산을 위한 일수계산 방식 설정
-        DayCounter couponDayCounter = getDayCounterByDCB(couponDCB, dayCounters); 
+        DayCounter couponDayCounter = getDayCounterByCode(couponDcb, dayCounters); 
 
         // GIRR 커브 구성용 날짜 및 금리 벡터
         vector<Date> girrDates_;
@@ -108,14 +113,13 @@ extern "C" {
         }
         
         // GIRR 커브 계산 사용 추가 요소
-        DayCounter girrDayCounter = getDayCounterByDCB(girrDCB, dayCounters);   // DCB
+        DayCounter girrDayCounter = getDayCounterByCode(girrDcb, dayCounters);   // DCB
         Linear girrInterpolator = Linear();                                     // 선형 보간
         Compounding girrCompounding = Compounding::Continuous;                  // 연속 복리
 		Frequency girrFrequency = Frequency::Annual;                            // 연 단위 빈도
-        //Frequency girrFrequency= Frequency::Semiannual;
 
         // GIRR 커브 생성
-        ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_, girrDayCounter, girrInterpolator, girrCompounding, girrFrequency);
+        ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_, girrDayCounter, girrInterpolatorCode, girrCompoundingCode, girrFrequencyCode);
 
         // GIRR 커브를 RelinkableHandle로 연결
         RelinkableHandle<YieldTermStructure> girrCurve;
@@ -125,8 +129,8 @@ extern "C" {
         double tmpSpreadOverYield = spreadOverYield;
         Compounding spreadOverYieldCompounding = Compounding::Continuous;       // 연속 복리
         Frequency spreadOverYieldFrequency = Frequency::Annual;                 // 연 단위 빈도
-        DayCounter spreadOverYieldDayCounter = getDayCounterByDCB(spreadOverYieldDCB, dayCounters);
-        InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter, spreadOverYieldCompounding, spreadOverYieldFrequency);
+        DayCounter spreadOverYieldDayCounter = getDayCounterByCode(spreadOverYieldDcb, dayCounters);
+        InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter, spreadOverYieldCompoundingCode, spreadOverYieldFrequency);
 
         // CSR 커브 구성용 날짜 및 금리 벡터
         vector<Date> csrDates_;
@@ -139,13 +143,13 @@ extern "C" {
         vector<Handle<Quote>> csrSpreads_;
 
         // 첫번째 CSR 스프레드에 spreadOverYield 적용
-        double spreadOverYield_ = tempRate.equivalentRate(girrCompounding, girrFrequency, girrDayCounter.yearFraction(revaluationDate, revaluationDate));
+        double spreadOverYield_ = tempRate.equivalentRate(girrCompoundingCode, girrFrequencyCode, girrDayCounter.yearFraction(revaluationDate, revaluationDate));
         csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[0]));
 
         // 나머지 CSR 기간별 스프레드 설정
         for (Size dateNum = 0; dateNum < csrCnt; ++dateNum) {
             csrDates_.emplace_back(revaluationDate + csrPeriod[dateNum]);
-            spreadOverYield_ = tempRate.equivalentRate(girrCompounding, girrFrequency, girrDayCounter.yearFraction(revaluationDate, csrDates_.back()));
+            spreadOverYield_ = tempRate.equivalentRate(girrCompoundingCode, girrFrequencyCode, girrDayCounter.yearFraction(revaluationDate, csrDates_.back()));
             csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads[dateNum]));
         }
 
@@ -176,7 +180,7 @@ extern "C" {
             fixedBondSchedule_,
             couponRate_, 
             couponDayCounter, 
-            getBusinessDayConventionByBDC(businessDayConvention, bdcs),
+            getBusinessDayConventionByCode(businessDayConventionCode, bdcs),
             100.0
         );
 
@@ -197,7 +201,7 @@ extern "C" {
             bumpGirrRates[bumpNum] += girrBump;
 
             // bump된 금리로 새로운 ZeroCurve 생성
-            ext::shared_ptr<YieldTermStructure> bumpGirrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, bumpGirrRates, girrDayCounter, girrInterpolator, girrCompounding, girrFrequency);
+            ext::shared_ptr<YieldTermStructure> bumpGirrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, bumpGirrRates, girrDayCounter, girrInterpolatorCode, girrCompoundingCode, girrFrequencyCode);
             
             // RelinkableHandle에 bump된 커브 연결
             RelinkableHandle<YieldTermStructure> bumpGirrCurve;
@@ -305,63 +309,138 @@ void initResult(double* result, int size) {
 void initDayCounters(vector<DayCounter>& dayCounters) {
 
     dayCounters.clear();
-    dayCounters.reserve(6);
+    dayCounters.reserve(18);
 
-    dayCounters.emplace_back(Thirty360(Thirty360::USA));         // 0: 30U/360
-    dayCounters.emplace_back(ActualActual(ActualActual::ISDA));  // 1: Act/Act
-    dayCounters.emplace_back(Actual360());                       // 2: Act/360
-    dayCounters.emplace_back(Actual365Fixed());                  // 3: Act/365
-    dayCounters.emplace_back(Thirty360(Thirty360::European));    // 4: 30E/360
-    dayCounters.emplace_back();                                  // 5: ERR
+    dayCounters.emplace_back(Actual365Fixed());                     // 0: Actual365
+    dayCounters.emplace_back(Actual360());                          // 1: Act/360
+    // dayCounters.emplace_back(Actual364());                       // 2: Act/364
+    // dayCounters.emplace_back(Actual36525());                     // 3: Act/36525
+    // dayCounters.emplace_back(Actual366());                       // 4: Act/366
+    dayCounters.emplace_back(ActualActual(ActualActual::ISDA));     // 5: Act/Act
+    dayCounters.emplace_back(Business252());                        // 6: Business252
+    dayCounters.emplace_back(OneDayCounter());                      // 7: OneDayCounter
+    dayCounters.emplace_back(SimpleDayCounter());                   // 8: SimpleDayCounter
+    dayCounters.emplace_back(Thirty360(Thirty360::USA));            // 9: 30U/360 USA
+    dayCounters.emplace_back(Thirty360(Thirty360::BondBasis));      // 10: 30U/360 BondBasis
+    dayCounters.emplace_back(Thirty360(Thirty360::European));       // 11: 30U/360 European
+	dayCounters.emplace_back(Thirty360(Thirty360::EurobondBasis));  // 12: 30U/360 EurobondBasis
+	dayCounters.emplace_back(Thirty360(Thirty360::Italian));        // 13: 30U/360 Italian
+	dayCounters.emplace_back(Thirty360(Thirty360::German));         // 14: 30U/360 German
+	dayCounters.emplace_back(Thirty360(Thirty360::ISMA));           // 15: 30U/360 ISMA
+	dayCounters.emplace_back(Thirty360(Thirty360::ISDA));           // 16: 30U/360 ISDA
+	dayCounters.emplace_back(Thirty360(Thirty360::NASD));           // 17: 30U/360 NASD
+    dayCounters.emplace_back();                                     // 18: ERR (Default None)
 }
 
 // Business Day Convention 객체 생성
-void initBDCs(vector<BusinessDayConvention>& bdcs) {
-    
-    bdcs.clear();
-    bdcs.reserve(6);
+void initDayConventions(vector<BusinessDayConvention>& dayConventions) {
 
-    bdcs.emplace_back(Following);           // 0: Following
-    bdcs.emplace_back(ModifiedFollowing);   // 1: Modified Following 
-    bdcs.emplace_back(Preceding);           // 2: Preceding
-    bdcs.emplace_back(ModifiedPreceding);   // 3: Modified Preceding
-    bdcs.emplace_back();                    // 4: ERR
+    dayConventions.clear();
+    dayConventions.reserve(5);
+
+    dayConventions.emplace_back(ModifiedFollowing);             // 0: Modified Following
+    dayConventions.emplace_back(Following);                     // 1: Following
+    dayConventions.emplace_back(Preceding);                     // 2: Preceding
+    dayConventions.emplace_back(ModifiedPreceding);             // 3: Modified Preceding
+    dayConventions.emplace_back(Unadjusted);                    // 4: Unadjusted
+	dayConventions.emplace_back(HalfMonthModifiedFollowing);    // 5: HalfMonthModifiedFollowing
+	dayConventions.emplace_back(Nearest);                       // 6: Nearest
+	dayConventions.emplace_back();                              // 7: ERR (Default Following)
 }
 
-// dcb 코드에 의한 QuantLib DayCounter 객체를 리턴
-DayCounter getDayCounterByDCB(unsigned int dcb, vector<DayCounter>& dayCounters) {
+// Frequency 객체 생성
+void initFrequencies(vector<Frequency>& frequencies) {
+    frequencies.clear();
+    frequencies.reserve(13);
 
-    switch (dcb) {
-    case 0: // 30U/360
-        return dayCounters[0];
-    case 1: // Act/Act
-        return dayCounters[1];
-    case 2: // Act/360
-        return dayCounters[2];
-    case 3: // Act/365
-        return dayCounters[3];
-    case 4: // 30E/360
-        return dayCounters[4];
-    default:
-        warn("[getDayCounterByDCB] Unknown dcb: default dayCounter applied.");
-        return dayCounters[5];
+    frequencies.emplace_back(Annual);           // 0: Annual (연간)
+    frequencies.emplace_back(Semiannual);       // 1: Semiannual (반기)
+    frequencies.emplace_back(Quarterly);        // 2: Quarterly (분기)
+    frequencies.emplace_back(Monthly);          // 3: Monthly (매달)
+    frequencies.emplace_back(Bimonthly);        // 4: Bimonthly (2달)
+    frequencies.emplace_back(Weekly);           // 5: Weekly (매주)
+    frequencies.emplace_back(Biweekly);         // 6: Biweekly (2주)
+    frequencies.emplace_back(Daily);            // 7: Daily (매일)
+    frequencies.emplace_back(NoFrequency);      // 8: No Frequency (주기 없음)
+    frequencies.emplace_back(Once);             // 9: Once  (최초 1회)
+    frequencies.emplace_back(EveryFourthMonth); // 10: Every Fourth Month (4달)
+    frequencies.emplace_back(EveryFourthWeek);  // 11: Every Fourth Week  (4주)
+    frequencies.emplace_back(OtherFrequency);   // 12: ERR (Default Other Frequency)
+}
+
+// Interpolator 객체 생성
+void initInterpolators(vector<Linear>& interpolators) {
+    interpolators.clear();
+    interpolators.reserve(1);
+
+    interpolators.emplace_back(Linear());   // 0: Linear
+	interpolators.emplace_back();           // 1: ERR (Default None)
+}
+
+// Compounding 객체 생성
+void initCompoundings(vector<Compounding>& compoundings) {
+    compoundings.clear();
+    compoundings.reserve(4);
+
+    compoundings.emplace_back(Compounding::Continuous);             // 0: Continuous
+	compoundings.emplace_back(Compounding::Simple);                 // 1: Simple
+	compoundings.emplace_back(Compounding::Compounded);             // 2: Compounded
+	compoundings.emplace_back(Compounding::SimpleThenCompounded);   // 3: SimpleThenCompounded
+	compoundings.emplace_back(Compounding::CompoundedThenSimple);   // 4: CompoundedThenSimple
+	compoundings.emplace_back();                                    // 5: ERR (Default None)
+}
+
+DayCounter getDayCounterByCode(const int code, const vector<DayCounter>& dayCounters) {
+
+    if (code >= 0 && code < static_cast<int>(dayCounters.size())) {
+        return dayCounters[code];
     }
+
+    warn("[getDayCounterByCode] Unknown day count code: default DayCounter applied.");
+    return dayCounters[18]; // 18: ERR (Default None)
 }
 
-// bdc 코드에 의한 QuantLib BusinessDayConvention 객체를 리턴
-BusinessDayConvention getBusinessDayConventionByBDC(unsigned int businessDayConvention, vector<BusinessDayConvention>& bdcs) {
+// 코드에 의한 QuantLib BusinessDayConvention 객체를 리턴
+BusinessDayConvention getBusinessDayConventionByCode(const int code, const vector<BusinessDayConvention>& dayConventions) {
 
-    switch (businessDayConvention) {
-    case 0: // Following
-        return bdcs[0];
-    case 1: // Modified Following
-        return bdcs[1];
-    case 2: // Preceding
-        return bdcs[2];
-    case 3: // Modified Preceding
-        return bdcs[3];
+    if (code >= 0 && code < static_cast<int>(dayConventions.size())) {
+        return dayConventions[code];
+    }
+
+    warn("[getBusinessDayConventionByCode] Unknown business day convention code: default applied.");
+    return dayConventions[7]; // 7: ERR (Default Following)
+}
+
+// 코드에 의한 QuantLib Frequency 객체를 리턴
+Frequency getFrequencyByCode(const int code, const vector<Frequency>& frequencies) {
+
+    switch (code) {
+    case 12: // Annual
+        return frequencies[0];
+    case 6: // SemiAnnual
+        return frequencies[1];
+    case 3: // Quaterly
+        return frequencies[2];
+    case 1: // Monthly
+        return frequencies[3];
+    //case 2: // Bimonthly
+        //return frequencies[4];
+    //case 5: // Weekly
+        //return frequencies[5];
+    //case 6: // Biweekly
+        //return frequencies[6];
+    //case 365: // Daily
+        //return frequencies[7];
+    //case 8: // NoFrequency
+        //return frequencies[8];
+    //case 9: // Once
+        //return frequencies[9];
+    //case 4: // EveryFourthMonth
+        //return frequencies[10];
+    //case 11: // EveryFourthWeek
+        //return frequencies[11];
     default:
-        warn("[getBusinessDayConventionBybdc] Unknown business Day Convention: default Business Day Convention applied.");
-        return bdcs[4];
+        warn("[getFrequencyByCode] Unknown Frequency: default Frequency applied.");
+        return frequencies[12];
     }
 }

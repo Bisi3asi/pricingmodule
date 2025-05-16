@@ -30,6 +30,10 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
+#include <ql/time/daycounters/business252.hpp>
+#include <ql/time/daycounters/one.hpp>
+#include <ql/time/daycounters/business252.hpp>
 #include <ql/time/daycounter.hpp>
 
 // dll export method
@@ -44,29 +48,30 @@ extern "C" {
 
         int couponCnt,                      // 쿠폰 개수
         double couponRate,                  // 쿠폰 이율
-        int couponDCB,                      // 쿠폰 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        int businessDayConvention,          // 영업일 조정 Convention [Following = 0, Modified Following = 1, Preceding = 2, Modified Preceding = 3] 
+        int couponDcb,                      // 쿠폰 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        int businessDayConventionCode,          // 영업일 조정 Convention [Following = 0, Modified Following = 1, Preceding = 2, Modified Preceding = 3] 
         const long* realStartDatesSerial,   // 각 구간 시작일
         const long* realEndDatesSerial,     // 각 구간 종료일
         const long* paymentDatesSerial,     // 지급일 배열
 
         int girrCnt,                        // GIRR 만기 수
         const double* girrRates,            // GIRR 금리
-        int girrDCB,                        // GIRR 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        // int girrInterpolator,            // 보간법 (Linear) (고정)
-        // int girrCompounding,             // 이자 계산 방식 (Continuous) (고정)
-        // int girrFrequency,               // 이자 빈도 (Annual) (고정)
+        int girrDcb,                        // GIRR 계산 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        int girrInterpolatorCode,               // 보간법 (Linear) (고정)
+        int girrCompoundingCode,                // 이자 계산 방식 (Continuous) (고정)
+        int girrFrequencyCode,                  // 이자 빈도 (Annual) (고정)
 
         double spreadOverYield,             // 채권의 종목 Credit Spread
-        // int spreadOverYieldCompounding,  // Continuous (고정)
-        int spreadOverYieldDCB,             // Credit Spread Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        int spreadOverYieldCompoundingCode,     // Continuous (고정)
+        int spreadOverYieldDcb,             // Credit Spread Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
 
         int csrCnt,                         // CSR 만기 수
+        const long* csrDates,               // CSR 만기 (startDate로부터의 일수)
         const double* csrSpreads,           // CSR 스프레드 (금리 차이)
 
         unsigned short logYn,               // 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. NETPV (리턴값)
+        // OUTPUT 1. NETPV (리턴값)
         double* resultGirrDelta,            // OUTPUT 2. GIRR 결과값 ([index 0] array size, [index 1 ~ size -1] Girr Delta tenor, [size ~ end] Girr Delta Sensitivity)    
         double* resultCsrDelta  	        // OUTPUT 3. CSR 결과값 ([index 0] array size, [index 1 ~ size -1] Csr Delta tenor, [size ~ end] Csr Delta Sensitivity)   
         // ===================================================================================================
@@ -77,11 +82,15 @@ void initResult(double* result, int size);
 
 void initDayCounters(std::vector<QuantLib::DayCounter>& dayCounters);
 
-void initBDCs(std::vector<QuantLib::BusinessDayConvention>& bdcs);
+void initDayConventions(std::vector<QuantLib::BusinessDayConvention>& dayConventions);
 
-QuantLib::DayCounter getDayCounterByDCB(unsigned int dcb, std::vector<QuantLib::DayCounter>& dayCounters);
+void initFrequencies(std::vector<QuantLib::Frequency>& frequencies);
 
-QuantLib::BusinessDayConvention getBusinessDayConventionByBDC(unsigned int businessDayConvention, std::vector<QuantLib::BusinessDayConvention>& bdcs);
+QuantLib::DayCounter getDayCounterByCode(const int code, const std::vector<QuantLib::DayCounter>& dayCounters);
+
+QuantLib::BusinessDayConvention getBusinessDayConventionByCode(const int code, std::vector<QuantLib::BusinessDayConvention>& dayConventions);
+
+QuantLib::Frequency getFrequencyByCode(const int code, const std::vector<QuantLib::Frequency>& frequencies) {
 
 
 #endif
