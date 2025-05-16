@@ -13,7 +13,6 @@
 int main() {
     // QuantLib 라이브러리 사용 예제
     /* 부사장님 Algo Bond 입수 데이터 */
-    /*
     const long evaluationDate = 45657;          // 2024-12-31
     const long settlementDays = 0;
     const long issueDate = 44175;
@@ -38,36 +37,36 @@ int main() {
     const long numberOfCsrTenors = 5;
     const long csrDates[] = { 183, 365, 1095, 1825, 3650 };
     const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
-    */
 
-    /* VBA 입수 데이터 */
+    /* 테스트 데이터 */
+    /*
     const long evaluationDate = 45657;          // 2024-12-31
     const long settlementDays = 0;              // 0
     const long issueDate = 45504;               // 2024-07-31
     const long maturityDate = 46599;            // 2027-07-31
     const double notional = 3000000.0;          
     const double couponRate = 0.055;
-    const int couponDayCounter = 5; //Actual/Actual(Bond)
-    const long numberOfCpnSch = 7;
-    const long paymentDates[] = { 45688, 45869, 46052, 46234, 46416, 46598, 46783 };
-    const long realStartDates[] = { 45504, 45688, 45869, 46052, 46234, 46416, 46598 };
-    const long realEndDates[] = { 45688, 45869, 46052, 46234, 46416, 46598, 46783 };
+    const int couponDayCounter = 7; // 30U/360 BASIS (미구현, bond.cpp에서 변경)
+    const long numberOfCpnSch = 6;
+    const long paymentDates[] = { 45688, 45869, 46052, 46234, 46416, 46598 };
+    const long realStartDates[] = { 45504, 45688, 45869, 46052, 46234, 46416 };
+    const long realEndDates[] = { 45688, 45869, 46052, 46234, 46416, 46598 };
     const long numberOfGirrTenors = 10;
     const long girrDates[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
-    const double girrRates[] = { 0.0434026344, 0.0552167219, 0.0539846356, 0.0403908251, 0.0527258415, 0.0524191116, 0.0526506237, 0.0405914923, 0.0403457538, 0.0377604176 };
-    const long girrDayCounter = 1; // Actual/365
+    const double girrRates[] = { 0.0434026344, 0.042590633, 0.041358547, 0.040390825, 0.040099753, 0.039793023, 0.040024535, 0.040591492, 0.040345754, 0.037760418 };
+    const long girrDayCounter = 1; // Actual/365 (미구현, bond.cpp에서 변경)
     const long girrInterpolator = 1; // Linear, 외삽 허용
-    const long girrCompounding = 1; // Continuous
-    const long girrFrequency = 1; // 쿠폰 지급 주기에 따라 Annual -> SemiAnnual로 변경(값 변동 없음)
+    const long girrCompounding = 1; // Continuous (미구현, bond.cpp에서 변경)
+    const long girrFrequency = 1; // Annual (미구현, bond.cpp에서 변경)
     
-    // CSR 스프레드 로직 VBA상 미구현으로 인한 CSR 커브 미적용 후 테스트
-    const double spreadOverYield = 0.00;
-    const int spreadOverYieldCompounding = 1; // Continuous
-    const int spreadOverYieldDayCounter = 1; // Actual/365
+    const double spreadOverYield = 0.0;
+    const int spreadOverYieldCompounding = 1; // Continuous (미구현, bond.cpp에서 변경)
+    const int spreadOverYieldDayCounter = 1; // Actual/365 (미구현, bond.cpp에서 변경)
     const long numberOfCsrTenors = 5; 
     const long csrDates[] = { 183, 365, 1095, 1825, 3650 };
-    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-    
+    const double csrRates[] = { 0.012626089, 0.012626089, 0.012626089, 0.012626089, 0.012626089 };
+    */
+
     //printSettlementDate(date, settlementDays);
     ZeroBondTest(
         evaluationDate,

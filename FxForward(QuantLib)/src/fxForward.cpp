@@ -17,7 +17,7 @@ extern "C" {
         , const char* buySideCurrency               // INPUT 4.  매입 통화 (Buy Side Currency)
         , double notionalForeign                    // INPUT 5.  매입 외화기준 명목금액 (NotionalF)
         , unsigned short buySideDCB                 // INPUT 6.  매입 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        , const char* buySideDcCurveId                // INPUT 7.  매입 기준 할인 커브 (Buy Side Discount Curve)
+        , const char* buySideDcCurveId              // INPUT 7.  매입 기준 할인 커브 (Buy Side Discount Curve)
 
         , unsigned int buyCurveDataSize             // INPUT 8.  매입 커브 데이터 사이즈
         , const double* buyCurveYearFrac            // INPUT 9.  매입 커브 만기 기간 (Buy Curve Term)  
@@ -26,7 +26,7 @@ extern "C" {
         , const char* sellSideCurrency              // INPUT 11. 매도 통화 (sell Side Currency)
         , double notionalDomestic                   // INPUT 12. 매도 원화기준 명목금액 (NotionalD)
         , unsigned short sellSideDCB                // INPUT 13. 매도 기준 Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
-        , const char* sellSideDcCurveId               // INPUT 14. 매도 기준 할인 커브 (Buy Side Discount Curve)
+        , const char* sellSideDcCurveId             // INPUT 14. 매도 기준 할인 커브 (Buy Side Discount Curve)
 
         , unsigned int sellCurveDataSize            // INPUT 15. 매도 커브 데이터 사이즈
         , const double* sellCurveYearFrac		    // INPUT 16. 매도 커브 만기 기간 (Sell Curve Term)     

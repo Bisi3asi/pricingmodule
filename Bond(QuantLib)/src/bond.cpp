@@ -58,7 +58,7 @@ extern "C" double EXPORT ZeroBondTest(
     Size settlementDays_ = settlementDays;
     Real notional_ = notional;
     std::vector<Rate> couponRate_ = std::vector<Rate>(1, couponRate);
-    DayCounter couponDayCounter_ = ActualActual(ActualActual::ISDA); // TODO 변환 함수 적용
+    DayCounter couponDayCounter_ = ActualActual(ActualActual::ISDA); // TODO 변환 함수 적용 (DayCounter)
     std::vector<Date> girrDates_;
     std::vector<Real> girrRates_;
     std::vector<Period> girrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
@@ -73,17 +73,16 @@ extern "C" double EXPORT ZeroBondTest(
     }
     // TODO 변환 함수 적용
     DayCounter girrDayCounter_ = Actual365Fixed();
-    Linear girrInterpolator_ = Linear();
-    Compounding girrCompounding_ = Compounding::Continuous;
-    //Frequency girrFrequency_ = Frequency::Annual;
-    Frequency girrFrequency_ = Frequency::Semiannual;                               /* 수정 1) 쿠폰지급 주기에 맞춰 Annual -> Semiannual로 변경했으나 값 차이 없음 */
+    Linear girrInterpolator_ = Linear(); // TODO 변환 함수 적용 (Interpolator)
+    Compounding girrCompounding_ = Compounding::Continuous; // TODO 변환 함수 적용 (Compounding)
+    Frequency girrFrequency_ = Frequency::Annual;
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
         girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
     RelinkableHandle<YieldTermStructure> girrCurve;
     girrCurve.linkTo(girrTermstructure);
     double tmpSpreadOverYield = spreadOverYield;
-    Compounding spreadOverYieldCompounding_ = Compounding::Continuous;
-    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // Actual/365
+    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // TODO 변환 함수 적용 (Compounding)
+    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // TODO 변환 함수 적용 (DayCounter)
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
     std::vector<Date> csrDates_;
     std::vector<Period> csrPeriod = { Period(6, Months), Period(1, Years), Period(3, Years), Period(5, Years), Period(10, Years) };
@@ -116,7 +115,7 @@ extern "C" double EXPORT ZeroBondTest(
         fixedBondSchedule_,
         couponRate_,
         couponDayCounter_,
-        ModifiedFollowing,
+        ModifiedFollowing, // TODO 변환 함수 적용 (DayConvention)
         100.0);
     fixedRateBond.setPricingEngine(bondEngine);
     //    //디버깅용 배열
@@ -129,7 +128,7 @@ extern "C" double EXPORT ZeroBondTest(
     //    }
     Real npv = fixedRateBond.NPV();
     std::cout << "NPV: " << npv << std::endl;
-    Real girrBump = 0.01;                                                           /* 수정 2) girrBump 1bp -> 100bp로 조정 */
+    Real girrBump = 0.0001;
     std::vector<Real> disCountingGirr;
     for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
         std::vector<Rate> bumpGirrRates = girrRates_;
