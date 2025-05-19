@@ -70,10 +70,10 @@
 			"callFunction": "pricing", "returnVariable": "%return%"
 		},
 		"delta": {
-			"callFunction": "pricing", "returnVariable": "%resultGirrDelta%", "variableIndex": 0
+			"callFunction": "pricing", "returnVariable": "%resultGirrDelta%"
 		},
 		"gamma": {
-			"callFunction": "pricing", "returnVariable": "%resultCsrDelta%", "variableIndex": 0
+			"callFunction": "pricing", "returnVariable": "%resultCsrDelta%"
 		},
 		"vega": {},
 		"theta": {},
