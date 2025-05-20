@@ -18,27 +18,27 @@ int main() {
 
     const char buySideCurrency[4] = "EUR";
     const double notionalForeign = 30000;
-    const unsigned short buySideDCB = 3;    // Act/365
+    const int buySideDCB = 3;    // Act/365
     const char buySideDcCurveId[20] = "IREUR-CRS";
 
     const char sellSideCurrency[4] = "KRW";
     const double notionalDomestic = 45273000;
-    const unsigned short sellSideDCB = 3;   // Act/365
+    const int sellSideDCB = 3;   // Act/365
     const char sellSideDcCurveId[20] = "IRKRW-CRS";
 
     // 테스트 데이터 정의 (buy Curve)
-    const unsigned int buyCurveDataSize = 10;
+    const int buyCurveDataSize = 10;
     const double buyCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
     const double buyMarketData[buyCurveDataSize] = { 2.64438703, 2.38058648, 2.10763173, 1.97593133, 1.98563969, 2.07148214, 2.25037149, 2.36128877, 2.34768987, 2.2255283 };
 
     // 테스트 데이터 정의 (sell Curve)
-    const unsigned int sellCurveDataSize = 10;
+    const int sellCurveDataSize = 10;
     const double sellCurveYearFrac[buyCurveDataSize] = { 0.25, 0.5, 1, 2, 3, 5, 10, 15, 20, 30 };
     const double sellMarketData[buyCurveDataSize] = { 2.9931427, 2.5760797, 2.3328592, 2.1926168, 2.1934282, 2.23125, 2.2380958, 2.115366, 2.0361275, 2.0361275 };
 
     // 테스트 데이터 정의 (cal Type, logYn)
-	const unsigned short calType = 1; // 1: NetPV, 2: GIRR Sensitivity
-	const unsigned short logYn = 1; // 0: No, 1: Yes
+	const int calType = 1; // 1: NetPV, 2: GIRR Sensitivity
+	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
     double resultNetPvFxSensitivity[2];
