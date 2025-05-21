@@ -1,0 +1,66 @@
+{
+	"_comment": "ex)FXF_REL@45834,45657,1532.578,0,EUR,30000,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0264438703|0.0238058648|0.0210763173|0.0197593133|0.0198563969|0.0207148214|0.0225037149|0.0236128877|0.0234768987|0.022255283,KRW,45273000,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.029931427|0.025760797|0.023328592|0.021926168|0.021934282|0.0223125|0.022380958|0.02115366|0.020361275|0.020361275,1@1",
+ 	"name" : "fxForward",
+	"product": "FXF_REL",
+	"inputArguments":[
+			{ "field": "maturityDateSerial", "type": "long" },  
+		  	{ "field": "evaluationDateSerial", "type": "long" },
+		  	{ "field": "exchangeRate", "type": "double" },
+		  	{ "field": "isBuySideDomestic",	"type": "int" },
+		  	{ "field": "buySideCurrency", "type": "char" },
+		  	{ "field": "buySideNotional", "type": "double" },
+		  	{ "field": "buySideDcb", "type": "int" },
+		  	{ "field": "buyCurveDataSize", "type": "int" },
+		  	{ "field": "buyCurveTenorDays",	"type": "int_ptr" },
+		  	{ "field": "buyCurveRates",	"type": "double_ptr" },
+			{ "field": "sellSideCurrency", "type": "char" },
+		  	{ "field": "sellSideNotional", "type": "double" },
+		  	{ "field": "sellSideDcb", "type": "int" },
+			{ "field": "sellCurveDataSize",	"type": "int" },
+		  	{ "field": "sellCurveTenorDays", "type": "int_ptr" },
+		  	{ "field": "sellCurveRates", "type": "double_ptr" },
+			{ "field": "logYn", "type": "int" }
+		],
+
+	"functions":[
+		{ 
+		  "name": "pricing", 
+		  "parameters": [
+			{ "field": "maturityDateSerial" },  
+		  	{ "field": "evaluationDateSerial" },
+		  	{ "field": "exchangeRate" },
+		  	{ "field": "isBuySideDomestic" },
+		  	{ "field": "buySideCurrency" },
+		  	{ "field": "buySideNotional" },
+		  	{ "field": "buySideDcb" },
+		  	{ "field": "buyCurveDataSize" },
+		  	{ "field": "buyCurveTenorDays" },
+		  	{ "field": "buyCurveRates" },
+			{ "field": "sellSideCurrency" },
+		  	{ "field": "sellSideNotional" },
+		  	{ "field": "sellSideDcb" },
+		  	{ "field": "sellCurveDataSize" },
+		  	{ "field": "sellCurveTenorDays" },
+		  	{ "field": "sellCurveRates" },
+		  	{ "field": "logYn" },
+		  	{ "field": "resultNetPvFxSensitivity", "type": "double_ptr", "size": "2" },
+			{ "field": "resultGirrTenorSensitivity", "type": "double_ptr", "size": "44" }		  
+		], 
+		  "returnType": "void"
+		}
+	],
+	"results" : {
+		"price": {
+			"callFunction": "pricing", "returnVariable": "%resultNetPvFxSensitivity%", "variableIndex": -1
+		},
+		"delta": {},
+		"gamma": {},
+		"vega": {},
+		"theta": {},
+		"rho": {},
+		"cross": {},
+		"girr": {
+			"callFunction": "pricing", "returnVariable": "%resultGirrTenorSensitivity%", "variableIndex": -1
+		}
+	}
+}

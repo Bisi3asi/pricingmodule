@@ -1,7 +1,7 @@
-#ifndef FXFORWARD_H
+Ôªø#ifndef FXFORWARD_H
 #define FXFORWARD_H
 
-// function ø‹∫Œ ¿Œ≈Õ∆‰¿ÃΩ∫ export ¡§¿«
+// function Ïô∏Î∂Ä Ïù∏ÌÑ∞ÌéòÏù¥Ïä§ export Ï†ïÏùò
 #ifdef _WIN32
     #ifdef BUILD_LIBRARY
         #define EXPORT_API __declspec(dllexport) __stdcall
@@ -39,32 +39,31 @@
 extern "C" {
     void EXPORT_API pricing(
         // ===================================================================================================
-        long maturityDateSerial                     // INPUT 1.  ∏∏±‚¿œ (Maturity Date) 
-        , long revaluationDateSerial                // INPUT 2.  ∆Ú∞°¿œ (Revaluation Date)
-        , double exchangeRate                       // INPUT 3.  «ˆπ∞»Ø¿≤ (Domestic / Foreign)  (Exchange Rate)
-        , int isBuySideDomestic					    // INPUT 4.  ∏≈¿‘ ≈Î»≠ ø¯»≠ ø©∫Œ (0: No, 1: Yes)     
+        const long maturityDateSerial               // INPUT 1.  ÎßåÍ∏∞Ïùº (Maturity Date) 
+        , const long evaluationDateSerial           // INPUT 2.  ÌèâÍ∞ÄÏùº (Revaluation Date)
+        , const double exchangeRate                 // INPUT 3.  ÌòÑÎ¨ºÌôòÏú® (Domestic / Foreign)  (Exchange Rate)
+        , const int isBuySideDomestic			    // INPUT 4.  Îß§ÏûÖ ÌÜµÌôî ÏõêÌôî Ïó¨Î∂Ä (0: No, 1: Yes)     
 
-        , const char* buySideCurrency               // INPUT 5.  ∏≈¿‘ ≈Î»≠ (Buy Side Currency)
-        , double notionalForeign                    // INPUT 6.  ∏≈¿‘ ø‹»≠±‚¡ÿ ∏Ì∏Ò±›æ◊ (Notional Foreign)
-        , int buySideDCB                            // INPUT 7.  ∏≈¿‘ ±‚¡ÿ Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        , const char* buySideCurrency               // INPUT 5.  Îß§ÏûÖ ÌÜµÌôî (Buy Side Currency)
+        , const double buySideNotional              // INPUT 6.  Îß§ÏûÖ Î™ÖÎ™©Í∏àÏï° (Buy Side Notional)
+        , const int buySideDcb                      // INPUT 7.  Îß§ÏûÖ Í∏∞Ï§Ä Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
 
-        , int buyCurveDataSize                      // INPUT 8.  ∏≈¿‘ ƒø∫Í µ•¿Ã≈Õ ªÁ¿Ã¡Ó
-        , const double* buyCurveYearFrac            // INPUT 9.  ∏≈¿‘ ƒø∫Í ∏∏±‚ ±‚∞£ (Buy Curve Term)  
-        , const double* buyMarketData               // INPUT 10. ∏≈¿‘ ƒø∫Í ∏∂ƒœ µ•¿Ã≈Õ (Buy Curve Market Data)
+        , const int buyCurveDataSize                // INPUT 8.  Îß§ÏûÖ Ïª§Î∏å Îç∞Ïù¥ÌÑ∞ ÏÇ¨Ïù¥Ï¶à
+        , const int* buyCurveTenorDays              // INPUT 9.  Îß§ÏûÖ Ïª§Î∏å ÎßåÍ∏∞ Í∏∞Í∞Ñ (Buy Curve Term)  
+        , const double* buyCurveRates               // INPUT 10. Îß§ÏûÖ Ïª§Î∏å ÎßàÏºì Îç∞Ïù¥ÌÑ∞ (Buy Curve Market Data)
 
-        , const char* sellSideCurrency              // INPUT 11. ∏≈µµ ≈Î»≠ (sell Side Currency)
-        , double notionalDomestic                   // INPUT 12. ∏≈µµ ø¯»≠±‚¡ÿ ∏Ì∏Ò±›æ◊ (Notional Domestic)
-        , int sellSideDCB                           // INPUT 13. ∏≈µµ ±‚¡ÿ Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
+        , const char* sellSideCurrency              // INPUT 11. Îß§ÎèÑ ÌÜµÌôî (Sell Side Currency)
+        , const double sellSideNotional             // INPUT 12. Îß§ÎèÑ Î™ÖÎ™©Í∏àÏï° (Sell Side Notional)
+        , const int sellSideDcb                     // INPUT 13. Îß§ÎèÑ Í∏∞Ï§Ä Day Count Basis [30U/360 = 0, Act/Act = 1, Act/360 = 2, Act/365 = 3, 30E/360 = 4]
 
-        , int sellCurveDataSize                     // INPUT 14. ∏≈µµ ƒø∫Í µ•¿Ã≈Õ ªÁ¿Ã¡Ó
-        , const double* sellCurveYearFrac		    // INPUT 15. ∏≈µµ ƒø∫Í ∏∏±‚ ±‚∞£ (Sell Curve Term)     
-        , const double* sellMarketData              // INPUT 16. ∏≈µµ ƒø∫Í ∏∂ƒœ µ•¿Ã≈Õ (Sell Curve Market Data) 
+        , const int sellCurveDataSize               // INPUT 14. Îß§ÎèÑ Ïª§Î∏å Îç∞Ïù¥ÌÑ∞ ÏÇ¨Ïù¥Ï¶à
+        , const int* sellCurveTenorDays		        // INPUT 15. Îß§ÎèÑ Ïª§Î∏å ÎßåÍ∏∞ Í∏∞Í∞Ñ (Sell Curve Term)     
+        , const double* sellCurveRates              // INPUT 16. Îß§ÎèÑ Ïª§Î∏å ÎßàÏºì Îç∞Ïù¥ÌÑ∞ (Sell Curve Market Data) 
 
-        , int logYn                                 // INPUT 17. ∑Œ±◊ ∆ƒ¿œ ª˝º∫ ø©∫Œ (0: No, 1: Yes)
+        , const int logYn                           // INPUT 17. Î°úÍ∑∏ ÌååÏùº ÏÉùÏÑ± Ïó¨Î∂Ä (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
-        , double* resultGirrTenor                   // OUTPUT 2. GIRR Delta Tenor [index 0 ~ 10] {0(Basis), 3m, 6m, 1y, 2y, 3y, 5y, 10y, 15y, 20y, 30y}
-        , double* resultGirrSensitivity 			// OUTPUT 3. GIRR Delta Sensitivity [index 0 ~ 10] Tenorø° «ÿ¥Á«œ¥¬ πŒ∞®µµ
+        , double* resultGirrTenorSensitivity        // OUTPUT 2. GIRR Delta Tenor [index 0 ~ 10] Buy Side Tenor, [index 11 ~ 21] Buy Side Sensitivity, [index 22 ~ 32] Sell Side Tenor, [index 33 ~ 43] Sell Side Sensitivity 
         // ===================================================================================================
     );
 }
@@ -72,7 +71,7 @@ extern "C" {
 /* struct */
 struct TradeInformation {
     QuantLib::Date maturityDate;
-    QuantLib::Date revaluationDate;
+    QuantLib::Date evaluationDate;
     QuantLib::Real exchangeRate;
 	int isBuySideDomestic;
 };
@@ -102,7 +101,7 @@ struct SellSideValuationCashFlow {
 
 struct Curve {
 	int sideFlag;
-    QuantLib::Real marketData;
+    QuantLib::Real rate;
     QuantLib::Real yearFrac;
     QuantLib::Real dcFactor;
     QuantLib::Real zeroRate;
@@ -120,13 +119,13 @@ void initResult(double* result, int size);
 
 void initDayCounters(std::vector<QuantLib::DayCounter>& dayCounters);
 
-void inputTradeInformation(long maturityDateSerial, long revaluationDateSerial, double exchangeRate, int isBuySideDomestic, TradeInformation& tradeInformation);
+void inputTradeInformation(long maturityDateSerial, long evaluationDateSerial, double exchangeRate, int isBuySideDomestic, TradeInformation& tradeInformation);
 
-void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, int dcb, BuySideValuationCashFlow& bSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
+void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long evaluationDateSerial, long cashFlowDateSerial, int dcb, BuySideValuationCashFlow& bSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
 
-void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long revaluationDateSerial, long cashFlowDateSerial, int dcb, SellSideValuationCashFlow& sSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
+void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long evaluationDateSerial, long cashFlowDateSerial, int dcb, SellSideValuationCashFlow& sSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
 
-void inputCurveData(int buyCurveDataSize, const double* buyYearFrac, const double* buyMarketData, int sellCurveDataSize, const double* sellYearFrac, const double* sellMarketData, std::vector<Curve>& curves);
+void inputCurveData(const int evaluationDateSerial, const int buyCurveDataSize, const int* buyCurveTenorDays, const double* buyCurveRates, const int buySideDcb, const int sellCurveDataSize, const int* sellCurveTenorDays, const double* sellCurveRates, const int sellSideDcb, std::vector<QuantLib::DayCounter>& dayCounters, std::vector<Curve>& curves);
 
 void setDcRate(Girr& girr, std::vector<Curve>& curves);
 
@@ -146,11 +145,11 @@ QuantLib::Real linterp(const std::vector<QuantLib::Real>& yearFractions, const s
 
 QuantLib::Real calDomesticNetPV(const QuantLib::Real buySidePV, const QuantLib::Real sellSidePV, const QuantLib::Real exchangeRate, const int isBuySideDomestic);
 
-QuantLib::Real calFxSensitivity(const QuantLib::Real buySidePV, const QuantLib::Real sellSidePV, const QuantLib::Real exchangeRate, const char* buySideCurrency, const QuantLib::Real domesticNetPV);
+QuantLib::Real calFxSensitivity(const QuantLib::Real buySidePV, const QuantLib::Real sellSidePV, const QuantLib::Real exchangeRate, const double fxBumpRate, const int isBuySideDomestic, const QuantLib::Real domesticNetPV);
 
 QuantLib::Real calGirrSensitivity(const QuantLib::Real domesticNetPV, const QuantLib::Real oroginalNetPV);
 
-QuantLib::DayCounter getDayCounterByDCB(int dcb, std::vector<QuantLib::DayCounter>& dayCounters);
+QuantLib::DayCounter getDayCounterByCode(const int code, std::vector<QuantLib::DayCounter>& dayCounters);
 
 std::vector<QuantLib::Real> getCurveYearFrac(const int sideFlag, const std::vector<Curve>& curves);
 
@@ -161,9 +160,9 @@ double roundToDecimals(double value, int n);
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
 
-void printAllInputData(long maturityDate, long revaluationDate, double exchangeRate, int isBuySideDomestic, const char* buySideCurrency, double notionalForeign, int buySideDCB, int buyCurveDataSize, const double* buyCurveYearFrac, const double* buyMarketData, const char* sellSideCurrency, double notionalDomestic, int sellSideDCB, int sellCurveDataSize, const double* sellCurveYearFrac, const double* sellMarketData,int logYn);
+void printAllInputData(const long maturityDateSerial, const long evaluationDateSerial, const double exchangeRate, const int isBuySideDomestic, const char* buySideCurrency, const double buySideNotional, const int buySideDcb, const int buyCurveDataSize, const int* buyCurveTenorDays, const double* buyCurveRates, const char* sellSideCurrency, const double sellSideNotional, const int sellSideDcb, const int sellCurveDataSize, const int* sellCurveTenorDays, const double* sellCurveRates);
 
-void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrTenor, const double* resultGirrSensitivity);
+void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrTenorSensitivity);
 
 void printAllData(const TradeInformation& tradeInformation, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, const std::vector<Curve>& curves, const std::vector<Girr>& girrs);
 
