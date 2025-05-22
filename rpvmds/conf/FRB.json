@@ -27,7 +27,7 @@
 			{ "field": "numberOfCsrTenors",	"type": "int" },
 			{ "field": "csrTenorDays", "type": "long_ptr" },
 			{ "field": "csrRates", "type": "double_ptr" },
-			{ "field": "logYn", "type": "int"}
+			{ "field": "logYn", "type": "int", "defaultValue": 0 }
 		],
 
 	"functions":[
