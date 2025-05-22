@@ -31,7 +31,8 @@ extern "C" {
         , const int* sellCurveTenorDays		        // INPUT 15. 매도 커브 만기 기간 (Sell Curve Term)     
         , const double* sellCurveRates              // INPUT 16. 매도 커브 마켓 데이터 (Sell Curve Market Data) 
 
-        , const int logYn                           // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
+        , const int calType                         // INPUT 17. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
+        , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
         , double* resultGirrTenorSensitivity        // OUTPUT 2. GIRR Delta Tenor [index 0 ~ 10] Buy Side Tenor, [index 11 ~ 21] Buy Side Sensitivity, [index 22 ~ 32] Sell Side Tenor, [index 33 ~ 43] Sell Side Sensitivity 
@@ -46,15 +47,17 @@ extern "C" {
         // 디버그용 메소드는 아래 for debug 메소드를 참고
         if (logYn == 1) {
             initLogger("fxForward.log"); // 생성 파일명 지정
-            info("==============[fxForward Logging Started!]==============");
-            printAllInputData( // Input 데이터 로깅
-                maturityDateSerial, evaluationDateSerial, exchangeRate, isBuySideDomestic,
-                buySideCurrency, buySideNotional, buySideDcb,
-                buyCurveDataSize, buyCurveTenorDays, buyCurveRates,
-                sellSideCurrency, sellSideNotional, sellSideDcb,
-                sellCurveDataSize, sellCurveTenorDays, sellCurveRates
-            );
         }
+
+        info("==============[fxForward Logging Started!]==============");
+        // Input 데이터 로깅
+        printAllInputData( 
+            maturityDateSerial, evaluationDateSerial, exchangeRate, isBuySideDomestic,
+            buySideCurrency, buySideNotional, buySideDcb,
+            buyCurveDataSize, buyCurveTenorDays, buyCurveRates,
+            sellSideCurrency, sellSideNotional, sellSideDcb,
+            sellCurveDataSize, sellCurveTenorDays, sellCurveRates
+        );
 
         TradeInformation tradeInfo{}; // 기본 상품 정보
         BuySideValuationCashFlow bSideCashFlow{}; // 매입 통화 현금흐름
@@ -80,35 +83,44 @@ extern "C" {
         // Curve              데이터 생성 
         inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
 
-        /* OUTPUT 1. NetPV, FX Sensitivity 산출 및 결과 적재 */
-        resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
-        resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
-
-        /*  GIRR 커브별 Sensitivity 산출 */
-        for (int i = 0; i < girrs.size(); ++i) {
-            auto& girr = girrs[i];
-
-            // GIRR Delta 산출 간 커브 데이터 초기화 (커브 MarKet Data Value 변경하며 Delta 산출)
-            inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
-
-            // GIRR Delta Sensitivity 산출
-            processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultNetPvFxSensitivity);
+        if (calType != 1 && calType != 3) {
+			error("Invalid calculation type. Please check the calculation type.");
+            return;
         }
 
-        double tenor[11] = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
-
-        // OUTPUT 2. GIRR Delta Tenor 결과 적재 (index 0 ~ 10, 22 ~ 32)
-        for (int i = 0; i < 11; ++i) {
-			resultGirrTenorSensitivity[i] = tenor[i]; // Buy Side Tenor
-            resultGirrTenorSensitivity[i + 22] = tenor[i]; // Sell Side Tenor
+        if (calType == 1 || calType == 3) {
+            /* OUTPUT 1. NetPV, FX Sensitivity 산출 및 결과 적재 */
+            resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
+            resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
         }
-		// OUTPUT 2. GIRR Delta Sensitivity 결과 적재  (index 11 ~ 21, 33 ~ 43)
-        for (const auto& girr : girrs) {
-            for (int i = 0; i < 11; ++i) {  // tenor에서 yearFrac 위치 찾기
-                if (girr.yearFrac == tenor[i]) {
-					int offset = (girr.sideFlag == 0) ? 11 : 33; // Buy Side이면 index 11, Sell Side이면 index 33부터 적재
-                    resultGirrTenorSensitivity[offset + i] = girr.sensitivity;
-                    break;
+
+        if (calType == 3) {
+            /*  GIRR 커브별 Sensitivity 산출 */
+            for (int i = 0; i < girrs.size(); ++i) {
+                auto& girr = girrs[i];
+
+                // GIRR Delta 산출 간 커브 데이터 초기화 (커브 MarKet Data Value 변경하며 Delta 산출)
+                inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
+
+                // GIRR Delta Sensitivity 산출
+                processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultNetPvFxSensitivity);
+            }
+
+            double tenor[11] = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+
+            // OUTPUT 2. GIRR Delta Tenor 결과 적재 (index 0 ~ 10, 22 ~ 32)
+            for (int i = 0; i < 11; ++i) {
+                resultGirrTenorSensitivity[i] = tenor[i]; // Buy Side Tenor
+                resultGirrTenorSensitivity[i + 22] = tenor[i]; // Sell Side Tenor
+            }
+            // OUTPUT 2. GIRR Delta Sensitivity 결과 적재  (index 11 ~ 21, 33 ~ 43)
+            for (const auto& girr : girrs) {
+                for (int i = 0; i < 11; ++i) {  // tenor에서 yearFrac 위치 찾기
+                    if (girr.yearFrac == tenor[i]) {
+                        int offset = (girr.sideFlag == 0) ? 11 : 33; // Buy Side이면 index 11, Sell Side이면 index 33부터 적재
+                        resultGirrTenorSensitivity[offset + i] = girr.sensitivity;
+                        break;
+                    }
                 }
             }
         }
@@ -123,12 +135,26 @@ extern "C" {
 }
 
 // 결과값 초기화
-void initResult(double* result, int size) {
+void initResult(double* result, const int size) {
     fill_n(result, size, 0.0);
 }
 
+// Day Counter 객체 생성
+void initDayCounters(vector<DayCounter>& dayCounters) {
+
+    dayCounters.clear();
+    dayCounters.reserve(6);
+
+    dayCounters.emplace_back(Thirty360(Thirty360::USA));         // 0: 30U/360
+    dayCounters.emplace_back(ActualActual(ActualActual::ISDA));  // 1: Act/Act
+    dayCounters.emplace_back(Actual360());                       // 2: Act/360
+    dayCounters.emplace_back(Actual365Fixed());                  // 3: Act/365
+    dayCounters.emplace_back(Thirty360(Thirty360::European));    // 4: 30E/360
+    dayCounters.emplace_back();                                  // 5: ERR
+}
+
 // 거래정보 입력
-void inputTradeInformation(long maturityDateSerial, long evaluationDateSerial, double exchangeRate, int isBuySideDomestic, TradeInformation& tradeInformation) {
+void inputTradeInformation(const long maturityDateSerial, const long evaluationDateSerial, const double exchangeRate, const int isBuySideDomestic, TradeInformation& tradeInformation) {
     
     tradeInformation.maturityDate = Date(maturityDateSerial); // 만기일
     tradeInformation.evaluationDate = Date(evaluationDateSerial); // 평가일
@@ -137,7 +163,7 @@ void inputTradeInformation(long maturityDateSerial, long evaluationDateSerial, d
 }
 
 // 매입 통화 현금흐름 입력
-void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long evaluationDateSerial, long cashFlowDateSerial, int dcb, BuySideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
+void inputBuySideValuationCashFlow(const char* currency, const double principalAmount, const long evaluationDateSerial, const long cashFlowDateSerial, const int dcb, BuySideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
     
     snprintf(cashflow.currency, sizeof(cashflow.currency), "%s", currency); // 통화
     cashflow.principalAmount = principalAmount; // 금액
@@ -148,7 +174,7 @@ void inputBuySideValuationCashFlow(const char* currency, double principalAmount,
 }
 
 // 매도 통화 현금흐름 입력
-void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long evaluationDateSerial, long cashFlowDateSerial, int dcb, SellSideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
+void inputSellSideValuationCashFlow(const char* currency, const double principalAmount, const long evaluationDateSerial, const long cashFlowDateSerial, const int dcb, SellSideValuationCashFlow& cashflow, vector<DayCounter>& dayCounters) {
     
     snprintf(cashflow.currency, sizeof(cashflow.currency), "%s", currency); // 통화
     cashflow.principalAmount = principalAmount; // 금액
@@ -186,22 +212,8 @@ void inputCurveData(const int evaluationDateSerial, const int buyCurveDataSize, 
     }
 }
 
-// Day Counter 객체 생성
-void initDayCounters(vector<DayCounter>& dayCounters) {
-    
-    dayCounters.clear();
-    dayCounters.reserve(6);
-
-    dayCounters.emplace_back(Thirty360(Thirty360::USA));         // 0: 30U/360
-    dayCounters.emplace_back(ActualActual(ActualActual::ISDA));  // 1: Act/Act
-    dayCounters.emplace_back(Actual360());                       // 2: Act/360
-    dayCounters.emplace_back(Actual365Fixed());                  // 3: Act/365
-    dayCounters.emplace_back(Thirty360(Thirty360::European));    // 4: 30E/360
-    dayCounters.emplace_back();                                  // 5: ERR
-}
-
 // Net Present Value 산출 프로세스
-double processNetPV(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, vector<Curve>& curves) {
+double processNetPV(const TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, vector<Curve>& curves) {
     
     // 1. 부트스트래핑으로 discount factor, zero rate 산출
     bootstrapZeroCurveContinuous(curves);
@@ -214,13 +226,13 @@ double processNetPV(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSide
 }
 
 // Fx Sensitivity 산춢 프로세스
-double processFxSensitivity(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow) {
+double processFxSensitivity(const TradeInformation& tradeInfo, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow) {
 	
     return calFxSensitivity(bSideCashFlow.presentValue, sSideCashFlow.presentValue, tradeInfo.exchangeRate, 1.1, tradeInfo.isBuySideDomestic, bSideCashFlow.domesticNetPV);
 }
 
 // 각 GIRR Curve 별 Sensitivity 산출 프로세스
-void processGirrSensitivity(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, vector<Curve>& curves, Girr& girr, double* resultNetPvFxSensitivity) {
+void processGirrSensitivity(const TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, vector<Curve>& curves, Girr& girr, double* resultNetPvFxSensitivity) {
     
 	// 1. GIRR Curve에 따른 마켓 데이터 할인 적용
     setDcRate(girr, curves);
@@ -235,7 +247,7 @@ void processGirrSensitivity(TradeInformation& tradeInfo, BuySideValuationCashFlo
 }
 
 // GIRR Sensitity 산출을 위해 각 GIRR Curve에 따른 마켓 데이터 할인 적용
-void setDcRate(Girr& girr, vector<Curve>& curves) {
+void setDcRate(const Girr& girr, vector<Curve>& curves) {
     
     for (auto& curve : curves) {
 		// Basis curve : yearFrac 상관없이 동일한 Curve에 대해 마켓 데이터 할인 적용
@@ -250,7 +262,7 @@ void setDcRate(Girr& girr, vector<Curve>& curves) {
 }
 
 // GIRR Delta Curve 데이터 생성
-void setGirrDeltaCurve(BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, vector<Girr>& girrs) {
+void setGirrDeltaCurve(const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, vector<Girr>& girrs) {
     
     girrs.clear(); // GIRR Delta Sensirivity 초기화
     girrs.reserve(22); // capacity 할당
@@ -441,7 +453,7 @@ vector<Real> getCurveZeroRate(const int sideFlag, const vector<Curve>& curves) {
     return resultRange;
 }
 
-double roundToDecimals(double value, int n) {
+double roundToDecimals(const double value, const int n) {
 	double factor = pow(10.0, n);
 	return round(value * factor) / factor;
 }

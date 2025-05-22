@@ -60,7 +60,8 @@ extern "C" {
         , const int* sellCurveTenorDays		        // INPUT 15. 매도 커브 만기 기간 (Sell Curve Term)     
         , const double* sellCurveRates              // INPUT 16. 매도 커브 마켓 데이터 (Sell Curve Market Data) 
 
-        , const int logYn                           // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
+        , const int calType                         // INPUT 17. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
+        , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
         , double* resultGirrTenorSensitivity        // OUTPUT 2. GIRR Delta Tenor [index 0 ~ 10] Buy Side Tenor, [index 11 ~ 21] Buy Side Sensitivity, [index 22 ~ 32] Sell Side Tenor, [index 33 ~ 43] Sell Side Sensitivity 
@@ -115,29 +116,29 @@ struct Girr {
 
 
 /* function */
-void initResult(double* result, int size);
+void initResult(double* result, const int size);
 
 void initDayCounters(std::vector<QuantLib::DayCounter>& dayCounters);
 
-void inputTradeInformation(long maturityDateSerial, long evaluationDateSerial, double exchangeRate, int isBuySideDomestic, TradeInformation& tradeInformation);
+void inputTradeInformation(const long maturityDateSerial, const long evaluationDateSerial, const double exchangeRate, const int isBuySideDomestic, TradeInformation& tradeInformation);
 
-void inputBuySideValuationCashFlow(const char* currency, double principalAmount, long evaluationDateSerial, long cashFlowDateSerial, int dcb, BuySideValuationCashFlow& bSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
+void inputBuySideValuationCashFlow(const char* currency, const double principalAmount, const long evaluationDateSerial, const long cashFlowDateSerial, const int dcb, BuySideValuationCashFlow& bSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
 
-void inputSellSideValuationCashFlow(const char* currency, double principalAmount, long evaluationDateSerial, long cashFlowDateSerial, int dcb, SellSideValuationCashFlow& sSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
+void inputSellSideValuationCashFlow(const char* currency, const double principalAmount, const long evaluationDateSerial, const long cashFlowDateSerial, const int dcb, SellSideValuationCashFlow& sSideCashFlow, std::vector<QuantLib::DayCounter>& dayCounters);
 
 void inputCurveData(const int evaluationDateSerial, const int buyCurveDataSize, const int* buyCurveTenorDays, const double* buyCurveRates, const int buySideDcb, const int sellCurveDataSize, const int* sellCurveTenorDays, const double* sellCurveRates, const int sellSideDcb, std::vector<QuantLib::DayCounter>& dayCounters, std::vector<Curve>& curves);
 
-void setDcRate(Girr& girr, std::vector<Curve>& curves);
+void setDcRate(const Girr& girr, std::vector<Curve>& curves);
 
-void setGirrDeltaCurve(BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, std::vector<Girr>& girrs);
+void setGirrDeltaCurve(const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, std::vector<Girr>& girrs);
 
 void bootstrapZeroCurveContinuous(std::vector<Curve>& curves);
 
-double processNetPV(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, std::vector<Curve>& curves);
+double processNetPV(const TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, std::vector<Curve>& curves);
 
-double processFxSensitivity(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow);
+double processFxSensitivity(const TradeInformation& tradeInfo, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow);
 
-void processGirrSensitivity(TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, std::vector<Curve>& curves, Girr& girr, double* resultNetPvFxSensitivity);
+void processGirrSensitivity(const TradeInformation& tradeInfo, BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, std::vector<Curve>& curves, Girr& girr, double* resultNetPvFxSensitivity);
 
 void valuateFxForward(BuySideValuationCashFlow& bSideCashFlow, SellSideValuationCashFlow& sSideCashFlow, const std::vector<Curve>& curves);
 
@@ -155,7 +156,7 @@ std::vector<QuantLib::Real> getCurveYearFrac(const int sideFlag, const std::vect
 
 std::vector<QuantLib::Real> getCurveZeroRate(const int sideFlag, const std::vector<Curve>& curves);
 
-double roundToDecimals(double value, int n);
+double roundToDecimals(const double value, const int n);
 
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
