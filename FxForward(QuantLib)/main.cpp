@@ -15,7 +15,7 @@ int main() {
     const long maturityDateSerial = 45834; // 2026-05-22
     const long revaluationDateSerial = 45657; // 2024-12-31
     const double exchangeRate = 1532.578;
-	const int isBuySideDomestic = 0; // 0: 매입 통화 원화
+	const int isBuySideDomestic = 0; // 0: 매도 통화 원화
 
 	// 테스트 데이터 정의 (Buy Side Valuation CashFlow)
     const char buySideCurrency[4] = "EUR";
@@ -37,7 +37,8 @@ int main() {
     const int sellCurveTenorDays[buyCurveDataSize] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double sellCurveRates[buyCurveDataSize] = { 0.029931427, 0.025760797, 0.023328592, 0.021926168, 0.021934282, 0.0223125, 0.022380958, 0.02115366, 0.020361275, 0.020361275 };
 
-    // 테스트 데이터 정의 (로깅 여부)
+    // 테스트 데이터 정의 (측정 구분 / 로그파일 생성여부)
+	const int calType = 3; // 1: Price, 2: BASEL 2 Delta, 3: BASEL 3 GIRR / CSR 
 	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
@@ -66,6 +67,7 @@ int main() {
         , sellCurveTenorDays
         , sellCurveRates
 
+        , calType
         , logYn
 
 		, resultNetPvFxSensitivity
