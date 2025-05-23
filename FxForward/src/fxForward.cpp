@@ -35,29 +35,37 @@ extern "C" {
         , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
-        , double* resultGirrTenorSensitivity        // OUTPUT 2. GIRR Delta Tenor [index 0 ~ 10] Buy Side Tenor, [index 11 ~ 21] Buy Side Sensitivity, [index 22 ~ 32] Sell Side Tenor, [index 33 ~ 43] Sell Side Sensitivity 
+        , double* resultGirrDelta                   // OUTPUT 2. GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity, sell Side tenor, sell Side Sensitivity]
         // ===================================================================================================
-    ) {
+    )
+    {
         /* TODO / NOTE */
         // 1. 현재 로직은 연속복리 기반임
         // 2. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
         // 3. 현재 Curve에서 받는 Tenor를 YearFraction으로 변환 후, OUPUT GIRR Tenor에 맞게 소수점 둘째자리에서 반올림 처리 후 매핑 ex) 0.249 -> 0.25
+        // 4. FX Sensitivity는 Basel 2 Delta 이나, Net PV와 동시 산출 가능하므로 첫번째 결과 array에 Net PV와 FX Sensitivity를 적재, calType 2는 비활성화
 
         /* 로거 초기화 */
-        // 디버그용 메소드는 아래 for debug 메소드를 참고
+        // 디버그용 메소드는 아래 FOR DEBUG 메소드를 참고
         if (logYn == 1) {
-            initLogger("fxForward.log"); // 생성 파일명 지정
+            initLogger("FXF.log"); // 생성 파일명 지정
         }
 
-        info("==============[fxForward Logging Started!]==============");
+        info("==============[FXF Logging Started!]==============");
         // Input 데이터 로깅
-        printAllInputData( 
+        printAllInputData(
             maturityDateSerial, evaluationDateSerial, exchangeRate, isBuySideDomestic,
             buySideCurrency, buySideNotional, buySideDcb,
             buyCurveDataSize, buyCurveTenorDays, buyCurveRates,
             sellSideCurrency, sellSideNotional, sellSideDcb,
-            sellCurveDataSize, sellCurveTenorDays, sellCurveRates
+            sellCurveDataSize, sellCurveTenorDays, sellCurveRates,
+            calType
         );
+
+        if (calType != 1 && calType != 3) {
+            error("[FXF]: Invalid calculation type. Only 1 and 3 are supported.");
+            return;
+        }
 
         TradeInformation tradeInfo{}; // 기본 상품 정보
         BuySideValuationCashFlow bSideCashFlow{}; // 매입 통화 현금흐름
@@ -67,7 +75,7 @@ extern "C" {
         vector<DayCounter> dayCounters{}; // Day Counter 데이터(캐시용 집합)
 
         initResult(resultNetPvFxSensitivity, 2); // OUTPUT 1 데이터 초기화
-        initResult(resultGirrTenorSensitivity, 44); // OUTPUT 2 데이터 초기화
+        initResult(resultGirrDelta, 50); // OUTPUT 2 데이터 초기화
 
         /* 기본 데이터 세팅 */
         // Day Counter        데이터 생성
@@ -83,54 +91,61 @@ extern "C" {
         // Curve              데이터 생성 
         inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
 
-        if (calType != 1 && calType != 3) {
-			error("Invalid calculation type. Please check the calculation type.");
+        /* OUTPUT 1. NetPV, FX Sensitivity 산출 및 결과 적재 */
+        resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
+        resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
+
+        // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
+        if (calType == 1) {
+            // OUTPUT 데이터 로깅
+            printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
+            info("==============[FXF Logging Ended!]==============");
             return;
         }
 
-        if (calType == 1 || calType == 3) {
-            /* OUTPUT 1. NetPV, FX Sensitivity 산출 및 결과 적재 */
-            resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
-            resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
+        /*  GIRR 커브별 Sensitivity 산출 */
+        for (int i = 0; i < girrs.size(); ++i) {
+            auto& girr = girrs[i];
+
+            // GIRR Delta 산출 간 커브 데이터 초기화 (커브 MarKet Data Value 변경하며 Delta 산출)
+            inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
+
+            // GIRR Delta Sensitivity 산출
+            processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultNetPvFxSensitivity);
         }
 
-        if (calType == 3) {
-            /*  GIRR 커브별 Sensitivity 산출 */
-            for (int i = 0; i < girrs.size(); ++i) {
-                auto& girr = girrs[i];
+        double girrTenor[11] = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+        Size girrDataSize = sizeof(girrTenor) / sizeof(girrTenor[0]);
 
-                // GIRR Delta 산출 간 커브 데이터 초기화 (커브 MarKet Data Value 변경하며 Delta 산출)
-                inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
+        /* OUTPUT 2. GIRR Delta 결과 적재 */
+        // Index 0: Data Size
+        // Index 1 ~ size: Buy Side Tenor
+        // Index size+1 ~ 2*size: Buy Side Sensitivity
+        // Index 2*size+1 ~ 3*size: Sell Side Tenor
+        // Index 3*size+1 ~ 4*size: Sell Side Sensitivity
+        resultGirrDelta[0] = girrDataSize; // index 0 : GIRR Delta Data Size
 
-                // GIRR Delta Sensitivity 산출
-                processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultNetPvFxSensitivity);
-            }
+        for (int i = 0; i < girrDataSize; ++i) {
+            resultGirrDelta[i + 1] = girrTenor[i]; // Buy Side Girr Tenor
+            resultGirrDelta[i + girrDataSize * 2 + 1] = girrTenor[i]; // Sell Side GIRR Tenor
 
-            double tenor[11] = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
-
-            // OUTPUT 2. GIRR Delta Tenor 결과 적재 (index 0 ~ 10, 22 ~ 32)
-            for (int i = 0; i < 11; ++i) {
-                resultGirrTenorSensitivity[i] = tenor[i]; // Buy Side Tenor
-                resultGirrTenorSensitivity[i + 22] = tenor[i]; // Sell Side Tenor
-            }
-            // OUTPUT 2. GIRR Delta Sensitivity 결과 적재  (index 11 ~ 21, 33 ~ 43)
             for (const auto& girr : girrs) {
-                for (int i = 0; i < 11; ++i) {  // tenor에서 yearFrac 위치 찾기
-                    if (girr.yearFrac == tenor[i]) {
-                        int offset = (girr.sideFlag == 0) ? 11 : 33; // Buy Side이면 index 11, Sell Side이면 index 33부터 적재
-                        resultGirrTenorSensitivity[offset + i] = girr.sensitivity;
+                for (int i = 0; i < girrDataSize; ++i) {  // tenor에서 yearFrac 위치 찾기
+                    if (girr.yearFrac == girrTenor[i]) {
+                        int offset = (girr.sideFlag == 0) ? girrDataSize + 1 : girrDataSize * 3 + 1; // Buy Side / Sell Side GIRR Sensitivity
+                        resultGirrDelta[offset + i] = girr.sensitivity;
                         break;
                     }
                 }
             }
         }
 
-        // For Debug
-		// printAllData(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girrs); // 전체 데이터 로깅
+        /* FOR DEBUG */
+        // printAllData(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girrs); // 전체 데이터 로깅
+        // OUTPUT 데이터 로깅
 
-        // Output 데이터 로깅
-        printAllOutputData(resultNetPvFxSensitivity, resultGirrTenorSensitivity);
-        info("==============[fxForward Logging Ended!]==============");
+        printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
+        info("==============[FXF Logging Ended!]==============");
     }
 }
 
@@ -288,8 +303,8 @@ void setGirrDeltaCurve(const BuySideValuationCashFlow& bSideCashFlow, const Sell
     };
 
     // Buy side, Sell side의 커브별 GIRR 데이터 생성
-    processCurve(bSideCashFlow.currency, 0);
-    processCurve(sSideCashFlow.currency, 1);
+    processCurve(bSideCashFlow.currency, 0); // Buy Side
+    processCurve(sSideCashFlow.currency, 1); // Sell Side
 }
 
 void bootstrapZeroCurveContinuous(vector<Curve>& curves) {
@@ -483,64 +498,84 @@ void printAllInputData(
     const int sellSideDcb,
     const int sellCurveDataSize,
     const int* sellCurveTenorDays,
-    const double* sellCurveRates
+    const double* sellCurveRates,
+
+    const int calType
 ) {
 
     info("[Print All - Input Data]");
 
     info("maturityDate: {}", maturityDateSerial);
     info("evaluationDate: {}", evaluationDateSerial);
-    info("exchangeRate: {:0.15f}", exchangeRate);
+    info("exchangeRate: {:0.5f}", exchangeRate);
 	info("isBuySideDomestic: {}", isBuySideDomestic == 0 ? "No" : "Yes");
     info("");
 
     info("buySideCurrency: {}", buySideCurrency);
-    info("buySideNotional: {:0.15f}", buySideNotional);
+    info("buySideNotional: {:0.5f}", buySideNotional);
     info("buySideDcb: {}", buySideDcb);
     info("");
 
     info("buyCurveDataSize: {}", buyCurveDataSize);
-    for (int i = 0; i < buyCurveDataSize; ++i) {
-        info("buyCurveTenorDays[{}]: {}", i, buyCurveTenorDays[i]);
-        info("buyCurveRates[{}]: {:0.15f}", i, buyCurveRates[i]);
-    }
+	logArrayLine("buyCurveTenorDays", buyCurveTenorDays, buyCurveDataSize);
+	logArrayLine("buyCurveRates", buyCurveRates, buyCurveDataSize, 10);
     info("");
 
     info("sellSideCurrency: {}", sellSideCurrency);
-    info("sellSideNotional: {:0.15f}", sellSideNotional);
+    info("sellSideNotional: {:0.5f}", sellSideNotional);
     info("sellSideDcb: {}", sellSideDcb);
     info("");
 
     info("sellCurveDataSize: {}", sellCurveDataSize);
-    for (int i = 0; i < sellCurveDataSize; ++i) {
-        info("sellCurveTenorDays[{}]: {}", i, sellCurveTenorDays[i]);
-        info("sellCurveRates[{}]: {:0.15f}", i, sellCurveRates[i]);
-    }
+	logArrayLine("sellCurveTenorDays", sellCurveTenorDays, sellCurveDataSize);
+	logArrayLine("sellCurveRates", sellCurveRates, sellCurveDataSize, 10);
+    info("");
+
+	info("calType: {}", calType);
     info("----------------------------------------------");
     info("");
 }
 
-void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrTenorSensitivity) {
+void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrDelta) {
+
 
 	info("[Print All - Output Data]");
+    
+	// NET PV & FX Sensitivity
     info("[Result Net PV & FX Sensitivity]");
 	info("INDEX 0. Net PV: {:0.10f}", resultNetPvFxSensitivity[0]);
 	info("INDEX 1. FX Sensitivity: {:0.10f}", resultNetPvFxSensitivity[1]);
 	info("");
 	
-    info("[Result GIRR Tenor]");
-	for (int i = 0; i < 11; ++i) {
-		info("INDEX {}. Tenor: {:0.2f}", i, resultGirrTenorSensitivity[i]);
+    // GIRR Delta
+    int girrSize = static_cast<int>(resultGirrDelta[0]);
+    info("[Result GIRR Delta Size]");
+    info("INDEX 0. Size: {}", girrSize);
+    info("");
+
+    info("[Result GIRR Delta Buy Side Tenor]");
+	for (int i = 0; i < girrSize; ++i) {
+		info("INDEX {}. Tenor: {:0.2f}", i + 1, resultGirrDelta[i + 1]);
 	}
-	info("");
-	info("[Result GIRR Sensitivity]");
-	for (int i = 11; i < 22; ++i) {
-		info("INDEX {}. Buy Side Sensitivity: {:0.10f}", i, resultGirrTenorSensitivity[i]);
-	}
-    for (int i = 33; i < 44; ++i) {
-        info("INDEX {}. Sell Side Sensitivity : {:0.10f}", i, resultGirrTenorSensitivity[i]);
+    info("");
+
+    info("[Result GIRR Delta Buy Side Sensitivity]");
+    for (int i = 0; i < girrSize; ++i) {
+        info("INDEX {}. Sensitivity: {:0.10f}", i + girrSize + 1, resultGirrDelta[i + girrSize + 1]);
     }
     info("");
+
+	info("[Result GIRR Delta Sell Side Tenor]");
+	for (int i = 0; i < girrSize; ++i) {
+		info("INDEX {}. Tenor: {:0.2f}", i + girrSize * 2 + 1, resultGirrDelta[i + girrSize * 2 + 1]);
+	}
+	info("");
+
+	info("[Result GIRR Delta Sell Side Sensitivity]");
+	for (int i = 0; i < girrSize; ++i) {
+		info("INDEX {}. Sensitivity: {:0.10f}", i + girrSize * 3 + 1, resultGirrDelta[i + girrSize * 3 + 1]);
+	}
+	info("");
 }
 
 void printAllData(const TradeInformation& tradeInfo, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, const vector<Curve>& curves, const vector<Girr>& girrs) {
@@ -557,7 +592,7 @@ void printAllData(const TradeInformation& tradeInfo) {
     info("[Print All - Trade Information]");
     info("Maturity Date: {}", qDateToString(tradeInfo.maturityDate));
     info("Revaluation Date: {}", qDateToString(tradeInfo.evaluationDate));
-    info("Exchange Rate: {:0.15f}", tradeInfo.exchangeRate);
+    info("Exchange Rate: {:0.5f}", tradeInfo.exchangeRate);
 	info("isBuySideDomestic: {}", tradeInfo.isBuySideDomestic == 0 ? "No" : "Yes");
     info("");
 }
@@ -566,13 +601,13 @@ void printAllData(const BuySideValuationCashFlow& bSideCashFlow) {
     
     info("[Print All - Buy Side Valuation Cash Flow]");
     info("Currency: {}", bSideCashFlow.currency);
-    info("Principal Amount: {:0.15f}", bSideCashFlow.principalAmount);
+    info("Principal Amount: {:0.5f}", bSideCashFlow.principalAmount);
     info("Cash Flow Date: {}", qDateToString(bSideCashFlow.cashFlowDate));
     info("Day Count Basis: {}", bSideCashFlow.dcb);
-    info("Year Fraction: {}", bSideCashFlow.yearFrac);
-    info("Discount Rate: {}", bSideCashFlow.dcRate);
-    info("Discount Factor: {}", bSideCashFlow.dcFactor);
-    info("Present Value: {:0.15f}", bSideCashFlow.presentValue);
+    info("Year Fraction: {0.10f}", bSideCashFlow.yearFrac);
+    info("Discount Rate: {0.10f}", bSideCashFlow.dcRate);
+    info("Discount Factor: {0.10f}", bSideCashFlow.dcFactor);
+    info("Present Value: {:0.10f}", bSideCashFlow.presentValue);
     info("");
 }
 
@@ -580,13 +615,13 @@ void printAllData(const SellSideValuationCashFlow& sSideCashFlow) {
     
     info("[Print All - Sell Side Valuation Cash Flow]");
     info("Currency: {}", sSideCashFlow.currency);
-    info("Principal Amount: {:0.15f}", sSideCashFlow.principalAmount);
+    info("Principal Amount: {:0.5f}", sSideCashFlow.principalAmount);
     info("Cash Flow Date: {}", qDateToString(sSideCashFlow.cashFlowDate));
     info("Day Count Basis: {}", sSideCashFlow.dcb);
-    info("Year Fraction: {}", sSideCashFlow.yearFrac);
-    info("Discount Rate: {}", sSideCashFlow.dcRate);
-    info("Discount Factor: {}", sSideCashFlow.dcFactor);
-    info("Present Value: {:0.15f}", sSideCashFlow.presentValue);
+    info("Year Fraction: {0.10f}", sSideCashFlow.yearFrac);
+    info("Discount Rate: {0.10f}", sSideCashFlow.dcRate);
+    info("Discount Factor: {0.10f}", sSideCashFlow.dcFactor);
+    info("Present Value: {:0.10f}", sSideCashFlow.presentValue);
     info("");
 }
 
@@ -595,10 +630,10 @@ void printAllData(const std::vector<Curve>& curves) {
     info("[Print All - Curves]");
     for (const auto& curve : curves) {
 		info("Curve Side: {}", curve.sideFlag == 0 ? "Buy Side" : "Sell Side");
-        info("Year Fraction: {}", curve.yearFrac);
-        info("Discount Rate: {:0.15f}", curve.rate);
-        info("Discount Factor: {}", curve.dcFactor);
-        info("Zero Rate: {}", curve.zeroRate);
+        info("Year Fraction: {0.10f}", curve.yearFrac);
+        info("Discount Rate: {:0.10f}", curve.rate);
+        info("Discount Factor: {0.10f}", curve.dcFactor);
+        info("Zero Rate: {0.10f}", curve.zeroRate);
         info("----------------------------------------------");
     }
     info("");
@@ -609,8 +644,8 @@ void printAllData(const std::vector<Girr>& girrs) {
     info("[Print All - GIRR Delta Risk Factors]");
     for (const auto& g : girrs) {
 		info("GIRR Curve Side: {}", g.sideFlag == 0 ? "Buy Side" : "Sell Side");
-        info("Year Fraction: {}", g.yearFrac);
-        info("Sensitivity: {:0.15f}", g.sensitivity);
+        info("Year Fraction: {0.10f}", g.yearFrac);
+        info("Sensitivity: {:0.10f}", g.sensitivity);
         info("----------------------------------------------");
     }
     info("");

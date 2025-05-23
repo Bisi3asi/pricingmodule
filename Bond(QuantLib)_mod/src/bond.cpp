@@ -113,7 +113,7 @@ extern "C" {
         }
         
         // GIRR 커브 계산 사용 추가 요소
-        DayCounter girrDayCounter = getDayCounterByCode(girrDcb, dayCounters);   // DCB
+        DayCounter girrDayCounter = getDayCounterByCode(girrDcb, dayCounters);  // DCB
         Linear girrInterpolator = Linear();                                     // 선형 보간
         Compounding girrCompounding = Compounding::Continuous;                  // 연속 복리
 		Frequency girrFrequency = Frequency::Annual;                            // 연 단위 빈도
@@ -190,8 +190,7 @@ extern "C" {
         // 채권의 Net PV 계산
         Real npv = fixedRateBond.NPV();
 
-        //Real girrBump = 0.0001;
-        Real girrBump = 0.01;
+        Real girrBump = 0.0001;
         vector<Real> discountingGirr;
 
         // GIRR Delta 계산

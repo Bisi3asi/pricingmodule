@@ -64,7 +64,7 @@ extern "C" {
         , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
-        , double* resultGirrTenorSensitivity        // OUTPUT 2. GIRR Delta Tenor [index 0 ~ 10] Buy Side Tenor, [index 11 ~ 21] Buy Side Sensitivity, [index 22 ~ 32] Sell Side Tenor, [index 33 ~ 43] Sell Side Sensitivity 
+        , double* resultGirrDelta                   // OUTPUT 2. GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity, sell Side tenor, sell Side Sensitivity]
         // ===================================================================================================
     );
 }
@@ -101,7 +101,7 @@ struct SellSideValuationCashFlow {
 };
 
 struct Curve {
-	int sideFlag;
+	int sideFlag; // 0: Buy Side, 1: Sell Side
     QuantLib::Real rate;
     QuantLib::Real yearFrac;
     QuantLib::Real dcFactor;
@@ -109,7 +109,7 @@ struct Curve {
 };
 
 struct Girr {
-	int sideFlag;
+	int sideFlag; // 0: Buy Side, 1: Sell Side
     QuantLib::Real yearFrac;
     QuantLib::Real sensitivity;
 };
@@ -161,9 +161,9 @@ double roundToDecimals(const double value, const int n);
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
 
-void printAllInputData(const long maturityDateSerial, const long evaluationDateSerial, const double exchangeRate, const int isBuySideDomestic, const char* buySideCurrency, const double buySideNotional, const int buySideDcb, const int buyCurveDataSize, const int* buyCurveTenorDays, const double* buyCurveRates, const char* sellSideCurrency, const double sellSideNotional, const int sellSideDcb, const int sellCurveDataSize, const int* sellCurveTenorDays, const double* sellCurveRates);
+void printAllInputData(const long maturityDateSerial, const long evaluationDateSerial, const double exchangeRate, const int isBuySideDomestic, const char* buySideCurrency, const double buySideNotional, const int buySideDcb, const int buyCurveDataSize, const int* buyCurveTenorDays, const double* buyCurveRates, const char* sellSideCurrency, const double sellSideNotional, const int sellSideDcb, const int sellCurveDataSize, const int* sellCurveTenorDays, const double* sellCurveRates, const int calType);
 
-void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrTenorSensitivity);
+void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrDelta);
 
 void printAllData(const TradeInformation& tradeInformation, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, const std::vector<Curve>& curves, const std::vector<Girr>& girrs);
 

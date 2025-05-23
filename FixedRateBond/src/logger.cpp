@@ -1,10 +1,5 @@
 ﻿#include "logger.h"
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <filesystem>
-#include <iostream>
-
 /* 파일 로거를 생성한다. */
 void initLogger(const std::string& filename) {
     try {

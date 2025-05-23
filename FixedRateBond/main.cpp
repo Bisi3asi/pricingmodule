@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <iomanip>
 
-#include "src/bond.h"
+#include "src/fixedRateBond.h"
 
 // 분기문 처리
 #ifdef _WIN32
@@ -67,10 +67,11 @@ int main() {
     const double csrRates[] = { 0.012626089, 0.012626089, 0.012626089, 0.012626089, 0.012626089 };
     */
     
-    const int logYn = 1;
+	const int calType = 3; // 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR) 
+	const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
 
-    double resultGirrDelta[21] = { 0 };
-    double resultCsrDelta[21] = { 0 };
+    double resultGirrDelta[50] = { 0 };
+    double resultCsrDelta[50] = { 0 };
 
     double resultNetPV = pricing(
         evaluationDate,
@@ -98,40 +99,61 @@ int main() {
         csrTenorDays,
         csrRates,
         
+        calType,
         logYn,
 
         resultGirrDelta,
         resultCsrDelta
     );
 
-	// OUTPUT1. Net PV
-	std::cout << "Net PV: " << std::setprecision(20 ) << resultNetPV << std::endl;
-	
-	// OUTPUT2. GIRR Delta
+	// OUTPUT 1 결과 출력
+	std::cout << "[Net PV]: " << std::setprecision(20) << resultNetPV << std::endl;
+    std::cout << std::endl;
+
+	// OUTPUT 2 결과 출력
     int girrSize = static_cast<int>(resultGirrDelta[0]);
-    std::cout << "0. size : " << girrSize << std::endl;     // index 0: size
+    std::cout << "[GIRR Data Size]: " << girrSize << std::endl;     // index 0: size
+    std::cout << "[GIRR Delta Tenor]: ";
     for (int i = 0; i < girrSize; ++i) {
-        std::cout << (i + 1) << ". tenorDay : " << resultGirrDelta[i + 1] << std::endl; // index 1 ~ size: tenorDay
+		std::cout << std::fixed << std::setprecision(2) << resultGirrDelta[i + 1]; // index 1 ~ size: tenor
+        if (i != girrSize - 1) {
+            std::cout << ", ";
+        }
     }
+    std::cout << std::endl;
+    std::cout << "[GIRR Delta Sensitivity] " << std::endl;
     for (int i = 0; i < girrSize; ++i) {
-        std::cout << (i + 1 + girrSize) << ". GIRR Delta : " << std::setprecision(20) << resultGirrDelta[i + 1 + girrSize] << std::endl; // index size + 1 ~ 2 * size: GIRR Delta
-    }
-    for (int i = girrSize * 2 + 1; i < 21; ++i) {
-        std::cout << i << ". Empty : " << resultGirrDelta[i] << std::endl; // Empty
+        std::cout << "index " << (i + 1 + girrSize) << ": " << std::setprecision(20) << resultGirrDelta[i + 1 + girrSize] << std::endl; // index size + 1 ~ 2 * size: sensitivity
     }
 
-	// OUTPUT3. CSR Delta
+    //for (int i = girrSize * 2 + 1; i < 50; ++i) {
+    //    std::cout << i << ". Empty : " << resultGirrDelta[i] << std::endl; // Empty
+    //}
+	std::cout << std::endl;
+
+    // OUTPUT 3 결과 출력
+    // index 0 : csr delta size    
     int csrSize = static_cast<int>(resultCsrDelta[0]);
-    std::cout << "0. size : " << csrSize << std::endl;     // index 0: size
+    std::cout << "[CSR Data Size]: " << csrSize << std::endl;     // index 0: size
+
+    std::cout << "[CSR Delta Tenor]: ";
     for (int i = 0; i < csrSize; ++i) {
-        std::cout << (i + 1) << ". tenorDay : " << resultCsrDelta[i + 1] << std::endl; // index 1 ~ size: tenorDay
+		std::cout << std::fixed << std::setprecision(2) << resultCsrDelta[i + 1]; // index 1 ~ size: tenor
+        if (i != csrSize - 1) {
+            std::cout << ", ";
+        }
     }
+    std::cout << std::endl;
+
+    std::cout << "[CSR Delta Sensitivity] " << std::endl;
     for (int i = 0; i < csrSize; ++i) {
-        std::cout << (i + 1 + csrSize) << ". CSR Delta : " << std::setprecision(20) << resultCsrDelta[i + 1 + csrSize] << std::endl; // index size + 1 ~ 2 * size: CSR Delta
+        std::cout << "index " << (i + 1 + csrSize) << ": " << std::setprecision(20) << resultCsrDelta[i + 1 + csrSize] << std::endl; // index size + 1 ~ 2 * size: sensitivity
     }
-	for (int i = csrSize * 2 + 1; i < 21; ++i) {
-		std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
-	}
+
+    //for (int i = csrSize * 2 + 1; i < 50; ++i) {
+    //    std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
+    //}
+    std::cout << std::endl;
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
     #ifdef _WIN32

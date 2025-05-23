@@ -42,8 +42,8 @@ int main() {
 	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT
-    double resultNetPvFxSensitivity[2];
-    double resultGirrTenorSensitivity[44];
+    double resultNetPvFxSensitivity[2] = { 0 };
+    double resultGirrDelta[50] = { 0 };
 
     pricing(
          maturityDateSerial
@@ -71,7 +71,7 @@ int main() {
         , logYn
 
 		, resultNetPvFxSensitivity
-        , resultGirrTenorSensitivity
+        , resultGirrDelta
     );
 
     // OUTPUT 1 결과 출력
@@ -83,34 +83,44 @@ int main() {
 
 
     // OUTPUT 2 결과 출력
-    // index 0 ~ 21: Buy Side
-    std::cout << "[Buy Side GIRR Delta Tenor]: ";
-    for (int i = 0; i < 11; ++i) {
-        std::cout << std::fixed << std::setprecision(2) << resultGirrTenorSensitivity[i];
-        if (i != 10) {
-            std::cout << ", ";
-        }
-    }
-    std::cout << std::endl;
-    std::cout << "[Buy Side GIRR Delta Sensitivity] " << std::endl;
-    for (int i = 11; i < 22; ++i) {
-		std::cout <<  "index " << i << ": " << std::fixed << std::setprecision(10) << resultGirrTenorSensitivity[i] << std::endl;
-	}
-	std::cout << std::endl;
+    int girrTenorSize = static_cast<int>(resultGirrDelta[0]);
+    std::cout << "[GIRR Buy Side / Sell Side Data Size]: " << girrTenorSize << std::endl;
 
-    // index 22 ~ 43: Sell Side
-    std::cout << "[Sell Side GIRR Delta Tenor]: ";
-    for (int i = 22; i < 33; ++i) {
-        std::cout << std::fixed << std::setprecision(2) << resultGirrTenorSensitivity[i];
-        if (i != 32) {
+    // Buy Side Tenor
+    std::cout << "[Buy Side Delta Tenor]: ";
+    for (int i = 0; i < girrTenorSize; ++i) {
+        std::cout << std::fixed << std::setprecision(2) << resultGirrDelta[i + 1];
+        if (i != girrTenorSize - 1) {
             std::cout << ", ";
         }
     }
     std::cout << std::endl;
-    std::cout << "[Sell Side GIRR Delta Sensitivity] " << std::endl;
-    for (int i = 33; i < 44; ++i) {
-        std::cout << "index " << i << ": " << std::fixed << std::setprecision(10) << resultGirrTenorSensitivity[i] << std::endl;
+
+    // Buy Side Sensitivity
+    std::cout << "[Buy Side Delta Sensitivity]" << std::endl;
+    for (int i = 0; i < girrTenorSize; ++i) {
+        int idx = i + 1 + girrTenorSize;
+        std::cout << "index " << idx << ": " << std::setprecision(20) << resultGirrDelta[idx] << std::endl;
     }
+    std::cout << std::endl;
+
+    // Sell Side Tenor
+    std::cout << "[Sell Side Delta Tenor]: ";
+    for (int i = 0; i < girrTenorSize; ++i) {
+        std::cout << std::fixed << std::setprecision(2) << resultGirrDelta[i + 1 + 2 * girrTenorSize];
+        if (i != girrTenorSize - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << std::endl;
+
+    // Sell Side Sensitivity
+    std::cout << "[Sell Side Delta Sensitivity]" << std::endl;
+    for (int i = 0; i < girrTenorSize; ++i) {
+        int idx = i + 1 + 3 * girrTenorSize;
+        std::cout << "index " << idx << ": " << std::setprecision(20) << resultGirrDelta[idx] << std::endl;
+    }
+    std::cout << std::endl;
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
     #ifdef _WIN32
