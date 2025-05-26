@@ -48,10 +48,10 @@ extern "C" {
         /* 로거 초기화 */
         // 디버그용 메소드는 아래 FOR DEBUG 메소드를 참고
         if (logYn == 1) {
-            initLogger("FXF.log"); // 생성 파일명 지정
+            initLogger("fxForward.log"); // 생성 파일명 지정
         }
 
-        info("==============[FXF Logging Started!]==============");
+        info("==============[fxForward Logging Started!]==============");
         // Input 데이터 로깅
         printAllInputData(
             maturityDateSerial, evaluationDateSerial, exchangeRate, isBuySideDomestic,
@@ -99,7 +99,7 @@ extern "C" {
         if (calType == 1) {
             // OUTPUT 데이터 로깅
             printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
-            info("==============[FXF Logging Ended!]==============");
+            info("==============[fxForward Logging Ended!]==============");
             return;
         }
 
@@ -145,7 +145,7 @@ extern "C" {
         // OUTPUT 데이터 로깅
 
         printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
-        info("==============[FXF Logging Ended!]==============");
+        info("==============[fxForward Logging Ended!]==============");
     }
 }
 
