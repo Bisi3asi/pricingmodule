@@ -19,7 +19,7 @@
 			{ "field": "sellCurveDataSize",	"type": "int" },
 		  	{ "field": "sellCurveTenorDays", "type": "int_ptr" },
 		  	{ "field": "sellCurveRates", "type": "double_ptr" },
-		  	{ "field": "calType", "type": "int", "defaultValue" : 1 },
+		  	{ "field": "calType", "type": "int", "defaultValue": 1 },
 			{ "field": "logYn", "type": "int", "defaultValue": 0 }
 		],
 
@@ -46,7 +46,7 @@
 		  	{ "field": "calType" },
 		  	{ "field": "logYn" },
 		  	{ "field": "resultNetPvFxSensitivity", "type": "double_ptr", "size": "2" },
-			{ "field": "resultGirrTenorSensitivity", "type": "double_ptr", "size": "44" }		  
+			{ "field": "resultGirrTenorSensitivity", "type": "double_ptr", "size": "50" }		  
 		], 
 		  "returnType": "void"
 		}
