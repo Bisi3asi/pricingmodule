@@ -1,4 +1,4 @@
-﻿#include "fixedRateBond.h"
+﻿#include "bond.h"
 #include "logger.h"
 
 #include <spdlog/spdlog.h>
@@ -10,21 +10,21 @@ using namespace spdlog;
 
 extern "C" double EXPORT pricing(
     // ===================================================================================================
-    const long evaluationDate               // INPUT 1. 평가일 (serial number)
-    , const long settlementDays             // INPUT 2. 결제일 offset
-    , const long issueDate                  // INPUT 3. 발행일 (serial number)
-    , const long maturityDate               // INPUT 4. 만기일 (serial number)
+    const int evaluationDate                // INPUT 1. 평가일 (serial number)
+    , const int settlementDays              // INPUT 2. 결제일 offset
+    , const int issueDate                   // INPUT 3. 발행일 (serial number)
+    , const int maturityDate                // INPUT 4. 만기일 (serial number)
     , const double notional                 // INPUT 5. 채권 원금
     , const double couponRate               // INPUT 6. 쿠폰 이율
     , const int couponDayCounter            // INPUT 7. DayCounter code (TODO)
 
     , const int numberOfCoupons             // INPUT 8. 쿠폰 개수
-    , const long* paymentDates              // INPUT 9. 지급일 배열
-    , const long* realStartDates            // INPUT 10. 각 구간 시작일
-    , const long* realEndDates              // INPUT 11. 각 구간 종료일
+    , const int* paymentDates               // INPUT 9. 지급일 배열
+    , const int* realStartDates             // INPUT 10. 각 구간 시작일
+    , const int* realEndDates               // INPUT 11. 각 구간 종료일
 
     , const int numberOfGirrTenors          // INPUT 12. GIRR 만기 수
-    , const long* girrTenorDays             // INPUT 13. GIRR 만기 (startDate로부터의 일수)
+    , const int* girrTenorDays              // INPUT 13. GIRR 만기 (startDate로부터의 일수)
     , const double* girrRates               // INPUT 14. GIRR 금리
 
     , const int girrDayCounter              // INPUT 15. GIRR DayCountern (TODO)
@@ -37,7 +37,7 @@ extern "C" double EXPORT pricing(
     , const int spreadOverYieldDayCounter   // INPUT 21. DCB (TODO)
 
     , const int numberOfCsrTenors           // INPUT 22. CSR 만기 수
-    , const long* csrTenorDays              // INPUT 23. CSR 만기 (startDate로부터의 일수)
+    , const int* csrTenorDays               // INPUT 23. CSR 만기 (startDate로부터의 일수)
     , const double* csrRates                // INPUT 24. CSR 스프레드 (금리 차이)
 
     , const int calType			            // INPUT 25. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)    
@@ -53,10 +53,10 @@ extern "C" double EXPORT pricing(
 
     /* 로거 초기화 */
     if (logYn == 1) {
-        initLogger("FRB.log"); // 생성 파일명 지정
+        initLogger("bond.log"); // 생성 파일명 지정
     }
 
-    info("==============[FRB Logging Started!]==============");
+    info("==============[bond Logging Started!]==============");
     // INPUT 데이터 로깅
     printAllInputData(evaluationDate,
         settlementDays,
@@ -86,7 +86,7 @@ extern "C" double EXPORT pricing(
     );
 
 	if (calType != 1 && calType != 3) {
-		error("[FRB]: Invalid calculation type. Only 1 and 3 are supported.");
+		error("[bond]: Invalid calculation type. Only 1 and 3 are supported.");
 		return -1; // Invalid calculation type
 	}
 
@@ -237,7 +237,7 @@ extern "C" double EXPORT pricing(
         // OUTPUT 데이터 로깅
 		printAllOutputData(npv, resultGirrDelta, resultCsrDelta);
         /* OUTPUT 1. Net PV 리턴 */
-        info("==============[FRB Logging Ended!]==============");
+        info("==============[bond Logging Ended!]==============");
         return npv;
 	}
    
@@ -357,7 +357,7 @@ extern "C" double EXPORT pricing(
     Real accruedInterest = fixedRateBond.accruedAmount() / 100.0 * notional;
     
     printAllOutputData(npv, resultGirrDelta, resultCsrDelta);
-    info("==============[FRB Logging Ended!]==============");
+    info("==============[bond Logging Ended!]==============");
 
     /* OUTPUT 1. Net PV 리턴 */
 	return npv; 
@@ -377,19 +377,19 @@ string qDateToString(const Date& date) {
 }
 
 void printAllInputData(
-    const long evaluationDate,
-    const long settlementDays,
-    const long issueDate,
-    const long maturityDate,
+    const int evaluationDate,
+    const int settlementDays,
+    const int issueDate,
+    const int maturityDate,
     const double notional,
     const double couponRate,
     const int couponDayCounter,
     const int numberOfCoupons,
-    const long* paymentDates,
-    const long* realStartDates,
-    const long* realEndDates,
+    const int* paymentDates,
+    const int* realStartDates,
+    const int* realEndDates,
     const int numberOfGirrTenors,
-    const long* girrTenorDays,
+    const int* girrTenorDays,
     const double* girrRates,
     const int girrDayCounter,
     const int girrInterpolator,
@@ -399,7 +399,7 @@ void printAllInputData(
     const int spreadOverYieldCompounding,
     const int spreadOverYieldDayCounter,
     const int numberOfCsrTenors,
-    const long* csrTenorDays,
+    const int* csrTenorDays,
     const double* csrRates,
     const int calType
 ) {

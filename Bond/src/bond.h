@@ -1,5 +1,5 @@
-﻿#ifndef FIXEDRATEBOND_H
-#define FIXEDRATEBOND_H
+﻿#ifndef BOND_H
+#define BOND_H
 
 // function 외부 인터페이스 export 정의
 #ifdef _WIN32
@@ -32,21 +32,21 @@
 // dll export method (extern "C", EXPORT 명시 필요)
 extern "C" double EXPORT pricing(
     // ===================================================================================================
-    const long evaluationDate               // INPUT 1. 평가일 (serial number)
-    , const long settlementDays             // INPUT 2. 결제일 offset
-    , const long issueDate                  // INPUT 3. 발행일 (serial number)
-    , const long maturityDate               // INPUT 4. 만기일 (serial number)
+    const int evaluationDate                // INPUT 1. 평가일 (serial number)
+    , const int settlementDays              // INPUT 2. 결제일 offset
+    , const int issueDate                   // INPUT 3. 발행일 (serial number)
+    , const int maturityDate                // INPUT 4. 만기일 (serial number)
     , const double notional                 // INPUT 5. 채권 원금
     , const double couponRate               // INPUT 6. 쿠폰 이율
     , const int couponDayCounter            // INPUT 7. DayCounter code (TODO)
 
     , const int numberOfCoupons             // INPUT 8. 쿠폰 개수
-    , const long* paymentDates              // INPUT 9. 지급일 배열
-    , const long* realStartDates            // INPUT 10. 각 구간 시작일
-    , const long* realEndDates              // INPUT 11. 각 구간 종료일
+    , const int* paymentDates               // INPUT 9. 지급일 배열
+    , const int* realStartDates             // INPUT 10. 각 구간 시작일
+    , const int* realEndDates               // INPUT 11. 각 구간 종료일
 
     , const int numberOfGirrTenors          // INPUT 12. GIRR 만기 수
-    , const long* girrTenorDays             // INPUT 13. GIRR 만기 (startDate로부터의 일수)
+    , const int* girrTenorDays              // INPUT 13. GIRR 만기 (startDate로부터의 일수)
     , const double* girrRates               // INPUT 14. GIRR 금리
 
     , const int girrDayCounter              // INPUT 15. GIRR DayCountern (TODO)
@@ -59,7 +59,7 @@ extern "C" double EXPORT pricing(
     , const int spreadOverYieldDayCounter   // INPUT 21. DCB (TODO)
 
     , const int numberOfCsrTenors           // INPUT 22. CSR 만기 수
-    , const long* csrTenorDays              // INPUT 23. CSR 만기 (startDate로부터의 일수)
+    , const int* csrTenorDays               // INPUT 23. CSR 만기 (startDate로부터의 일수)
     , const double* csrRates                // INPUT 24. CSR 스프레드 (금리 차이)
 
     , const int calType			            // INPUT 25. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)    
@@ -77,19 +77,19 @@ void initResult(double* result, const int size);
 std::string qDateToString(const QuantLib::Date& date);
 
 void printAllInputData(
-    const long evaluationDate,
-    const long settlementDays,
-    const long issueDate,
-    const long maturityDate,
+    const int evaluationDate,
+    const int settlementDays,
+    const int issueDate,
+    const int maturityDate,
     const double notional,
     const double couponRate,
     const int couponDayCounter,
     const int numberOfCoupons,
-    const long* paymentDates,
-    const long* realStartDates,
-    const long* realEndDates,
+    const int* paymentDates,
+    const int* realStartDates,
+    const int* realEndDates,
     const int numberOfGirrTenors,
-    const long* girrTenorDays,
+    const int* girrTenorDays,
     const double* girrRates,
     const int girrDayCounter,
     const int girrInterpolator,
@@ -99,7 +99,7 @@ void printAllInputData(
     const int spreadOverYieldCompounding,
     const int spreadOverYieldDayCounter,
     const int numberOfCsrTenors,
-    const long* csrTenorDays,
+    const int* csrTenorDays,
     const double* csrRates,
     const int calType
 );
