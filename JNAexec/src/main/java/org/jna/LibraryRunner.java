@@ -4,6 +4,7 @@ import com.sun.jna.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -31,8 +32,11 @@ public class LibraryRunner {
         logger.info("Loading native library : {}", fileNameWithExt);
 
         NativeLibraryLoader loader;
-        if (config.getExecFileDir() == null || config.getExecFileDir().isEmpty()) {
-            loader = new NativeLibraryLoader("./" + fileNameWithExt);
+
+        String baseDir = config.getExecFileDir();
+        if (baseDir == null || baseDir.isEmpty()) {
+            baseDir = System.getProperty("user.dir");
+            loader = new NativeLibraryLoader(baseDir + File.separator + fileNameWithExt);
         } else {
             loader = new NativeLibraryLoader("./" + config.getExecFileDir() + "/" + fileNameWithExt);
         }
@@ -83,7 +87,7 @@ public class LibraryRunner {
 
             // Div, Sub, Mul, Sum (double a, double b)
             if (("-Div".equals(input) || "-Sub".equals(input) || "-Mul".equals(input) || "-Sum".equals(input))
-            && loader.getFunctions().contains("Div")) {
+                    && loader.getFunctions().contains("Div")) {
                 execMathFunction(loader, scanner, input);
                 continue;
             }
@@ -97,7 +101,13 @@ public class LibraryRunner {
 
             // FxFoward - pricing
             if ("-pricing".equals(input) && loader.getFunctions().contains("pricing") && (config.getExecFileName().equals("fxForward"))) {
-                execPricing(loader);
+                execFxForwardPricing(loader);
+                continue;
+            }
+
+            // Bond - pricing
+            if ("-pricing".equals(input) && loader.getFunctions().contains("pricing") && (config.getExecFileName().equals("bond"))) {
+                execFixedRateBondPricing(loader);
                 continue;
             }
 
@@ -185,7 +195,7 @@ public class LibraryRunner {
                 1200.0, 1000.0, 1000.0, 1.2, 0.0, new double[]{0.0, 0.0, 0.0, 0.0, 0.0}, new double[]{0.0});
     }
 
-    private static void execPricing(NativeLibraryLoader loader) {
+    private static void execFxForwardPricing(NativeLibraryLoader loader) {
         // 입력값 정의
         long maturityDate = 46164;
         long revaluationDate = 45657;
@@ -215,7 +225,7 @@ public class LibraryRunner {
         double[] resultGirrDelta = new double[25];  // 충분히 크게
 
         // 함수 호출
-        loader.callPricing(
+        loader.callFxFowardPricing(
                 "pricing",
                 maturityDate,
                 revaluationDate,
@@ -252,6 +262,101 @@ public class LibraryRunner {
             }
             for (int i = size + 1; i <= size * 2; i++) {
                 System.out.printf("%d. Sensitivity: %.2f%n", i - size, resultGirrDelta[i]);
+            }
+        }
+    }
+
+    private static void execFixedRateBondPricing(NativeLibraryLoader loader) {
+        // 입력값 정의 (테스트 데이터 참고)
+        int evaluationDate = 45657;
+        int settlementDays = 0;
+        int issueDate = 44175;
+        int maturityDate = 47827;
+        double notional = 6000000000.0;
+        double couponRate = 0.015;
+        int couponDayCounter = 5; // Actual/Actual(Bond)
+        int numberOfCoupons = 12;
+        int[] paymentDates = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+        int[] realStartDates = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
+        int[] realEndDates = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+
+        int numberOfGirrTenors = 10;
+        int[] girrTenorDays = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
+        double[] girrRates = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
+        int girrDayCounter = 1;      // Actual/365
+        int girrInterpolator = 1;    // Linear
+        int girrCompounding = 1;     // Continuous
+        int girrFrequency = 1;       // Annual
+
+        double spreadOverYield = 0.001389;
+        int spreadOverYieldCompounding = 1;  // Continuous
+        int spreadOverYieldDayCounter = 1;   // Actual/365
+
+        int numberOfCsrTenors = 5;
+        int[] csrTenorDays = { 183, 365, 1095, 1825, 3650 };
+        double[] csrRates = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
+
+        int calType = 3;  // GIRR/CSR 민감도 산출
+        int logYn = 1;    // 로그 출력 여부
+
+        // 결과 배열 초기화
+        double[] resultGirrDelta = new double[50];
+        double[] resultCsrDelta = new double[50];
+
+        // 네이티브 함수 호출
+        double resultNetPV =
+        loader.callFixedRateBondPricing(
+                "pricing",
+                evaluationDate,
+                settlementDays,
+                issueDate,
+                maturityDate,
+                notional,
+                couponRate,
+                couponDayCounter,
+                numberOfCoupons,
+                paymentDates,
+                realStartDates,
+                realEndDates,
+                numberOfGirrTenors,
+                girrTenorDays,
+                girrRates,
+                girrDayCounter,
+                girrInterpolator,
+                girrCompounding,
+                girrFrequency,
+                spreadOverYield,
+                spreadOverYieldCompounding,
+                spreadOverYieldDayCounter,
+                numberOfCsrTenors,
+                csrTenorDays,
+                csrRates,
+                calType,
+                logYn,
+                resultGirrDelta,
+                resultCsrDelta
+        );
+
+        // 결과 출력
+        if (calType == 1 || calType == 3) {
+            System.out.printf("Net PV: %.10f%n", resultNetPV);
+        }
+        if (calType == 3) {
+            int size = (int) resultGirrDelta[0];
+            System.out.println("GIRR Delta Size: " + size);
+            for (int i = 1; i <= size; i++) {
+                System.out.printf("%d. GIRR Tenor: %.2f%n", i, (double) resultGirrDelta[i]);
+            }
+            for (int i = size + 1; i <= size * 2; i++) {
+                System.out.printf("%d. GIRR Sensitivity: %.10f%n", i, (double) resultGirrDelta[i]);
+            }
+
+            size = (int) resultCsrDelta[0];
+            for (int i = 1; i <= size; i++) {
+                System.out.printf("%d. CSR Tenor: %.2f%n", i, (double) resultCsrDelta[i]);
+            }
+            for (int i = size + 1; i <= size * 2; i++) {
+                System.out.printf("%d. CSR Sensitivity: %.10f%n", i, (double) resultCsrDelta[i]);
             }
         }
     }

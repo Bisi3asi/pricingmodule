@@ -31,8 +31,8 @@ public class NativeLibraryLoader {
             ProcessBuilder processBuilder;
 
             if (Platform.isWindows()) {
-                // Windows : 함수 목록 파싱 (dumpbin /EXPORTS)
-                processBuilder = new ProcessBuilder("cmd.exe", "/s", "/c", "dumpbin /EXPORTS \"" + libraryPath + "\"");
+                processBuilder = new ProcessBuilder("cmd.exe", "/c", "dumpbin /EXPORTS \"" + libraryPath + "\"");
+                processBuilder.redirectErrorStream(true);
             } else if (Platform.isLinux()) {
                 // Linux : 함수 목록 파싱 (nm -D)
                 processBuilder = new ProcessBuilder("nm", "-D", libraryPath);
@@ -160,30 +160,29 @@ public class NativeLibraryLoader {
     }
 
     // function (fxForward)
-    // function (fxForward)
     // pricing
-    public void callPricing(String functionName,
-                            long maturityDate,
-                            long revaluationDate,
-                            double exchangeRate,
-                            String buySideCurrency,
-                            double notionalForeign,
-                            int buySideDCB,
-                            String buySideDcCurve,
-                            int buyCurveSize,
-                            double[] buyCurveYearFrac,
-                            double[] buyMarketData,
-                            String sellSideCurrency,
-                            double notionalDomestic,
-                            int sellSideDCB,
-                            String sellSideDcCurve,
-                            int sellCurveSize,
-                            double[] sellCurveYearFrac,
-                            double[] sellMarketData,
-                            int calType,
-                            int logYn,
-                            double[] resultNetPvFxSensitivity,
-                            double[] resultGirrDelta) {
+    public void callFxFowardPricing(String functionName,
+                                    long maturityDate,
+                                    long revaluationDate,
+                                    double exchangeRate,
+                                    String buySideCurrency,
+                                    double notionalForeign,
+                                    int buySideDCB,
+                                    String buySideDcCurve,
+                                    int buyCurveSize,
+                                    double[] buyCurveYearFrac,
+                                    double[] buyMarketData,
+                                    String sellSideCurrency,
+                                    double notionalDomestic,
+                                    int sellSideDCB,
+                                    String sellSideDcCurve,
+                                    int sellCurveSize,
+                                    double[] sellCurveYearFrac,
+                                    double[] sellMarketData,
+                                    int calType,
+                                    int logYn,
+                                    double[] resultNetPvFxSensitivity,
+                                    double[] resultGirrDelta) {
         try {
             library.getFunction(functionName).invoke(void.class, new Object[]{
                     maturityDate,
@@ -224,6 +223,72 @@ public class NativeLibraryLoader {
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call function: fxForward pricing", e);
+        }
+    }
+
+    public double callFixedRateBondPricing(String functionName,
+            int evaluationDate,
+            int settlementDays,
+            int issueDate,
+            int maturityDate,
+            double notional,
+            double couponRate,
+            int couponDayCounter,
+            int numberOfCoupons,
+            int[] paymentDates,
+            int[] realStartDates,
+            int[] realEndDates,
+            int numberOfGirrTenors,
+            int[] girrTenorDays,
+            double[] girrRates,
+            int girrDayCounter,
+            int girrInterpolator,
+            int girrCompounding,
+            int girrFrequency,
+            double spreadOverYield,
+            int spreadOverYieldCompounding,
+            int spreadOverYieldDayCounter,
+            int numberOfCsrTenors,
+            int[] csrTenorDays,
+            double[] csrRates,
+            int calType,
+            int logYn,
+            double[] resultGirrDelta,
+            double[] resultCsrDelta
+    ) {
+        try {
+            return (double) library.getFunction(functionName).invoke(double.class, new Object[]{
+                    evaluationDate,
+                    settlementDays,
+                    issueDate,
+                    maturityDate,
+                    notional,
+                    couponRate,
+                    couponDayCounter,
+                    numberOfCoupons,
+                    paymentDates,
+                    realStartDates,
+                    realEndDates,
+                    numberOfGirrTenors,
+                    girrTenorDays,
+                    girrRates,
+                    girrDayCounter,
+                    girrInterpolator,
+                    girrCompounding,
+                    girrFrequency,
+                    spreadOverYield,
+                    spreadOverYieldCompounding,
+                    spreadOverYieldDayCounter,
+                    numberOfCsrTenors,
+                    csrTenorDays,
+                    csrRates,
+                    calType,
+                    logYn,
+                    resultGirrDelta,
+                    resultCsrDelta
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call pricing function", e);
         }
     }
 }
