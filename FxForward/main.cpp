@@ -43,7 +43,8 @@ int main() {
 
     // OUTPUT
     double resultNetPvFxSensitivity[2] = { 0 };
-    double resultGirrDelta[50] = { 0 };
+    double resultBuySideGirrDelta[50] = { 0 };
+    double resultSellSideGirrDelta[50] = { 0 };
 
     pricing(
          maturityDateSerial
@@ -71,7 +72,8 @@ int main() {
         , logYn
 
 		, resultNetPvFxSensitivity
-        , resultGirrDelta
+        , resultBuySideGirrDelta
+		, resultSellSideGirrDelta
     );
 
     // OUTPUT 1 결과 출력
@@ -83,14 +85,14 @@ int main() {
 
 
     // OUTPUT 2 결과 출력
-    int girrTenorSize = static_cast<int>(resultGirrDelta[0]);
-    std::cout << "[GIRR Buy Side / Sell Side Data Size]: " << girrTenorSize << std::endl;
+    int buySideGirrTenorSize = static_cast<int>(resultBuySideGirrDelta[0]);
+    std::cout << "[GIRR Buy Side Data Size]: " << buySideGirrTenorSize << std::endl;
 
     // Buy Side Tenor
     std::cout << "[Buy Side Delta Tenor]: ";
-    for (int i = 0; i < girrTenorSize; ++i) {
-        std::cout << std::fixed << std::setprecision(2) << resultGirrDelta[i + 1];
-        if (i != girrTenorSize - 1) {
+    for (int i = 0; i < buySideGirrTenorSize; ++i) {
+        std::cout << std::fixed << std::setprecision(2) << resultBuySideGirrDelta[i + 1];
+        if (i != buySideGirrTenorSize - 1) {
             std::cout << ", ";
         }
     }
@@ -98,27 +100,30 @@ int main() {
 
     // Buy Side Sensitivity
     std::cout << "[Buy Side Delta Sensitivity]" << std::endl;
-    for (int i = 0; i < girrTenorSize; ++i) {
-        int idx = i + 1 + girrTenorSize;
-        std::cout << "index " << idx << ": " << std::setprecision(20) << resultGirrDelta[idx] << std::endl;
+    for (int i = 0; i < buySideGirrTenorSize; ++i) {
+        int idx = i + 1 + buySideGirrTenorSize;
+        std::cout << "index " << idx << ": " << std::setprecision(20) << resultBuySideGirrDelta[idx] << std::endl;
     }
     std::cout << std::endl;
 
+    int sellSideGirrTenorSize = static_cast<int>(resultSellSideGirrDelta[0]);
+    std::cout << "[GIRR Sell Side Data Size]: " << sellSideGirrTenorSize << std::endl;
+
     // Sell Side Tenor
     std::cout << "[Sell Side Delta Tenor]: ";
-    for (int i = 0; i < girrTenorSize; ++i) {
-        std::cout << std::fixed << std::setprecision(2) << resultGirrDelta[i + 1 + 2 * girrTenorSize];
-        if (i != girrTenorSize - 1) {
+    for (int i = 0; i < sellSideGirrTenorSize; ++i) {
+        std::cout << std::fixed << std::setprecision(2) << resultSellSideGirrDelta[i + 1];
+        if (i != sellSideGirrTenorSize - 1) {
             std::cout << ", ";
         }
     }
     std::cout << std::endl;
 
-    // Sell Side Sensitivity
+    // Buy Side Sensitivity
     std::cout << "[Sell Side Delta Sensitivity]" << std::endl;
-    for (int i = 0; i < girrTenorSize; ++i) {
-        int idx = i + 1 + 3 * girrTenorSize;
-        std::cout << "index " << idx << ": " << std::setprecision(20) << resultGirrDelta[idx] << std::endl;
+    for (int i = 0; i < sellSideGirrTenorSize; ++i) {
+        int idx = i + 1 + sellSideGirrTenorSize;
+        std::cout << "index " << idx << ": " << std::setprecision(20) << resultSellSideGirrDelta[idx] << std::endl;
     }
     std::cout << std::endl;
 

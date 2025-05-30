@@ -35,7 +35,8 @@ extern "C" {
         , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
-        , double* resultGirrDelta                   // OUTPUT 2. GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity, sell Side tenor, sell Side Sensitivity]
+        , double* resultBuySideGirrDelta            // OUTPUT 2. Buy Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity]
+        , double* resultSellSideGirrDelta           // OUTPUT 3. Sell Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 sell Side tenor, sell Side Sensitivity]
         // ===================================================================================================
     )
     {
@@ -75,7 +76,8 @@ extern "C" {
         vector<DayCounter> dayCounters{}; // Day Counter 데이터(캐시용 집합)
 
         initResult(resultNetPvFxSensitivity, 2); // OUTPUT 1 데이터 초기화
-        initResult(resultGirrDelta, 50); // OUTPUT 2 데이터 초기화
+        initResult(resultBuySideGirrDelta, 50); // OUTPUT 2 데이터 초기화
+		initResult(resultSellSideGirrDelta, 50); // OUTPUT 3 데이터 초기화
 
         /* 기본 데이터 세팅 */
         // Day Counter        데이터 생성
@@ -98,7 +100,7 @@ extern "C" {
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
             // OUTPUT 데이터 로깅
-            printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
+            printAllOutputData(resultNetPvFxSensitivity, resultBuySideGirrDelta, resultSellSideGirrDelta);
             info("==============[fxForward Logging Ended!]==============");
             return;
         }
@@ -114,37 +116,36 @@ extern "C" {
             processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultNetPvFxSensitivity);
         }
 
-        double girrTenor[11] = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
-        Size girrDataSize = sizeof(girrTenor) / sizeof(girrTenor[0]);
-
         /* OUTPUT 2. GIRR Delta 결과 적재 */
-        // Index 0: Data Size
-        // Index 1 ~ size: Buy Side Tenor
-        // Index size+1 ~ 2*size: Buy Side Sensitivity
-        // Index 2*size+1 ~ 3*size: Sell Side Tenor
-        // Index 3*size+1 ~ 4*size: Sell Side Sensitivity
-        resultGirrDelta[0] = girrDataSize; // index 0 : GIRR Delta Data Size
+        
+        vector<Real> buySideGirrTenor{};
+        vector<Real> buySideGirrSensitivity{};
+		vector<Real> sellSideGirrTenor{};
+		vector<Real> sellSideGirrSensitivity{};
 
-        for (int i = 0; i < girrDataSize; ++i) {
-            resultGirrDelta[i + 1] = girrTenor[i]; // Buy Side Girr Tenor
-            resultGirrDelta[i + girrDataSize * 2 + 1] = girrTenor[i]; // Sell Side GIRR Tenor
-
-            for (const auto& girr : girrs) {
-                for (int i = 0; i < girrDataSize; ++i) {  // tenor에서 yearFrac 위치 찾기
-                    if (girr.yearFrac == girrTenor[i]) {
-                        int offset = (girr.sideFlag == 0) ? girrDataSize + 1 : girrDataSize * 3 + 1; // Buy Side / Sell Side GIRR Sensitivity
-                        resultGirrDelta[offset + i] = girr.sensitivity;
-                        break;
-                    }
-                }
+		// Buy Side와 Sell Side GIRR Delta 결과를 분리
+		for (const auto & girr : girrs) {
+			if (girr.sideFlag == 0) { // Buy Side
+                buySideGirrTenor.emplace_back(girr.yearFrac);
+				buySideGirrSensitivity.emplace_back(girr.sensitivity);
+			}
+			if (girr.sideFlag == 1) { // Sell Side
+				sellSideGirrTenor.emplace_back(girr.yearFrac);
+				sellSideGirrSensitivity.emplace_back(girr.sensitivity);
             }
-        }
+		}
+
+        // Buy Side GIRR Delta 결과 적재
+		processResultArray(buySideGirrTenor, buySideGirrSensitivity, buySideGirrSensitivity.size(), resultBuySideGirrDelta);
+        
+		// Sell Side GIRR Delta 결과 적재
+		processResultArray(sellSideGirrTenor, sellSideGirrSensitivity, sellSideGirrSensitivity.size(), resultSellSideGirrDelta);
 
         /* FOR DEBUG */
-        // printAllData(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girrs); // 전체 데이터 로깅
+        printAllData(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girrs); // 전체 데이터 로깅
         // OUTPUT 데이터 로깅
 
-        printAllOutputData(resultNetPvFxSensitivity, resultGirrDelta);
+        printAllOutputData(resultNetPvFxSensitivity, resultBuySideGirrDelta, resultSellSideGirrDelta);
         info("==============[fxForward Logging Ended!]==============");
     }
 }
@@ -473,6 +474,34 @@ double roundToDecimals(const double value, const int n) {
 	return round(value * factor) / factor;
 }
 
+void processResultArray(vector<Real> tenors, vector<Real> sensitivities, Size originalSize, double* resultArray) {
+    vector<double> filteredTenor;
+    vector<double> filteredSensitivity;
+
+    // 1. 전처리: sensitivity가 0이 아닌 것만 걸러냄
+    for (Size i = 0; i < originalSize; ++i) {
+        if (sensitivities[i] != 0.0) {
+            filteredTenor.push_back(tenors[i]);
+            filteredSensitivity.push_back(sensitivities[i]);
+        }
+    }
+
+    Size filteredSize = filteredTenor.size();
+
+    // 2. resultArray 구성
+    resultArray[0] = filteredSize;  // 유효 데이터 개수
+
+    // 3. Tenor 입력 (index 1 ~ filteredSize)
+    for (Size i = 0; i < filteredSize; ++i) {
+        resultArray[i + 1] = filteredTenor[i];
+    }
+
+    // 4. girrSensitivity 입력 (index 1 + filteredSize ~ 2 + 2 * filteredSize)
+    for (Size i = 0; i < filteredSize; ++i) {
+        resultArray[i + 1 + filteredSize] = filteredSensitivity[i];
+    }
+}
+
 /* FOR DEBUG */
 string qDateToString(const Date& date) {
     ostringstream oss;
@@ -536,7 +565,7 @@ void printAllInputData(
     info("");
 }
 
-void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultGirrDelta) {
+void printAllOutputData(const double* resultNetPvFxSensitivity, const double* resultBuySideGirrDelta, const double* resultSellSideGirrDelta) {
 
 
 	info("[Print All - Output Data]");
@@ -547,35 +576,40 @@ void printAllOutputData(const double* resultNetPvFxSensitivity, const double* re
 	info("INDEX 1. FX Sensitivity: {:0.10f}", resultNetPvFxSensitivity[1]);
 	info("");
 	
-    // GIRR Delta
-    int girrSize = static_cast<int>(resultGirrDelta[0]);
-    info("[Result GIRR Delta Size]");
+    // Buy Side GIRR Delta
+    int girrSize = static_cast<int>(resultBuySideGirrDelta[0]);
+    info("[Result Buy Side GIRR Delta Size]");
     info("INDEX 0. Size: {}", girrSize);
     info("");
 
-    info("[Result GIRR Delta Buy Side Tenor]");
+    info("[Result Buy Side GIRR Delta Tenor]");
 	for (int i = 0; i < girrSize; ++i) {
-		info("INDEX {}. Tenor: {:0.2f}", i + 1, resultGirrDelta[i + 1]);
+		info("INDEX {}. Tenor: {:0.2f}", i + 1, resultBuySideGirrDelta[i + 1]);
 	}
     info("");
 
-    info("[Result GIRR Delta Buy Side Sensitivity]");
+    info("Result Buy Side GIRR Delta Sensitivity");
     for (int i = 0; i < girrSize; ++i) {
-        info("INDEX {}. Sensitivity: {:0.10f}", i + girrSize + 1, resultGirrDelta[i + girrSize + 1]);
+		info("INDEX {}. Sensitivity: {:0.10f}", i + 1 + girrSize, resultBuySideGirrDelta[i + 1 + girrSize]);
     }
+
+	// Sell Side GIRR Delta
+	girrSize = static_cast<int>(resultSellSideGirrDelta[0]);
+	info("[Result Sell Side GIRR Delta Size]");
+	info("INDEX 0. Size: {}", girrSize);
+	info("");
+
+	info("[Result Sell Side GIRR Delta Tenor]");
+	for (int i = 0; i < girrSize; ++i) {
+		info("INDEX {}. Tenor: {:0.2f}", i + 1, resultSellSideGirrDelta[i + 1]);
+	}
+	info("");
+	
+    info("Result Sell Side GIRR Delta Sensitivity");
+	for (int i = 0; i < girrSize; ++i) {
+		info("INDEX {}. Sensitivity: {:0.10f}", i + 1 + girrSize, resultSellSideGirrDelta[i + 1 + girrSize]);
+	}
     info("");
-
-	info("[Result GIRR Delta Sell Side Tenor]");
-	for (int i = 0; i < girrSize; ++i) {
-		info("INDEX {}. Tenor: {:0.2f}", i + girrSize * 2 + 1, resultGirrDelta[i + girrSize * 2 + 1]);
-	}
-	info("");
-
-	info("[Result GIRR Delta Sell Side Sensitivity]");
-	for (int i = 0; i < girrSize; ++i) {
-		info("INDEX {}. Sensitivity: {:0.10f}", i + girrSize * 3 + 1, resultGirrDelta[i + girrSize * 3 + 1]);
-	}
-	info("");
 }
 
 void printAllData(const TradeInformation& tradeInfo, const BuySideValuationCashFlow& bSideCashFlow, const SellSideValuationCashFlow& sSideCashFlow, const vector<Curve>& curves, const vector<Girr>& girrs) {
@@ -604,9 +638,9 @@ void printAllData(const BuySideValuationCashFlow& bSideCashFlow) {
     info("Principal Amount: {:0.5f}", bSideCashFlow.principalAmount);
     info("Cash Flow Date: {}", qDateToString(bSideCashFlow.cashFlowDate));
     info("Day Count Basis: {}", bSideCashFlow.dcb);
-    info("Year Fraction: {0.10f}", bSideCashFlow.yearFrac);
-    info("Discount Rate: {0.10f}", bSideCashFlow.dcRate);
-    info("Discount Factor: {0.10f}", bSideCashFlow.dcFactor);
+    info("Year Fraction: {:0.10f}", bSideCashFlow.yearFrac);
+    info("Discount Rate: {:0.10f}", bSideCashFlow.dcRate);
+    info("Discount Factor: {:0.10f}", bSideCashFlow.dcFactor);
     info("Present Value: {:0.10f}", bSideCashFlow.presentValue);
     info("");
 }
@@ -618,9 +652,9 @@ void printAllData(const SellSideValuationCashFlow& sSideCashFlow) {
     info("Principal Amount: {:0.5f}", sSideCashFlow.principalAmount);
     info("Cash Flow Date: {}", qDateToString(sSideCashFlow.cashFlowDate));
     info("Day Count Basis: {}", sSideCashFlow.dcb);
-    info("Year Fraction: {0.10f}", sSideCashFlow.yearFrac);
-    info("Discount Rate: {0.10f}", sSideCashFlow.dcRate);
-    info("Discount Factor: {0.10f}", sSideCashFlow.dcFactor);
+    info("Year Fraction: {:0.10f}", sSideCashFlow.yearFrac);
+    info("Discount Rate: {:0.10f}", sSideCashFlow.dcRate);
+    info("Discount Factor: {:0.10f}", sSideCashFlow.dcFactor);
     info("Present Value: {:0.10f}", sSideCashFlow.presentValue);
     info("");
 }
@@ -630,10 +664,10 @@ void printAllData(const std::vector<Curve>& curves) {
     info("[Print All - Curves]");
     for (const auto& curve : curves) {
 		info("Curve Side: {}", curve.sideFlag == 0 ? "Buy Side" : "Sell Side");
-        info("Year Fraction: {0.10f}", curve.yearFrac);
+        info("Year Fraction: {:0.10f}", curve.yearFrac);
         info("Discount Rate: {:0.10f}", curve.rate);
-        info("Discount Factor: {0.10f}", curve.dcFactor);
-        info("Zero Rate: {0.10f}", curve.zeroRate);
+        info("Discount Factor: {:0.10f}", curve.dcFactor);
+        info("Zero Rate: {:0.10f}", curve.zeroRate);
         info("----------------------------------------------");
     }
     info("");
@@ -644,7 +678,7 @@ void printAllData(const std::vector<Girr>& girrs) {
     info("[Print All - GIRR Delta Risk Factors]");
     for (const auto& g : girrs) {
 		info("GIRR Curve Side: {}", g.sideFlag == 0 ? "Buy Side" : "Sell Side");
-        info("Year Fraction: {0.10f}", g.yearFrac);
+        info("Year Fraction: {:0.10f}", g.yearFrac);
         info("Sensitivity: {:0.10f}", g.sensitivity);
         info("----------------------------------------------");
     }

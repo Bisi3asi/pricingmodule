@@ -281,17 +281,11 @@ extern "C" double EXPORT pricing(
         disCountingGirr.emplace_back(tmpGirr);
     }
 
-    double girrTenor[10] = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
-	Size girrDataSize = sizeof(girrTenor) / sizeof(girrTenor[0]);
-
-    /* OUTPUT 1. GIRR Delta 결과 적재 */
-    resultGirrDelta[0] = girrDataSize; // index 0 : size
-    for (Size i = 0; i < girrDataSize; ++i) {
-		resultGirrDelta[i + 1] = girrTenor[i]; // index 1 ~ size : girrTenorDays
-	}
-	for (Size i = 0; i < girrDataSize; ++i) {
-		resultGirrDelta[i + 1 + girrDataSize] = disCountingGirr[i]; // index size + 1 ~ size + size : GIRR Delta
-	}
+	/* OUTPUT 2. GIRR Delta 결과 적재 */
+    vector<Real> girrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+	Size girrDataSize = girrTenor.size();
+    // 0인 민감도를 제외하고 적재
+	processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
     // CSR Bump Rate 설정
     Real csrBump = 0.0001;
@@ -339,17 +333,11 @@ extern "C" double EXPORT pricing(
         disCountingCsr.emplace_back(tmpCsr);
     }
 
-    double csrTenor[5] = { 0.5, 1.0, 3.0, 5.0, 10.0 };
-    Size csrDataSize = sizeof(csrTenor) / sizeof(csrTenor[0]);
-
-	/* OUTPUT 3. CSR Delta 결과 적재 */
-    resultCsrDelta[0] = csrDataSize; // index 0 : size
-    for (Size i = 0; i < csrDataSize; ++i) {
-		resultCsrDelta[i + 1] = csrTenor[i]; // index 1 ~ size : csrTenorDays
-    }
-    for (Size i = 0; i < csrDataSize; ++i) {
-        resultCsrDelta[i + 1 + csrDataSize] = disCountingCsr[i]; // index size + 1 ~ size + size : CSR Delta
-    }
+    /* OUTPUT 3. CSR Delta 결과 적재 */
+    vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
+    Size csrDataSize = csrTenor.size();
+    // 0인 민감도를 제외하고 적재
+	processResultArray(csrTenor, disCountingCsr, csrDataSize, resultCsrDelta);
 
     // NPV : clean, dirty, accured Interest
     Real cleanPrice = fixedRateBond.cleanPrice() / 100.0 * notional;
@@ -366,6 +354,34 @@ extern "C" double EXPORT pricing(
 void initResult(double* result, const int size) {
 
 	fill_n(result, size, 0.0);
+}
+
+void processResultArray(vector<Real> tenors, vector<Real> sensitivities, Size originalSize, double* resultArray) {
+    vector<double> filteredTenor;
+    vector<double> filteredSensitivity;
+
+    // 1. 전처리: sensitivity가 0이 아닌 것만 걸러냄
+    for (Size i = 0; i < originalSize; ++i) {
+        if (sensitivities[i] != 0.0) {
+            filteredTenor.push_back(tenors[i]);
+            filteredSensitivity.push_back(sensitivities[i]);
+        }
+    }
+
+    Size filteredSize = filteredTenor.size();
+
+    // 2. resultArray 구성
+    resultArray[0] = filteredSize;  // 유효 데이터 개수
+
+    // 3. Tenor 입력 (index 1 ~ filteredSize)
+    for (Size i = 0; i < filteredSize; ++i) {
+        resultArray[i + 1] = filteredTenor[i];
+    }
+
+    // 4. girrSensitivity 입력 (index 1 + filteredSize ~ 2 + 2 * filteredSize)
+    for (Size i = 0; i < filteredSize; ++i) {
+        resultArray[i + 1 + filteredSize] = filteredSensitivity[i];
+    }
 }
 
 /* FOR DEBUG */

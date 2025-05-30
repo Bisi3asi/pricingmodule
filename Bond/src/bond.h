@@ -73,6 +73,8 @@ extern "C" double EXPORT pricing(
 
 void initResult(double* result, const int size);
 
+void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib::Real> sensitivities, QuantLib::Size originalSize, double* resultArray);
+
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
 
