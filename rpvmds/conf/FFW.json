@@ -46,7 +46,8 @@
 		  	{ "field": "calType" },
 		  	{ "field": "logYn" },
 		  	{ "field": "resultNetPvFxSensitivity", "type": "double_ptr", "size": "2" },
-			{ "field": "resultGirrTenorSensitivity", "type": "double_ptr", "size": "50" }		  
+			{ "field": "resultBuySideGirrDelta", "type": "double_ptr", "size": "50" }
+			{ "field": "resultSellSideGirrDelta", "type": "double_ptr", "size": "50" }			
 		], 
 		  "returnType": "void"
 		}
@@ -64,7 +65,7 @@
 		"rho": {},
 		"cross": {},
 		"girr": {
-			"callFunction": "pricing", "returnVariable": "%resultGirrTenorSensitivity%", "variableIndex": -1
+			"callFunction": "pricing", "returnVariable": "%resultBuySideGirrDelta%|resultSellSideGirrDelta", "variableIndex": -1
 		}
 	}
 }
