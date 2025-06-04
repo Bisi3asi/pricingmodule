@@ -38,7 +38,7 @@ int main() {
     const double sellCurveRates[buyCurveDataSize] = { 0.029931427, 0.025760797, 0.023328592, 0.021926168, 0.021934282, 0.0223125, 0.022380958, 0.02115366, 0.020361275, 0.020361275 };
 
     // 테스트 데이터 정의 (측정 구분 / 로그파일 생성여부)
-	const int calType = 3; // 1: Price, 2: BASEL 2 Delta, 3: BASEL 3 GIRR / CSR 
+	const int calType = 2; // 1: Price, 2: BASEL 2 Delta, 3: BASEL 3 GIRR / CSR 
 	const int logYn = 1; // 0: No, 1: Yes
 
     // OUTPUT

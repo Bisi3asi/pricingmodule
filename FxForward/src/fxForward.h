@@ -63,9 +63,9 @@ extern "C" {
         , const int calType                         // INPUT 17. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
         , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-        , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
-        , double* resultBuySideGirrDelta            // OUTPUT 2. Buy Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity]
-        , double* resultSellSideGirrDelta           // OUTPUT 3. Sell Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 sell Side tenor, sell Side Sensitivity]        
+        , double* resultNetPvFxSensitivity          // OUTPUT 1, 2. [index 0] Net PV, [index 1] FX Sensitivity
+        , double* resultBuySideGirrDelta            // OUTPUT 3. Buy Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity]
+        , double* resultSellSideGirrDelta           // OUTPUT 4. Sell Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 sell Side tenor, sell Side Sensitivity]        
         // ===================================================================================================
     );
 }

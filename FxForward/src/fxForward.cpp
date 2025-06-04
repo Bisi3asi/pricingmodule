@@ -34,9 +34,9 @@ extern "C" {
         , const int calType                         // INPUT 17. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
         , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-        , double* resultNetPvFxSensitivity          // OUTPUT 1. [index 0] Net PV, [index 1] FX Sensitivity
-        , double* resultBuySideGirrDelta            // OUTPUT 2. Buy Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity]
-        , double* resultSellSideGirrDelta           // OUTPUT 3. Sell Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 sell Side tenor, sell Side Sensitivity]
+        , double* resultNetPvFxSensitivity          // OUTPUT 1, 2. [index 0] Net PV, [index 1] FX Sensitivity
+        , double* resultBuySideGirrDelta            // OUTPUT 3. Buy Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 buy Side tenor, buy Side Sensitivity]
+        , double* resultSellSideGirrDelta           // OUTPUT 4. Sell Side GIRR Delta [index 0: size, index 1 ~ end: 순서대로 sell Side tenor, sell Side Sensitivity]
         // ===================================================================================================
     )
     {
@@ -63,8 +63,8 @@ extern "C" {
             calType
         );
 
-        if (calType != 1 && calType != 3) {
-            error("[FXF]: Invalid calculation type. Only 1 and 3 are supported.");
+        if (calType != 1 && calType != 2 && calType != 3) {
+            error("[FXF]: Invalid calculation type. Only 1, 2, 3 are supported.");
             return;
         }
 
@@ -93,11 +93,10 @@ extern "C" {
         // Curve              데이터 생성 
         inputCurveData(evaluationDateSerial, buyCurveDataSize, buyCurveTenorDays, buyCurveRates, buySideDcb, sellCurveDataSize, sellCurveTenorDays, sellCurveRates, sellSideDcb, dayCounters, curves);
 
-        /* OUTPUT 1. NetPV, FX Sensitivity 산출 및 결과 적재 */
+        /* OUTPUT 1. NetPV 산출 결과 적재 */
         resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
-        resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
 
-        // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
+        // CalType 1. 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
             // OUTPUT 데이터 로깅
             printAllOutputData(resultNetPvFxSensitivity, resultBuySideGirrDelta, resultSellSideGirrDelta);
@@ -105,7 +104,18 @@ extern "C" {
             return;
         }
 
-        /*  GIRR 커브별 Sensitivity 산출 */
+        /* OUTPUT 2. FX Sensitivity 산출 결과 적재 */
+        resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
+
+		// CalType 2. Basel 2 FX Delta 산출의 경우 GIRR Delta 산출을 하지 않음
+        if (calType == 2) {
+            // OUTPUT 데이터 로깅
+			printAllOutputData(resultNetPvFxSensitivity, resultBuySideGirrDelta, resultSellSideGirrDelta);
+			info("==============[fxForward Logging Ended!]==============");
+			return;
+        }
+
+        /* GIRR 커브별 Sensitivity 산출 */
         for (int i = 0; i < girrs.size(); ++i) {
             auto& girr = girrs[i];
 
@@ -116,8 +126,7 @@ extern "C" {
             processGirrSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow, curves, girr, resultNetPvFxSensitivity);
         }
 
-        /* OUTPUT 2. GIRR Delta 결과 적재 */
-        
+        /* OUTPUT 3, 4. GIRR Delta 결과 적재 */
         vector<Real> buySideGirrTenor{};
         vector<Real> buySideGirrSensitivity{};
 		vector<Real> sellSideGirrTenor{};
@@ -135,10 +144,10 @@ extern "C" {
             }
 		}
 
-        // Buy Side GIRR Delta 결과 적재
+        // OUTPUT 3. Buy Side GIRR Delta 결과 적재
 		processResultArray(buySideGirrTenor, buySideGirrSensitivity, buySideGirrSensitivity.size(), resultBuySideGirrDelta);
         
-		// Sell Side GIRR Delta 결과 적재
+		// OUTPUT 4. Sell Side GIRR Delta 결과 적재
 		processResultArray(sellSideGirrTenor, sellSideGirrSensitivity, sellSideGirrSensitivity.size(), resultSellSideGirrDelta);
 
         /* FOR DEBUG */
