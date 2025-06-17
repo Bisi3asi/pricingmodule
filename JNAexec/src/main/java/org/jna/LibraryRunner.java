@@ -379,7 +379,7 @@ public class LibraryRunner {
         int[] NT = new int[] {3,3,3,3};
         double[] TVol = new double[] {1,2,1,2,1,2};
         double[] Parity = new double[] {0.9,1,1.1,0.9,1,1.1,0.9,1,1.1};
-        double[] LocalVolSurface = new double[] {0.2,0.2,0.2w,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2};
+        double[] LocalVolSurface = new double[] {0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2,0.2};
         int[] NVol = new int[] {2,2,2};
         int[] NParity = new int[] {3,3,3};
         double[] UnderlyingCorr = new double[] {1,0,0,0,1,0,0,0,1};
