@@ -19,18 +19,23 @@
 #include <iomanip>
 
 // include (QuantLib)
+#include "ql/currency.hpp"
+#include "ql/currencies/all.hpp"
 #include "ql/time/calendars/southkorea.hpp"
+#include "ql/time/schedule.hpp"
+#include "ql/time/daycounters/actualactual.hpp"
 #include "ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp"
 #include "ql/termstructures/yield/zerocurve.hpp"
 #include "ql/quotes/simplequote.hpp"
-#include "ql/pricingengines/bond/discountingbondengine.hpp"
+#include "ql/indexes/iborindex.hpp"
 #include "ql/instruments/bonds/zerocouponbond.hpp"
 #include "ql/instruments/bonds/fixedratebond.hpp"
-#include "ql/time/schedule.hpp"
-#include "ql/time/daycounters/actualactual.hpp"
+#include "ql/instruments/bonds/floatingratebond.hpp"
+#include "ql/pricingengines/bond/discountingbondengine.hpp"
+
 
 // dll export method (extern "C", EXPORT 명시 필요)
-extern "C" double EXPORT pricing(
+extern "C" double EXPORT pricingFRB(
     // ===================================================================================================
     const int evaluationDate                // INPUT 1. 평가일 (serial number)
     , const int settlementDays              // INPUT 2. 결제일 offset
@@ -71,6 +76,74 @@ extern "C" double EXPORT pricing(
     // ===================================================================================================
 );
 
+extern "C" double EXPORT pricingFRN(
+    // ===================================================================================================
+    const int evaluationDate                // INPUT 1. 평가일 (serial number)
+    , const int settlementDays              // INPUT 2. 결제일 offset
+    , const int issueDate                   // INPUT 3. 발행일 (serial number)
+    , const int maturityDate                // INPUT 4. 만기일 (serial number)
+    , const double notional                 // INPUT 5. 채권 원금
+    , const int couponDayCounter            // INPUT 6. DayCounter code (TODO)
+
+    , const int referenceIndex              // INPUT 7. 참고 금리
+    , const int fixingDays                  // INPUT 8. 금리 확정일 수
+    , const double gearing                  // INPUT 9. 참여율
+    , const double spread                   // INPUT 10. 스프레드
+    , const double lastResetRate            // INPUT 11. 직전 확정 금리
+    , const double nextResetRate            // INPUT 12. 차기 확정 금리
+
+    , const int numberOfCoupons             // INPUT 13. 쿠폰 개수
+    , const int* paymentDates               // INPUT 14. 지급일 배열
+    , const int* realStartDates             // INPUT 15. 각 구간 시작일
+    , const int* realEndDates               // INPUT 16. 각 구간 종료일
+
+    , const double spreadOverYield          // INPUT 17. 채권의 종목 Credit Spread
+    , const int spreadOverYieldCompounding  // INPUT 18. 이자 계산 방식 (TODO)
+    , const int spreadOverYieldDayCounter   // INPUT 19. DCB (TODO)
+
+    , const int numberOfGirrTenors          // INPUT 20. GIRR 만기 수
+    , const int* girrTenorDays              // INPUT 21. GIRR 만기 (startDate로부터의 일수)
+    , const double* girrRates               // INPUT 22. GIRR 금리
+
+    , const int girrDayCounter              // INPUT 23. GIRR DayCountern (TODO)
+    , const int girrInterpolator            // INPUT 24. 보간법 (TODO)
+    , const int girrCompounding             // INPUT 25. 이자 계산 방식 (TODO)
+    , const int girrFrequency               // INPUT 26. 이자 빈도 (TODO)
+
+    , const int numberOfCsrTenors           // INPUT 27. CSR 만기 수
+    , const int* csrTenorDays               // INPUT 28. CSR 만기 (startDate로부터의 일수)
+    , const double* csrRates                // INPUT 29. CSR 스프레드 (금리 차이)
+
+    , const int numberOfIndexGirrTenors     // INPUT 30. GIRR 만기 수
+    , const int* indexGirrTenorDays         // INPUT 31. GIRR 만기 (startDate로부터의 일수)
+    , const double* indexGirrRates          // INPUT 32. GIRR 금리
+
+    , const int indexGirrDayCounter         // INPUT 33. GIRR DayCountern (TODO)
+    , const int indexGirrInterpolator       // INPUT 34. 보간법 (TODO)
+    , const int indexGirrCompounding        // INPUT 35. 이자 계산 방식 (TODO)
+    , const int indexGirrFrequency          // INPUT 36. 이자 빈도 (TODO)
+
+    , const int indexTenorNumber            // INPUT 37. 금리 인덱스 만기의 길이(1, 2, ..)
+    , const int indexTenorUnit              // INPUT 38. 금리 인덱스 만기의 표시 단위(D, M, Y)
+    , const int indexFixingDays             // INPUT 39. 금리 인덱스의 고시 확정일 수
+    , const int indexCurrency               // INPUT 40. 금리 인덱스의 표시 통화
+    , const int indexCalendar               // INPUT 41. 금리 인덱스의 휴일 기준 달력
+    , const int indexBDC                    // INPUT 42. 금리 인덱스의 휴일 적용 기준
+    , const int indexEOM                    // INPUT 43. 금리 인덱스의 월말 여부
+    , const int indexDayCounter             // INPUT 44. 금리 인덱스의 날짜 계산 기준
+
+    , const int calType			            // INPUT 45. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
+    , const int logYn                       // INPUT 46. 로그 파일 생성 여부 (0: No, 1: Yes)
+
+                                            // OUTPUT 1. Net PV (리턴값)
+    , double* resultGirrDelta               // OUTPUT 2. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
+    , double* resultIndexGirrDelta          // OUTPUT 3. IndexGIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
+    , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
+    // ===================================================================================================
+);
+
+
+/* FOR UTIL */
 void initResult(double* result, const int size);
 
 void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib::Real> sensitivities, QuantLib::Size originalSize, double* resultArray);
@@ -78,7 +151,7 @@ void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib
 /* FOR DEBUG */
 std::string qDateToString(const QuantLib::Date& date);
 
-void printAllInputData(
+void printAllInputDataFRB(
     const int evaluationDate,
     const int settlementDays,
     const int issueDate,
@@ -106,7 +179,7 @@ void printAllInputData(
     const int calType
 );
 
-void printAllOutputData(
+void printAllOutputDataFRB(
     const double resultNetPV,
     const double* resultGirrDelta,
     const double* resultCsrDelta
