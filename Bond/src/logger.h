@@ -9,10 +9,13 @@
 #include <iostream>
 #include <filesystem>
 
+/* 로거 초기화 및 생성 함수 */
+void disableConsoleLogging();
 void initLogger(const std::string& filename);
 
-// Array 출력용
-template <typename T>
+
+/* 로깅용 템플릿 함수 */
+template <typename T> // Array 출력용
 void logArrayLine(const std::string& label, const T* data, size_t size, int precision = -1) {
     std::ostringstream oss;
     if (precision >= 0) {
@@ -28,8 +31,7 @@ void logArrayLine(const std::string& label, const T* data, size_t size, int prec
     spdlog::info("{}", oss.str());
 }
 
-// vector 출력용
-template <typename T>
+template <typename T> // vector 출력용
 void logArrayLine(const std::string& label, const std::vector<T>& data, int precision = -1) {
     logArrayLine(label, data.data(), data.size(), precision);
 }
