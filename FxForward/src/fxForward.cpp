@@ -31,7 +31,7 @@ extern "C" {
         , const int* sellCurveTenorDays		        // INPUT 15. 매도 커브 만기 기간 (Sell Curve Term)     
         , const double* sellCurveRates              // INPUT 16. 매도 커브 마켓 데이터 (Sell Curve Market Data) 
 
-        , const int calType                         // INPUT 17. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
+        , const int calType                         // INPUT 17. 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity)
         , const int logYn                           // INPUT 18. 로그 파일 생성 여부 (0: No, 1: Yes)
 
         , double* resultNetPvFxSensitivity          // OUTPUT 1, 2. [index 0] Net PV, [index 1] FX Sensitivity
@@ -44,10 +44,11 @@ extern "C" {
         // 1. 현재 로직은 연속복리 기반임
         // 2. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
         // 3. 현재 Curve에서 받는 Tenor를 YearFraction으로 변환 후, OUPUT GIRR Tenor에 맞게 소수점 둘째자리에서 반올림 처리 후 매핑 ex) 0.249 -> 0.25
-        // 4. FX Sensitivity는 Basel 2 Delta 이나, Net PV와 동시 산출 가능하므로 첫번째 결과 array에 Net PV와 FX Sensitivity를 적재, calType 2는 비활성화
+        // 4. FX Sensitivity는 Basel 2 Delta 이나, Net PV와 동시 산출 가능하므로 첫번째 결과 array에 Net PV와 FX Sensitivity를 적재
 
         /* 로거 초기화 */
         // 디버그용 메소드는 아래 FOR DEBUG 메소드를 참고
+        disableConsoleLogging();         // 로깅여부 N일시 콘촐 입출력 비활성화
         if (logYn == 1) {
             initLogger("fxForward.log"); // 생성 파일명 지정
         }
@@ -96,7 +97,7 @@ extern "C" {
         /* OUTPUT 1. NetPV 산출 결과 적재 */
         resultNetPvFxSensitivity[0] = roundToDecimals(processNetPV(tradeInfo, bSideCashFlow, sSideCashFlow, curves), 10); // Net PV (소수점 열째자리까지 반올림)
 
-        // CalType 1. 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
+        // CalType 1. 이론가 산출
         if (calType == 1) {
             // OUTPUT 데이터 로깅
             printAllOutputData(resultNetPvFxSensitivity, resultBuySideGirrDelta, resultSellSideGirrDelta);
@@ -107,7 +108,7 @@ extern "C" {
         /* OUTPUT 2. FX Sensitivity 산출 결과 적재 */
         resultNetPvFxSensitivity[1] = roundToDecimals(processFxSensitivity(tradeInfo, bSideCashFlow, sSideCashFlow), 10); // FX Sensitivity (소수점 열째자리까지 반올림)
 
-		// CalType 2. Basel 2 FX Delta 산출의 경우 GIRR Delta 산출을 하지 않음
+		// CalType 2. 이론가 산출 + Basel 2 FX Delta
         if (calType == 2) {
             // OUTPUT 데이터 로깅
 			printAllOutputData(resultNetPvFxSensitivity, resultBuySideGirrDelta, resultSellSideGirrDelta);
