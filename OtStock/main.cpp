@@ -1,9 +1,9 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <vector>
 #include <string>
 #include "src/OtStock.h"
 
-// ºÐ±â¹® Ã³¸®
+// ë¶„ê¸°ë¬¸ ì²˜ë¦¬
 #ifdef _WIN32
     #include <windows.h>
     #define EXPORT __declspec(dllimport) __stdcall
@@ -14,29 +14,29 @@
 
 //----------------------------------------------------------------
 // stockPricing
-// amt : ÁÖ½Ä ½Ã°¡
-// price : °¡°Ý ( À§Çè¿äÀÎ O : ÁÖ½Ä°¡°Ý , À§Çè¿äÀÎ X : ÁÖ°¡ Áö¼ö ) - ½Ã³ª¸®¿À Àû¿ëµÈ °¡°Ý ¶Ç´Â »çÈÄ °ËÁõÀÇ ±ÝÀÏ Á¾°¡.
-// basePricee : ±âÁØ°¡°Ý ( À§Çè¿äÀÎ O : ÁÖ½Ä ±âÁØ°¡°Ý , À§Çè¿äÀÎ X : ÁÖ°¡Áö¼ö ±âÁØ °¡°Ý ) - »çÈÄ °ËÁõ ½Ã ÀüÀÏ Á¾°¡.
-// beta : ÁÖ½Ä º£Å¸ ( À§Çè¿äÀÎ O : 1 , À§Çè¿äÀÎ X : ÁÖ½Ä º£Å¸ ) 
-// fx : ¿ÜÈ­È¯À² ( ¿øÈ­ Æ÷Áö¼ÇÀÏ °æ¿ì 0 )
-// *p : 0:µ¨Å¸ , 1:°¨¸¶, 2:º£Å¸, 3:¼¼Å¸, 4:·Î 
-// *ResultPrice : Æò°¡°¡°Ý(ÀÌ·Ð°¡)
+// amt : ì£¼ì‹ ì‹œê°€
+// price : ê°€ê²© ( ìœ„í—˜ìš”ì¸ O : ì£¼ì‹ê°€ê²© , ìœ„í—˜ìš”ì¸ X : ì£¼ê°€ ì§€ìˆ˜ ) - ì‹œë‚˜ë¦¬ì˜¤ ì ìš©ëœ ê°€ê²© ë˜ëŠ” ì‚¬í›„ ê²€ì¦ì˜ ê¸ˆì¼ ì¢…ê°€.
+// basePricee : ê¸°ì¤€ê°€ê²© ( ìœ„í—˜ìš”ì¸ O : ì£¼ì‹ ê¸°ì¤€ê°€ê²© , ìœ„í—˜ìš”ì¸ X : ì£¼ê°€ì§€ìˆ˜ ê¸°ì¤€ ê°€ê²© ) - ì‚¬í›„ ê²€ì¦ ì‹œ ì „ì¼ ì¢…ê°€.
+// beta : ì£¼ì‹ ë² íƒ€ ( ìœ„í—˜ìš”ì¸ O : 1 , ìœ„í—˜ìš”ì¸ X : ì£¼ì‹ ë² íƒ€ ) 
+// fx : ì™¸í™”í™˜ìœ¨ ( ì›í™” í¬ì§€ì…˜ì¼ ê²½ìš° 0 )
+// *p : 0:ë¸íƒ€ , 1:ê°ë§ˆ, 2:ë² íƒ€, 3:ì„¸íƒ€, 4:ë¡œ 
+// *ResultPrice : í‰ê°€ê°€ê²©(ì´ë¡ ê°€)
 //----------------------------------------------------------------
 int main() {
-    // ÀÔ·Â°ª ¼³Á¤
-    double amt = 1200.0;          // ÁÖ½Ä ½Ã°¡
-    double price = 1100.0;        // ÇöÀç °¡°Ý
-    double basePrice = 1000.0;    // ±âÁØ °¡°Ý
-    double beta = 1.2;            // º£Å¸ °ª
-    double fx = 0.0;              // ¿ÜÈ¯ È¯À² (¿øÈ­ Æ÷Áö¼ÇÀÏ °æ¿ì 0)
+    // ìž…ë ¥ê°’ ì„¤ì •
+    double amt = 1200.0;          // ì£¼ì‹ ì‹œê°€
+    double price = 1100.0;        // í˜„ìž¬ ê°€ê²©
+    double basePrice = 1000.0;    // ê¸°ì¤€ ê°€ê²©
+    double beta = 1.2;            // ë² íƒ€ ê°’
+    double fx = 0.0;              // ì™¸í™˜ í™˜ìœ¨ (ì›í™” í¬ì§€ì…˜ì¼ ê²½ìš° 0)
 
-    double p[5];             // µ¨Å¸, °¨¸¶, º£°¡, ¼¼Å¸, ·Î ÀúÀå ¹è¿­
-    double ResultPrice = 0.0;     // Æò°¡ °¡°Ý ÀúÀå º¯¼ö
+    double p[5];             // ë¸íƒ€, ê°ë§ˆ, ë² ê°€, ì„¸íƒ€, ë¡œ ì €ìž¥ ë°°ì—´
+    double ResultPrice = 0.0;     // í‰ê°€ ê°€ê²© ì €ìž¥ ë³€ìˆ˜
 
-    // ÇÔ¼ö È£Ãâ
+    // í•¨ìˆ˜ í˜¸ì¶œ
     long result = stockPricing(amt, price, basePrice, beta, fx, p, &ResultPrice);
 
-    // °á°ú Ãâ·Â
+    // ê²°ê³¼ ì¶œë ¥
     std::cout << "Pricing Calculation Result:" << std::endl;
     std::cout << "  - Theoretical Price: " << ResultPrice << std::endl;
     std::cout << "  - Delta: " << p[0] << std::endl;
@@ -46,7 +46,7 @@ int main() {
     std::cout << "  - Rho: " << p[4] << std::endl;
     std::cout << "  - Return Code: " << result << std::endl;
 
-    // È­¸é Á¾·á ¹æÁö (À©µµ¿ì¿Í ¸®´ª½º È£È¯)
+    // í™”ë©´ ì¢…ë£Œ ë°©ì§€ (ìœˆë„ìš°ì™€ ë¦¬ëˆ…ìŠ¤ í˜¸í™˜)
 #ifdef _WIN32
     system("pause");
 #else

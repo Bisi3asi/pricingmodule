@@ -1,4 +1,4 @@
-#ifndef OTSTOCK_H
+ï»¿#ifndef OTSTOCK_H
 #define OTSTOCK_H
 
 #ifdef _WIN32
@@ -7,7 +7,7 @@
 #define EXPORT
 #endif
 
-// extern "C" Ã³¸®ÇÏ¿© C ½ºÅ¸ÀÏ·Î ¿ÜºÎ¿¡¼­ ÇÔ¼ö°¡ È£ÃâµÉ ¼ö ÀÖµµ·Ï Ã³¸®
+// extern "C" ì²˜ë¦¬í•˜ì—¬ C ìŠ¤íƒ€ì¼ë¡œ ì™¸ë¶€ì—ì„œ í•¨ìˆ˜ê°€ í˜¸ì¶œë  ìˆ˜ ìˆë„ë¡ ì²˜ë¦¬
 extern "C" long EXPORT stockPricing(double amt, double price, double basePrice, double beta, double fx, double* p, double* ResultPrice);
 
 #endif
