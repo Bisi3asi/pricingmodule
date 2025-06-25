@@ -33,7 +33,7 @@
 
 	"functions":[
 		{ 
-		  "name": "pricing", 
+		  "name": "pricingFRB", 
 		  "parameters": [
 			{ "field": "evaluationDate" },  
 		  	{ "field": "settlementDays" },
@@ -69,7 +69,7 @@
 	],
 	"results" : {
 		"price": {
-			"callFunction": "pricing", "returnVariable": "%return%"
+			"callFunction": "pricingFRB", "returnVariable": "%return%"
 		},
 		"delta": {},
 		"gamma": {},
@@ -78,10 +78,10 @@
 		"rho": {},
 		"cross": {},
 		"girr": {
-			"callFunction": "pricing", "returnVariable": "%resultGirrDelta%", "variableIndex": -1
+			"callFunction": "pricingFRB", "returnVariable": "%resultGirrDelta%", "variableIndex": -1
 		},
 		"csr": {
-			"callFunction": "pricing", "returnVariable": "%resultCsrDelta%", "variableIndex": -1
+			"callFunction": "pricingFRB", "returnVariable": "%resultCsrDelta%", "variableIndex": -1
 		}
 	}
 }
