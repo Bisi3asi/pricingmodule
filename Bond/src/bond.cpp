@@ -17,54 +17,66 @@ extern "C" double EXPORT pricingFRB(
     , const double notional                 // INPUT 5. 채권 원금
     , const double couponRate               // INPUT 6. 쿠폰 이율
     , const int couponDayCounter            // INPUT 7. DayCounter code (TODO)
+    , const int couponCalendar              // INPUT 8. Calendar code (TODO)
+    , const int couponFrequency             // INPUT 9. Frequency code (TODO)
 
-    , const int numberOfCoupons             // INPUT 8. 쿠폰 개수
-    , const int* paymentDates               // INPUT 9. 지급일 배열
-    , const int* realStartDates             // INPUT 10. 각 구간 시작일
-    , const int* realEndDates               // INPUT 11. 각 구간 종료일
+    , const int numberOfCoupons             // INPUT 10. 쿠폰 개수
+    , const int* paymentDates               // INPUT 11. 지급일 배열
+    , const int* realStartDates             // INPUT 12. 각 구간 시작일
+    , const int* realEndDates               // INPUT 13. 각 구간 종료일
 
-    , const int numberOfGirrTenors          // INPUT 12. GIRR 만기 수
-    , const int* girrTenorDays              // INPUT 13. GIRR 만기 (startDate로부터의 일수)
-    , const double* girrRates               // INPUT 14. GIRR 금리
+    , const int numberOfGirrTenors          // INPUT 14. GIRR 만기 수
+    , const int* girrTenorDays              // INPUT 15. GIRR 만기 (startDate로부터의 일수)
+    , const double* girrRates               // INPUT 16. GIRR 금리
 
-    , const int girrDayCounter              // INPUT 15. GIRR DayCounter (TODO)
-    , const int girrInterpolator            // INPUT 16. 보간법 (TODO)
-    , const int girrCompounding             // INPUT 17. 이자 계산 방식 (TODO)
-    , const int girrFrequency               // INPUT 18. 이자 빈도 (TODO)
+    , const int girrDayCounter              // INPUT 17. GIRR DayCountern (TODO)
+    , const int girrInterpolator            // INPUT 18. 보간법 (TODO)
+    , const int girrCompounding             // INPUT 19. 이자 계산 방식 (TODO)
+    , const int girrFrequency               // INPUT 20. 이자 빈도 (TODO)
 
-    , const double spreadOverYield          // INPUT 19. 채권의 종목 Credit Spread
-    , const int spreadOverYieldCompounding  // INPUT 20. 이자 계산 방식 (TODO)
-    , const int spreadOverYieldDayCounter   // INPUT 21. DCB (TODO)
+    , const double spreadOverYield          // INPUT 21. 채권의 종목 Credit Spread
+    , const int spreadOverYieldCompounding  // INPUT 22. 이자 계산 방식 (TODO)
+    , const int spreadOverYieldDayCounter   // INPUT 23. DCB (TODO)
 
-    , const int numberOfCsrTenors           // INPUT 22. CSR 만기 수
-    , const int* csrTenorDays               // INPUT 23. CSR 만기 (startDate로부터의 일수)
-    , const double* csrRates                // INPUT 24. CSR 스프레드 (금리 차이)
+    , const int numberOfCsrTenors           // INPUT 24. CSR 만기 수
+    , const int* csrTenorDays               // INPUT 25. CSR 만기 (startDate로부터의 일수)
+    , const double* csrRates                // INPUT 26. CSR 스프레드 (금리 차이)
 
-    , const int calType			            // INPUT 25. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)    
-    , const int logYn                       // INPUT 26. 로그 파일 생성 여부 (0: No, 1: Yes)
+    , const double marketPrice              // INPUT 27. 시장가격(Spread Over Yield 산출 시 사용)
+    , const double csrRiskWeight            // INPUT 28. csr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용)
+
+    , const int calType			            // INPUT 29. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
+    , const int logYn                       // INPUT 30. 로그 파일 생성 여부 (0: No, 1: Yes)
 
                                             // OUTPUT 1. Net PV (리턴값)
-	, double* resultGirrDelta               // OUTPUT 2. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
-    , double* resultCsrDelta			    // OUTPUT 3. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
+    , double* resultBasel2                  // OUTPUT 2. Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
+    , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
+    , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
+    , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
+    , double* resultCsrCvr			        // OUTPUT 6. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     // ===================================================================================================
 ) {
     /* TODO / NOTE */
     // 1. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
 
     /* 로거 초기화 */
+    disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
     if (logYn == 1) {
         initLogger("bond.log"); // 생성 파일명 지정
     }
 
     info("==============[Bond: pricingFRB Logging Started!]==============");
     // INPUT 데이터 로깅
-    printAllInputDataFRB(evaluationDate,
+    printAllInputDataFRB(
+        evaluationDate,
         settlementDays,
         issueDate,
         maturityDate,
         notional,
         couponRate,
         couponDayCounter,
+        couponCalendar,
+        couponFrequency,
         numberOfCoupons,
         paymentDates,
         realStartDates,
@@ -82,63 +94,69 @@ extern "C" double EXPORT pricingFRB(
         numberOfCsrTenors,
         csrTenorDays,
         csrRates,
+        marketPrice,
+        csrRiskWeight,
         calType
     );
 
-	if (calType != 1 && calType!= 2 && calType != 3) {
-		error("[princingFRB]: Invalid calculation type. Only 1, 2, 3 are supported.");
-		return -1; // Invalid calculation type
-	}
+    if (calType != 1 && calType != 2 && calType != 3 && calType != 9) {
+        error("[princingFRB]: Invalid calculation type. Only 1, 2, 3, 9 are supported.");
+        return -1; // Invalid calculation type
+    }
 
     // 결과 데이터 초기화
-	initResult(resultGirrDelta, 50);
+    initResult(resultBasel2, 50);
+    initResult(resultGirrDelta, 50);
     initResult(resultCsrDelta, 50);
+    initResult(resultGirrCvr, 50);
+    initResult(resultCsrCvr, 50);
 
     // revaluationDateSerial -> revaluationDate
     Date asOfDate_ = Date(evaluationDate);
+    const Date issueDate_ = Date(issueDate);
 
     // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
     Settings::instance().evaluationDate() = asOfDate_;
     Size settlementDays_ = settlementDays;
-    
+
     Real notional_ = notional;
-    
+
     // 고정 쿠폰율 벡터 생성
     std::vector<Rate> couponRate_ = std::vector<Rate>(1, couponRate);
-    
+
     // 쿠폰 이자 계산을 위한 일수계산 방식 설정
     DayCounter couponDayCounter_ = ActualActual(ActualActual::ISDA); // TODO 변환 함수 적용 (DayCounter)
-    
+
     // GIRR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> girrDates_;
     std::vector<Real> girrRates_;
 
     // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
     std::vector<Period> girrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
-                                      Period(3, Years), Period(5, Years), Period(10, Years), Period(15, Years),
-                                      Period(20, Years), Period(30, Years) };
-    
+                                       Period(3, Years), Period(5, Years), Period(10, Years), Period(15, Years),
+                                       Period(20, Years), Period(30, Years) };
+
     // GIRR 커브 시작점 (revaluationDate 기준) 입력
     girrDates_.emplace_back(asOfDate_);
     girrRates_.emplace_back(girrRates[0]);
-    
+
     // 나머지 GIRR 커브 구성 요소 입력
     for (Size dateNum = 0; dateNum < numberOfGirrTenors; ++dateNum) {
         girrDates_.emplace_back(asOfDate_ + girrPeriod[dateNum]);
-        girrRates_.emplace_back(girrRates[dateNum] + spreadOverYield);
+        girrRates_.emplace_back(girrRates[dateNum]);
     }
-    
+
     // GIRR 커브 계산 사용 추가 요소
     DayCounter girrDayCounter_ = Actual365Fixed(); // DCB, TODO 변환 함수 적용
     Linear girrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
     Compounding girrCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-	Frequency girrFrequency_ = Frequency::Annual; // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
+    Frequency girrFrequency_ = Frequency::Annual; // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
 
     // GIRR 커브 생성
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
         girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
-    
-	// GIRR 커브를 RelinkableHandle에 연결
+
+    // GIRR 커브를 RelinkableHandle에 연결
     RelinkableHandle<YieldTermStructure> girrCurve;
     girrCurve.linkTo(girrTermstructure);
 
@@ -147,43 +165,43 @@ extern "C" double EXPORT pricingFRB(
     Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
     DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DCB, TODO 변환 함수 적용 (DayCounter)
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
-    
-	// CSR 커브 구성용 날짜 및 금리 벡터
+
+    // CSR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> csrDates_;
     std::vector<Period> csrPeriod = { Period(6, Months), Period(1, Years), Period(3, Years), Period(5, Years), Period(10, Years) };
-    
-	// CSR 커브 시작점 (revaluationDate 기준) 입력
+
+    // CSR 커브 시작점 (revaluationDate 기준) 입력
     csrDates_.emplace_back(asOfDate_);
-    
+
     // CSR 스프레드를 담을 핸들 벡터
     std::vector<Handle<Quote>> csrSpreads_;
 
-	// 첫번째 CSR 스프레드에 spreadOverYield 값을 설정
+    // 첫번째 CSR 스프레드에 spreadOverYield 값을 설정
     double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
-    csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[0]));
-    
-	// 나머지 CSR 커브 기간별 스프레드 입력
+    csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(spreadOverYield_));
+
+    // 나머지 CSR 커브 기간별 스프레드 입력
     for (Size dateNum = 0; dateNum < numberOfCsrTenors; ++dateNum) {
         csrDates_.emplace_back(asOfDate_ + csrPeriod[dateNum]);
         spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, csrDates_.back()));
-        csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[dateNum]));
+        csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[dateNum] + spreadOverYield_));
     }
 
     // GIRR + CSR 스프레드 커브 생성
     ext::shared_ptr<ZeroYieldStructure> discountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, csrSpreads_, csrDates_);
-    
+
     // Discounting 커브 연결
     RelinkableHandle<YieldTermStructure> discountingCurve;
     discountingCurve.linkTo(discountingTermStructure);
 
-	// Discounting 엔진 생성 (채권 가격 계산용)
+    // Discounting 엔진 생성 (채권 가격 계산용)
     auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve);
 
     // Schedule 객체 생성 (지급일)
     Schedule fixedBondSchedule_;
 
     // Coupon Schedule 생성
-	if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우        
+    if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
         info("[Coupon Schedule]: PARAMETER INPUT");
 
         std::vector<Date> couponSch_;
@@ -213,10 +231,11 @@ extern "C" double EXPORT pricingFRB(
     }
 
     /* FOR DEBUG */
-    printAllData(fixedBondSchedule_);
+    //    printAllData(fixedBondSchedule_);
 
 
-	// FixedRateBond 객체 생성
+    // FixedRateBond 객체 생성
+    Calendar couponCalendar_ = NullCalendar(); // TODO 변환 함수 적용(Calendar)
     FixedRateBond fixedRateBond(
         settlementDays_,
         notional_,
@@ -224,132 +243,326 @@ extern "C" double EXPORT pricingFRB(
         couponRate_,
         couponDayCounter_,
         ModifiedFollowing, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
-        100.0);
+        100.0,
+        issueDate_,
+        couponCalendar_);
 
-	// Fixed Rate Bond에 Discounting 엔진 연결
+    if (calType == 9) {
+        // Calc Spread Over Yield
+        std::vector<Handle<Quote>> tmpCsrSpreads_;
+        tmpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(0.0));
+        for (Size dateNum = 0; dateNum < numberOfCsrTenors; ++dateNum) {
+            tmpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[dateNum]));
+        }
+        ext::shared_ptr<ZeroYieldStructure> tmpDiscountingTermStructure =
+            ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, tmpCsrSpreads_, csrDates_);
+        RelinkableHandle<YieldTermStructure> tmpDiscountingCurve;
+        tmpDiscountingCurve.linkTo(tmpDiscountingTermStructure);
+        auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve);
+        fixedRateBond.setPricingEngine(tmpBondEngine);
+        // SettlementDays 관행 무시(Algo)
+        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
+            false, asOfDate_, couponCalendar_.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
+        //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
+        //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
+
+        // OUTPUT 데이터 로깅
+        printAllOutputDataFRB(soy, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+        /* OUTPUT 9. spreadOverYield 리턴 */
+        info("==============[Bond: pricingFRB Logging Ended!]==============");
+        return soy;
+    }
+    // Fixed Rate Bond에 Discounting 엔진 연결
     fixedRateBond.setPricingEngine(bondEngine);
 
-	// 채권 가격 Net PV 계산
+    // 채권 가격 Net PV 계산
     Real npv = fixedRateBond.NPV();
 
     // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
-	if (calType == 1 || calType == 2) {
+    if (calType == 1) {
         // OUTPUT 데이터 로깅
-		printAllOutputDataFRB(npv, resultGirrDelta, resultCsrDelta);
+        printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
         /* OUTPUT 1. Net PV 리턴 */
         info("==============[Bond: pricingFRB Logging Ended!]==============");
         return npv;
-	}
-   
-    // GIRR Bump Rate 설정
-    Real girrBump = 0.0001;
-
-    // GIRR Delta 적재용 벡터 생성
-    std::vector<Real> disCountingGirr;
-
-    // GIRR Delta 계산
-    for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
-        // GIRR 커브의 금리를 bumping (1bp 상승)
-        std::vector<Rate> bumpGirrRates = girrRates_;
-        bumpGirrRates[bumpNum] += girrBump;
-
-        // bump된 금리로 새로운 ZeroCurve 생성
-        ext::shared_ptr<YieldTermStructure> bumpGirrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, bumpGirrRates, girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
-        
-        // RelinkableHandle에 bump된 커브 연결
-        RelinkableHandle<YieldTermStructure> bumpGirrCurve;
-        bumpGirrCurve.linkTo(bumpGirrTermstructure);
-
-        // CSR Spread를 적용한 bump GIRR 기반 할인 커브 생성
-        ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(bumpGirrCurve, csrSpreads_, csrDates_);
-        
-        // 할인 커브를 RelinkableHandle로 wrapping
-        RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
-        bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
-        bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
-        
-        // discountingCurve로 새로운 pricing engine 생성
-        auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
-        
-		// FixedRateBond에 bump된 pricing engine 연결
-        fixedRateBond.setPricingEngine(bumpBondEngine);
-        
-		// 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
-        Real tmpGirr = (fixedRateBond.NPV() - npv) * 10000;
-
-		// 산출된 Girr Delta 값을 벡터에 추가   
-        disCountingGirr.emplace_back(tmpGirr);
     }
 
-	/* OUTPUT 2. GIRR Delta 결과 적재 */
-    vector<Real> girrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
-	Size girrDataSize = girrTenor.size();
-    // 0인 민감도를 제외하고 적재
-	processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
+    if (calType == 2) {
+        // Delta 계산
+        Real bumpSize = 0.0001; // bumpSize를 0.0001 이외의 값으로 적용 시, PV01 산출을 독립적으로 구현해줘야 함
+        std::vector<Real> bumpGearings{ 1.0, -1.0 };
+        std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
+        for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
+            std::vector<Rate> bumpGirrRates = girrRates_;
+            for (Size bumpTenorNum = 0; bumpTenorNum < girrRates_.size(); ++bumpTenorNum) {
+                // GIRR 커브의 금리를 bumping (1bp 상승)
+                bumpGirrRates[bumpTenorNum] += bumpGearings[bumpNo] * bumpSize;
+            }
 
-    // CSR Bump Rate 설정
-    Real csrBump = 0.0001;
+            // bump된 금리로 새로운 ZeroCurve 생성
+            ext::shared_ptr<YieldTermStructure> bumpGirrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, bumpGirrRates, girrDayCounter_, girrInterpolator_,
+                girrCompounding_, girrFrequency_);
 
-    // CSR Delta 적재용 벡터 생성
-    std::vector<Real> disCountingCsr;
+            // RelinkableHandle에 bump된 커브 연결
+            RelinkableHandle<YieldTermStructure> bumpGirrCurve;
+            bumpGirrCurve.linkTo(bumpGirrTermstructure);
 
-	// CSR Delta 계산
-    for (Size bumpNum = 1; bumpNum < csrSpreads_.size(); ++bumpNum) {
-        // bump된 CSR Spread 벡터 초기화
-        std::vector<Handle<Quote>> bumpCsrSpreads_;
-        
-        // 첫번째 spread 항목은 조건부로 bump 적용 (벤치마크 sparead curve에 대해 하나의 bump만 적용)
-        if (bumpNum == 1) {
-            bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[0]->value() + csrBump));
+            // CSR Spread를 적용한 bump GIRR 기반 할인 커브 생성
+            ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(bumpGirrCurve, csrSpreads_, csrDates_);
+
+            // 할인 커브를 RelinkableHandle로 wrapping
+            RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
+            bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
+            bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
+
+            // discountingCurve로 새로운 pricing engine 생성
+            auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+
+            // FixedRateBond에 bump된 pricing engine 연결
+            fixedRateBond.setPricingEngine(bumpBondEngine);
+
+            // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
+            bumpedNpv[bumpNo] = fixedRateBond.NPV();
+
         }
-        else {
-            bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[0]->value()));
-        }
 
-		// 나머지 CSR Spread 항목도 bumpNum 위치에만 bump 적용
-        for (Size i = 1; i < csrSpreads_.size(); ++i) {
-            Real bump = (i == bumpNum) ? csrBump : 0.0;
-            bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[i]->value() + bump));            
-        }
+        QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+        Real delta = (bumpedNpv[0] - npv) / bumpSize;
+        Real gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
-		// GIRR 커브에 bump된 CSR Spread를 적용한 할인 커브 생성
-        ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, bumpCsrSpreads_, csrDates_);
+        const DayCounter& ytmDayCounter = Actual365Fixed();
+        Compounding ytmCompounding = Continuous;
+        Frequency ytmFrequency = Annual;
+        Rate ytmValue = CashFlows::yield(fixedRateBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
+            couponCalendar_.advance(asOfDate_, Period(settlementDays, Days)), asOfDate_,
+            1.0e-15, 100, 0.005);
+        InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
+
+        // Duration 계산
+        Duration::Type durationType = Duration::Modified;
+        Real duration = CashFlows::duration(fixedRateBond.cashflows(), ytm, durationType, false,
+            couponCalendar_.advance(asOfDate_, Period(settlementDays, Days)), asOfDate_);
+
+        Real convexity = CashFlows::convexity(fixedRateBond.cashflows(), ytm, false,
+            couponCalendar_.advance(asOfDate_, Period(settlementDays, Days)), asOfDate_);
+
+        Real PV01 = delta * bumpSize;
+
+        resultBasel2[0] = delta;
+        resultBasel2[1] = gamma;
+        resultBasel2[2] = duration;
+        resultBasel2[3] = convexity;
+        resultBasel2[4] = PV01;
+
         
-		// 새로운 할인 커브를 RelinkableHandle로 wrapping
-        RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
-        bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
-        bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
-        
-		// discountingCurve로 새로운 pricing engine 생성
-        auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
-        
-		// FixedRateBond에 bump된 pricing engine 연결
-        fixedRateBond.setPricingEngine(bumpBondEngine);
-        
-		// 기존 Net PV - bump된 Net PV 계산 (CSR Delta)
-        Real tmpCsr = (fixedRateBond.NPV() - npv) * 10000;
-        
-		// 산출된 CSR Delta 값을 벡터에 추가
-        disCountingCsr.emplace_back(tmpCsr);
+        // OUTPUT 데이터 로깅
+        printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+        /* OUTPUT 1,2 : Net PV, Basel 2 Delta 리턴 */
+        info("==============[Bond: pricingFRB Logging Ended!]==============");
+        return npv;
     }
 
-    /* OUTPUT 3. CSR Delta 결과 적재 */
-    vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
-    Size csrDataSize = csrTenor.size();
-    // 0인 민감도를 제외하고 적재
-	processResultArray(csrTenor, disCountingCsr, csrDataSize, resultCsrDelta);
+    if (calType == 3) {
+        // GIRR Bump Rate 설정
+        Real girrBump = 0.0001;
+
+        // GIRR Delta 적재용 벡터 생성
+        std::vector<Real> disCountingGirr;
+
+        // GIRR Delta 계산
+        for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
+            // GIRR 커브의 금리를 bumping (1bp 상승)
+            std::vector<Rate> bumpGirrRates = girrRates_;
+            bumpGirrRates[bumpNum] += girrBump;
+
+            // bump된 금리로 새로운 ZeroCurve 생성
+            ext::shared_ptr<YieldTermStructure> bumpGirrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, bumpGirrRates, girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
+
+            // RelinkableHandle에 bump된 커브 연결
+            RelinkableHandle<YieldTermStructure> bumpGirrCurve;
+            bumpGirrCurve.linkTo(bumpGirrTermstructure);
+
+            // CSR Spread를 적용한 bump GIRR 기반 할인 커브 생성
+            ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(bumpGirrCurve, csrSpreads_, csrDates_);
+
+            // 할인 커브를 RelinkableHandle로 wrapping
+            RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
+            bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
+            bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
+
+            // discountingCurve로 새로운 pricing engine 생성
+            auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+
+            // FixedRateBond에 bump된 pricing engine 연결
+            fixedRateBond.setPricingEngine(bumpBondEngine);
+
+            // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
+            Real tmpGirr = (fixedRateBond.NPV() - npv) * 10000;
+
+            // 산출된 Girr Delta 값을 벡터에 추가
+            disCountingGirr.emplace_back(tmpGirr);
+        }
+
+        /* OUTPUT 2. GIRR Delta 결과 적재 */
+        std::vector<Real> girrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+        Size girrDataSize = girrTenor.size();
+        // 0인 민감도를 제외하고 적재
+        processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
+
+        // CSR Bump Rate 설정
+        Real csrBump = 0.0001;
+
+        // CSR Delta 적재용 벡터 생성
+        std::vector<Real> disCountingCsr;
+
+        // CSR Delta 계산
+        for (Size bumpNum = 1; bumpNum < csrSpreads_.size(); ++bumpNum) {
+            // bump된 CSR Spread 벡터 초기화
+            std::vector<Handle<Quote>> bumpCsrSpreads_;
+
+            // 첫번째 spread 항목은 조건부로 bump 적용 (벤치마크 sparead curve에 대해 하나의 bump만 적용)
+            if (bumpNum == 1) {
+                bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[0]->value() + csrBump));
+            }
+            else {
+                bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[0]->value()));
+            }
+
+            // 나머지 CSR Spread 항목도 bumpNum 위치에만 bump 적용
+            for (Size i = 1; i < csrSpreads_.size(); ++i) {
+                Real bump = (i == bumpNum) ? csrBump : 0.0;
+                bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[i]->value() + bump));
+            }
+
+            // GIRR 커브에 bump된 CSR Spread를 적용한 할인 커브 생성
+            ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, bumpCsrSpreads_, csrDates_);
+
+            // 새로운 할인 커브를 RelinkableHandle로 wrapping
+            RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
+            bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
+            bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
+
+            // discountingCurve로 새로운 pricing engine 생성
+            auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+
+            // FixedRateBond에 bump된 pricing engine 연결
+            fixedRateBond.setPricingEngine(bumpBondEngine);
+
+            // 기존 Net PV - bump된 Net PV 계산 (CSR Delta)
+            Real tmpCsr = (fixedRateBond.NPV() - npv) * 10000;
+
+            // 산출된 CSR Delta 값을 벡터에 추가
+            disCountingCsr.emplace_back(tmpCsr);
+        }
+
+        /* OUTPUT 3. CSR Delta 결과 적재 */
+        std::vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
+        Size csrDataSize = csrTenor.size();
+        // 0인 민감도를 제외하고 적재
+        processResultArray(csrTenor, disCountingCsr, csrDataSize, resultCsrDelta);
+
+
+        Real totalGirr = 0;
+        for (const auto& girr : disCountingGirr) {
+            totalGirr += girr;
+        }
+
+        // Curvature 계산
+        Real curvatureRW = 0.017; // bumpSize를 FRTB 기준서의 Girr Curvature RiskWeight로 설정
+        std::vector<Real> bumpGearings{ 1.0, -1.0 };
+        std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
+        for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
+            std::vector<Rate> bumpGirrRates = girrRates_;
+            for (Size bumpTenorNum = 0; bumpTenorNum < girrRates_.size(); ++bumpTenorNum) {
+                // GIRR 커브의 금리를 bumping (RiskWeight 만큼 상승)
+                bumpGirrRates[bumpTenorNum] += bumpGearings[bumpNo] * curvatureRW;
+            }
+
+            // bump된 금리로 새로운 ZeroCurve 생성
+            ext::shared_ptr<YieldTermStructure> bumpGirrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, bumpGirrRates, girrDayCounter_, girrInterpolator_,
+                girrCompounding_, girrFrequency_);
+
+            // RelinkableHandle에 bump된 커브 연결
+            RelinkableHandle<YieldTermStructure> bumpGirrCurve;
+            bumpGirrCurve.linkTo(bumpGirrTermstructure);
+
+            // CSR Spread를 적용한 bump GIRR 기반 할인 커브 생성
+            ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(bumpGirrCurve, csrSpreads_, csrDates_);
+
+            // 할인 커브를 RelinkableHandle로 wrapping
+            RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
+            bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
+            bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
+
+            // discountingCurve로 새로운 pricing engine 생성
+            auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+
+            // FixedRateBond에 bump된 pricing engine 연결
+            fixedRateBond.setPricingEngine(bumpBondEngine);
+
+            // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
+            bumpedNpv[bumpNo] = fixedRateBond.NPV();
+        }
+
+        QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+        resultGirrCvr[0] = (bumpedNpv[0] - npv - curvatureRW * totalGirr);
+        resultGirrCvr[1] = (bumpedNpv[1] - npv + curvatureRW * totalGirr);
+
+        Real totalCsr = 0;
+        for (const auto& csr : disCountingCsr) {
+            totalCsr += csr;
+        }
+
+        // Curvature 계산
+        curvatureRW = csrRiskWeight; // bumpSize를 FRTB 기준서의 CSR Bucket의 Curvature RiskWeight로 설정
+        for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
+            std::vector<Handle<Quote>> bumpCsrSpreads_;
+            for (Size bumpTenorNum = 0; bumpTenorNum < csrSpreads_.size(); ++bumpTenorNum) {
+                // Csr 커브의 금리를 bumping (RiskWeight 만큼 상승)
+                bumpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrSpreads_[bumpTenorNum]->value() +
+                    bumpGearings[bumpNo] * curvatureRW));
+            }
+
+            // GIRR 커브에 bump된 CSR Spread를 적용한 할인 커브 생성
+            ext::shared_ptr<ZeroYieldStructure> bumpDiscountingTermStructure =
+                ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, bumpCsrSpreads_, csrDates_);
+
+            // 새로운 할인 커브를 RelinkableHandle로 wrapping
+            RelinkableHandle<YieldTermStructure> bumpDiscountingCurve;
+            bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
+            bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
+
+
+            // discountingCurve로 새로운 pricing engine 생성
+            auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+
+            // FixedRateBond에 bump된 pricing engine 연결
+            fixedRateBond.setPricingEngine(bumpBondEngine);
+
+            // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
+            bumpedNpv[bumpNo] = fixedRateBond.NPV();
+        }
+
+        QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+        resultCsrCvr[0] = (bumpedNpv[0] - npv - curvatureRW * totalCsr);
+        resultCsrCvr[1] = (bumpedNpv[1] - npv + curvatureRW * totalCsr);
+
+
+        printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+        info("==============[Bond: pricingFRB Logging Ended!]==============");
+        /* OUTPUT 1. Net PV 리턴 */
+        return npv;
+    }
 
     // NPV : clean, dirty, accured Interest
     Real cleanPrice = fixedRateBond.cleanPrice() / 100.0 * notional;
     Real dirtyPrice = fixedRateBond.dirtyPrice() / 100.0 * notional;
     Real accruedInterest = fixedRateBond.accruedAmount() / 100.0 * notional;
-    
-    printAllOutputDataFRB(npv, resultGirrDelta, resultCsrDelta);
-    info("==============[Bond: pricingFRB Logging Ended!]==============");
 
     /* OUTPUT 1. Net PV 리턴 */
-	return npv; 
+    return npv;
 }
+
 
 extern "C" double EXPORT pricingFRN(
     // ===================================================================================================
@@ -410,7 +623,7 @@ extern "C" double EXPORT pricingFRN(
     , const int calType			            // INPUT 45. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR)
     , const int logYn                       // INPUT 46. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultGirrDelta               // OUTPUT 2. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultIndexGirrDelta          // OUTPUT 3. IndexGIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
@@ -420,38 +633,70 @@ extern "C" double EXPORT pricingFRN(
     // 1. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
 
     /* 로거 초기화 */
+	disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
     if (logYn == 1) {
         initLogger("bond.log"); // 생성 파일명 지정
     }
 
     info("==============[Bond: pricingFRN Logging Started!]==============");
-     //INPUT 데이터 로깅
-    //printAllInputData(evaluationDate,
-    //                  settlementDays,
-    //                  issueDate,
-    //                  maturityDate,
-    //                  notional,
-    //                  couponRate,
-    //                  couponDayCounter,
-    //                  numberOfCoupons,
-    //                  paymentDates,
-    //                  realStartDates,
-    //                  realEndDates,
-    //                  numberOfGirrTenors,
-    //                  girrTenorDays,
-    //                  girrRates,
-    //                  girrDayCounter,
-    //                  girrInterpolator,
-    //                  girrCompounding,
-    //                  girrFrequency,
-    //                  spreadOverYield,
-    //                  spreadOverYieldCompounding,
-    //                  spreadOverYieldDayCounter,
-    //                  numberOfCsrTenors,
-    //                  csrTenorDays,
-    //                  csrRates,
-    //                  calType
-    //);
+     // INPUT 데이터 로깅
+    printAllInputDataFRN(
+        evaluationDate,
+        settlementDays,
+        issueDate,
+        maturityDate,
+        notional,
+        couponDayCounter,
+
+        referenceIndex,
+        fixingDays,
+        gearing,
+        spread,
+        lastResetRate,
+        nextResetRate,
+
+        numberOfCoupons,
+        paymentDates,
+        realStartDates,
+        realEndDates,
+
+        spreadOverYield,
+        spreadOverYieldCompounding,
+        spreadOverYieldDayCounter,
+
+        numberOfGirrTenors,
+        girrTenorDays,
+        girrRates,
+
+        girrDayCounter,
+        girrInterpolator,
+        girrCompounding,
+        girrFrequency,
+
+        numberOfCsrTenors,
+        csrTenorDays,
+        csrRates,
+
+        numberOfIndexGirrTenors,
+        indexGirrTenorDays,
+        indexGirrRates,
+
+        indexGirrDayCounter,
+        indexGirrInterpolator,
+        indexGirrCompounding,
+        indexGirrFrequency,
+
+        indexTenorNumber,
+        indexTenorUnit,
+        indexFixingDays,
+        indexCurrency,
+        indexCalendar,
+        indexBDC,
+        indexEOM,
+        indexDayCounter,
+
+        calType
+    );
 
     if (calType != 1 && calType != 2 && calType != 3) {
         error("[princingFRB]: Invalid calculation type. Only 1, 2, 3 are supported.");
@@ -548,7 +793,6 @@ extern "C" double EXPORT pricingFRN(
     for (Size dateNum = 0; dateNum < numberOfGirrTenors; ++dateNum) {
         girrDates_.emplace_back(asOfDate_ + girrPeriod[dateNum]);
         girrRates_.emplace_back(girrRates[dateNum]);
-        //        girrRates_.emplace_back(girrRates[dateNum] + spreadOverYield);
     }
 
     // GIRR 커브 계산 사용 추가 요소
@@ -663,7 +907,7 @@ extern "C" double EXPORT pricingFRN(
         // OUTPUT 데이터 로깅
         printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
         /* OUTPUT 1. Net PV 리턴 */
-        info("==============[bond Logging Ended!]==============");
+        info("==============[Bond: pricingFRN Logging Ended!]==============");
         return npv;
     }
 
@@ -731,13 +975,7 @@ extern "C" double EXPORT pricingFRN(
         RelinkableHandle<YieldTermStructure> bumpGirrCurve;
         indexGirrCurve.linkTo(bumpGirrTermstructure);
 
-        //        // discountingCurve로 새로운 pricing engine 생성
-        //        auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpGirrCurve);
-        //
-        //        // FixedRateBond에 bump된 pricing engine 연결
-        //        floatingRateBond.setPricingEngine(bumpBondEngine);
-
-                // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
+        // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
         Real tmpGirr = (floatingRateBond.NPV() - npv) * 10000;
 
         // 산출된 Girr Delta 값을 벡터에 추가
@@ -796,7 +1034,7 @@ extern "C" double EXPORT pricingFRN(
         disCountingCsr.emplace_back(tmpCsr);
     }
 
-    /* OUTPUT 3. CSR Delta 결과 적재 */
+    /* OUTPUT 4. CSR Delta 결과 적재 */
     std::vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
     Size csrDataSize = csrTenor.size();
     // 0인 민감도를 제외하고 적재
@@ -864,6 +1102,8 @@ void printAllInputDataFRB(
     const double notional,
     const double couponRate,
     const int couponDayCounter,
+    const int couponCalendar,
+    const int couponFrequency,
     const int numberOfCoupons,
     const int* paymentDates,
     const int* realStartDates,
@@ -875,15 +1115,16 @@ void printAllInputDataFRB(
     const int girrInterpolator,
     const int girrCompounding,
     const int girrFrequency,
-    double spreadOverYield,
+    const double spreadOverYield,
     const int spreadOverYieldCompounding,
     const int spreadOverYieldDayCounter,
     const int numberOfCsrTenors,
     const int* csrTenorDays,
     const double* csrRates,
+    const double marketPrice,
+    const double csrRiskWeight,
     const int calType
 ) {
-
     info("------------------------------------------------------------");
     info("[Print All - FRB Input Data]");
 
@@ -894,18 +1135,20 @@ void printAllInputDataFRB(
     info("notional: {:0.5f}", notional);
     info("couponRate: {:0.5f}", couponRate);
     info("couponDayCounter: {}", couponDayCounter);
+    info("couponCalendar: {}", couponCalendar);
+    info("couponFrequency: {}", couponFrequency);
     info("");
-    
+
     info("numberOfCoupons: {}", numberOfCoupons);
     logArrayLine("paymentDates", paymentDates, numberOfCoupons);
     logArrayLine("realStartDates", realStartDates, numberOfCoupons);
-	logArrayLine("realEndDates", realEndDates, numberOfCoupons);
-    info(""); 
+    logArrayLine("realEndDates", realEndDates, numberOfCoupons);
+    info("");
 
     info("numberOfGirrTenors: {}", numberOfGirrTenors);
-	logArrayLine("girrTenorDays", girrTenorDays, numberOfGirrTenors);
-	logArrayLine("girrRates", girrRates, numberOfGirrTenors, 10);
-    info(""); 
+    logArrayLine("girrTenorDays", girrTenorDays, numberOfGirrTenors);
+    logArrayLine("girrRates", girrRates, numberOfGirrTenors, 10);
+    info("");
 
     info("girrDayCounter: {}", girrDayCounter);
     info("girrInterpolator: {}", girrInterpolator);
@@ -919,26 +1162,48 @@ void printAllInputDataFRB(
     info("");
 
     info("numberOfCsrTenors: {}", numberOfCsrTenors);
-	logArrayLine("csrTenorDays", csrTenorDays, numberOfCsrTenors);
-	logArrayLine("csrRates", csrRates, numberOfCsrTenors, 10);
+    logArrayLine("csrTenorDays", csrTenorDays, numberOfCsrTenors);
+    logArrayLine("csrRates", csrRates, numberOfCsrTenors, 10);
     info("");
 
-	info("calType: {}", calType);
+    info("marketPrice: {:0.5f}", marketPrice);
+    info("csrRiskWeight: {:0.5f}", csrRiskWeight);
+    info("calType: {}", calType);
     info("------------------------------------------------------------");
     info("");
 }
 
 void printAllOutputDataFRB(
-    const double resultNetPV,
+    const double result,
+    const double* resultBasel2,
     const double* resultGirrDelta,
-    const double* resultCsrDelta
+    const double* resultCsrDelta,
+    const double* resultGirrCvr,
+    const double* resultCsrCvr,
+    const int calType
 ) {
 
     info("[Print All - FRB Output Data]");
 
-    // Net PV
-    info("[Net PV]");
-    info("Net Present Value: {:0.10f}", resultNetPV);
+	// Net PV / Spread Over Yield
+    if (calType != 9) {
+        info("[Net PV]");
+        info("Net Present Value: {:0.10f}", result);
+        info("");
+    }
+    else {
+		info("[Spread Over Yield]");
+		info("Spread Over Yield: {:0.10f}", result);
+		info("");
+    }
+
+    // Basel 2
+	info("[Basel 2]");
+	info("INDEX 0. Basel 2 Delta: {:0.10f}", resultBasel2[0]);
+	info("INDEX 1. Basel 2 Gamma: {:0.10f}", resultBasel2[1]);
+	info("INDEX 2. Basel 2 Duration: {:0.10f}", resultBasel2[2]);
+	info("INDEX 3. Basel 2 Convexity: {:0.10f}", resultBasel2[3]);
+	info("INDEX 4. Basel 2 PV01: {:0.10f}", resultBasel2[4]);
     info("");
 
     // GIRR Delta
@@ -981,6 +1246,148 @@ void printAllOutputDataFRB(
     //for (int i = csrSize * 2 + 1; i < 50; ++i) {
     //    info("{}. Empty: {}", i, resultCsrDelta[i]);
     //}
+    info("");
+
+    info("[Result GIRR CVR]");
+	info("INDEX 0. BUMPUP CVR: {:0.10f}", resultGirrCvr[0]);
+	info("INDEX 1. BUMPDOWN CVR: {:0.10f}", resultGirrCvr[1]);
+    info("");
+
+	info("[Result CSR CVR]");
+	info("INDEX 0. BUMPUP CVR: {:0.10f}", resultCsrCvr[0]);
+	info("INDEX 1. BUMPDOWN CVR: {:0.10f}", resultCsrCvr[1]);
+ 
+    info("------------------------------------------------------------");
+    info("");
+}
+
+void printAllInputDataFRN(
+    const int evaluationDate,
+    const int settlementDays,
+    const int issueDate,
+    const int maturityDate,
+    const double notional,
+    const int couponDayCounter,
+
+    const int referenceIndex,
+    const int fixingDays,
+    const double gearing,
+    const double spread,
+    const double lastResetRate,
+    const double nextResetRate,
+
+    const int numberOfCoupons,
+    const int* paymentDates,
+    const int* realStartDates,
+    const int* realEndDates,
+
+    const double spreadOverYield,
+    const int spreadOverYieldCompounding,
+    const int spreadOverYieldDayCounter,
+
+    const int numberOfGirrTenors,
+    const int* girrTenorDays,
+    const double* girrRates,
+
+    const int girrDayCounter,
+    const int girrInterpolator,
+    const int girrCompounding,
+    const int girrFrequency,
+
+    const int numberOfCsrTenors,
+    const int* csrTenorDays,
+    const double* csrRates,
+
+    const int numberOfIndexGirrTenors,
+    const int* indexGirrTenorDays,
+    const double* indexGirrRates,
+
+    const int indexGirrDayCounter,
+    const int indexGirrInterpolator,
+    const int indexGirrCompounding,
+    const int indexGirrFrequency,
+
+    const int indexTenorNumber,
+    const int indexTenorUnit,
+    const int indexFixingDays,
+    const int indexCurrency,
+    const int indexCalendar,
+    const int indexBDC,
+    const int indexEOM,
+    const int indexDayCounter,
+
+    const int calType
+) {
+
+    info("------------------------------------------------------------");
+    info("[Print All - FRN Input Data]");
+
+    info("evaluationDate: {}", evaluationDate);
+    info("settlementDays: {}", settlementDays);
+    info("issueDate: {}", issueDate);
+    info("maturityDate: {}", maturityDate);
+    info("notional: {:0.5f}", notional);
+    info("couponDayCounter: {}", couponDayCounter);
+    info("");
+
+    info("referenceIndex: {}", referenceIndex);
+    info("fixingDays: {}", fixingDays);
+    info("gearing: {:0.5f}", gearing);
+    info("spread: {:0.5f}", spread);
+    info("lastResetRate: {:0.5f}", lastResetRate);
+    info("nextResetRate: {:0.5f}", nextResetRate);
+    info("");
+
+    info("numberOfCoupons: {}", numberOfCoupons);
+    logArrayLine("paymentDates", paymentDates, numberOfCoupons);
+    logArrayLine("realStartDates", realStartDates, numberOfCoupons);
+    logArrayLine("realEndDates", realEndDates, numberOfCoupons);
+    info("");
+
+    info("spreadOverYield: {:0.5f}", spreadOverYield);
+    info("spreadOverYieldCompounding: {}", spreadOverYieldCompounding);
+    info("spreadOverYieldDayCounter: {}", spreadOverYieldDayCounter);
+    info("");
+
+    info("numberOfGirrTenors: {}", numberOfGirrTenors);
+    logArrayLine("girrTenorDays", girrTenorDays, numberOfGirrTenors);
+    logArrayLine("girrRates", girrRates, numberOfGirrTenors, 10);
+    info("");
+
+    info("girrDayCounter: {}", girrDayCounter);
+    info("girrInterpolator: {}", girrInterpolator);
+    info("girrCompounding: {}", girrCompounding);
+    info("girrFrequency: {}", girrFrequency);
+    info("");
+
+    info("numberOfCsrTenors: {}", numberOfCsrTenors);
+    logArrayLine("csrTenorDays", csrTenorDays, numberOfCsrTenors);
+    logArrayLine("csrRates", csrRates, numberOfCsrTenors, 10);
+    info("");
+
+    info("numberOfIndexGirrTenors: {}", numberOfIndexGirrTenors);
+    logArrayLine("indexGirrTenorDays", indexGirrTenorDays, numberOfIndexGirrTenors);
+    logArrayLine("indexGirrRates", indexGirrRates, numberOfIndexGirrTenors, 10);
+    info("");
+
+    info("indexGirrDayCounter: {}", indexGirrDayCounter);
+    info("indexGirrInterpolator: {}", indexGirrInterpolator);
+    info("indexGirrCompounding: {}", indexGirrCompounding);
+    info("indexGirrFrequency: {}", indexGirrFrequency);
+    info("");
+
+    info("indexTenorNumber: {}", indexTenorNumber);
+    info("indexTenorUnit: {}", indexTenorUnit);
+    info("indexFixingDays: {}", indexFixingDays);
+    info("indexCurrency: {}", indexCurrency);
+    info("indexCalendar: {}", indexCalendar);
+    info("indexBDC: {}", indexBDC);
+    info("indexEOM: {}", indexEOM);
+    info("indexDayCounter: {}", indexDayCounter);
+    info("");
+
+    info("calType: {}", calType);
+
     info("------------------------------------------------------------");
     info("");
 }
