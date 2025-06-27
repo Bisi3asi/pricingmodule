@@ -71,19 +71,19 @@ extern "C" double EXPORT pricingFRB(
     , const double* csrRates                // INPUT 26. CSR 스프레드 (금리 차이)
 
     , const double marketPrice              // INPUT 27. 시장가격(Spread Over Yield 산출 시 사용)
-    , const double csrRiskWeight            // INPUT 28. csr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용)
+    , const double girrRiskWeight           // INPUT 28. GIRR 리스크요소 버킷의 위험 가중치(TODO, Curvature 산출 시 사용)
+    , const double csrRiskWeight            // INPUT 29. CSR 리스크요소 버킷의 위험 가중치(TODO, Curvature 산출 시 사용)
 
-    , const int calType			            // INPUT 29. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
-    , const int logYn                       // INPUT 30. 로그 파일 생성 여부 (0: No, 1: Yes)
+    , const int calType			            // INPUT 30. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
+    , const int logYn                       // INPUT 31. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. Net PV (리턴값)
+    // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     // ===================================================================================================
-
 );
 
 extern "C" double EXPORT pricingFRN(

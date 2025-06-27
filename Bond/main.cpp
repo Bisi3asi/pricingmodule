@@ -42,7 +42,7 @@ int main() {
 
     const double marketPrice = 5536303734.68839; // 5536062000.0;
     const double csrRiskWeight = 0.05;
-
+	const double girrRiskWeight = 0.05;
 
     const int calType = 3; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
     const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
@@ -82,6 +82,7 @@ int main() {
         csrRates,
 
         marketPrice,
+        girrRiskWeight,
         csrRiskWeight,
 
         calType,
