@@ -1,71 +1,91 @@
 {
-	"_comment": "ex)FFW_REL@45834,45657,1532.578,0,EUR,30000,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0264438703|0.0238058648|0.0210763173|0.0197593133|0.0198563969|0.0207148214|0.0225037149|0.0236128877|0.0234768987|0.022255283,KRW,45273000,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.029931427|0.025760797|0.023328592|0.021926168|0.021934282|0.0223125|0.022380958|0.02115366|0.020361275|0.020361275,3,1@1",
+	"_comment": "ex)FFW_REL@45657,0,1532.578,0,EUR,30000,45834,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0264438703|0.0238058648|0.0210763173|0.0197593133|0.0198563969|0.0207148214|0.0225037149|0.0236128877|0.0234768987|0.022255283,KRW,45273000,45834,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.029931427|0.025760797|0.023328592|0.021926168|0.021934282|0.0223125|0.022380958|0.02115366|0.020361275|0.020361275,0.05,0.05,3,1@1",
  	"name" : "fxForward",
 	"product": "FFW_REL",
 	"inputArguments":[
-			{ "field": "maturityDateSerial", "type": "long" },  
-		  	{ "field": "evaluationDateSerial", "type": "long" },
+		  	{ "field": "evaluationDateSerial", "type": "int" },
+		  	{ "field": "settlementDays", "type": "int" },
 		  	{ "field": "exchangeRate", "type": "double" },
 		  	{ "field": "isBuySideDomestic",	"type": "int" },
 		  	{ "field": "buySideCurrency", "type": "char" },
 		  	{ "field": "buySideNotional", "type": "double" },
+		  	{ "field": "buySidePayDate", "type": "int" },
 		  	{ "field": "buySideDcb", "type": "int" },
 		  	{ "field": "buyCurveDataSize", "type": "int" },
 		  	{ "field": "buyCurveTenorDays",	"type": "int_ptr" },
 		  	{ "field": "buyCurveRates",	"type": "double_ptr" },
 			{ "field": "sellSideCurrency", "type": "char" },
 		  	{ "field": "sellSideNotional", "type": "double" },
+		  	{ "field": "sellSidePayDate", "type": "int" },
 		  	{ "field": "sellSideDcb", "type": "int" },
 			{ "field": "sellCurveDataSize",	"type": "int" },
 		  	{ "field": "sellCurveTenorDays", "type": "int_ptr" },
 		  	{ "field": "sellCurveRates", "type": "double_ptr" },
+		  	{ "field": "buyGirrRiskWeight", "type": "double" },
+		  	{ "field": "sellGirrRiskWeight", "type": "double" },
 		  	{ "field": "calType", "type": "int", "defaultValue": 1 },
 			{ "field": "logYn", "type": "int", "defaultValue": 0 }
 		],
 
 	"functions":[
 		{ 
-		  "name": "pricing", 
+		  "name": "pricingFXF", 
 		  "parameters": [
-			{ "field": "maturityDateSerial" },  
 		  	{ "field": "evaluationDateSerial" },
+		  	{ "field": "settlementDays" },
 		  	{ "field": "exchangeRate" },
 		  	{ "field": "isBuySideDomestic" },
 		  	{ "field": "buySideCurrency" },
 		  	{ "field": "buySideNotional" },
+		  	{ "field": "buySidePayDate" },
 		  	{ "field": "buySideDcb" },
 		  	{ "field": "buyCurveDataSize" },
 		  	{ "field": "buyCurveTenorDays" },
 		  	{ "field": "buyCurveRates" },
 			{ "field": "sellSideCurrency" },
 		  	{ "field": "sellSideNotional" },
+		  	{ "field": "sellSidePayDate" },
 		  	{ "field": "sellSideDcb" },
-		  	{ "field": "sellCurveDataSize" },
+			{ "field": "sellCurveDataSize" },
 		  	{ "field": "sellCurveTenorDays" },
 		  	{ "field": "sellCurveRates" },
+		  	{ "field": "buyGirrRiskWeight" },
+		  	{ "field": "sellGirrRiskWeight" },
 		  	{ "field": "calType" },
-		  	{ "field": "logYn" },
-		  	{ "field": "resultNetPvFxSensitivity", "type": "double_ptr", "size": "2" },
+			{ "field": "logYn" },
+		  	{ "field": "resultNetPv", "type": "double_ptr", "size": "2" },
+			{ "field": "resultBuySideBasel2", "type": "double_ptr", "size": "50" },
+			{ "field": "resultSellSideBasel2", "type": "double_ptr", "size": "50" },
 			{ "field": "resultBuySideGirrDelta", "type": "double_ptr", "size": "50" },
-			{ "field": "resultSellSideGirrDelta", "type": "double_ptr", "size": "50" }			
+			{ "field": "resultSellSideGirrDelta", "type": "double_ptr", "size": "50" },
+			{ "field": "resultBuySideGirrCvr", "type": "double_ptr", "size": "50" },
+			{ "field": "resultSellSideGirrCvr", "type": "double_ptr", "size": "50" }			
 		], 
 		  "returnType": "void"
 		}
 	],
 	"results" : {
-		"price": {
-			"callFunction": "pricing", "returnVariable": "%resultNetPvFxSensitivity%", "variableIndex": 0
-		},
-		"delta": {
-			"callFunction": "pricing", "returnVariable": "%resultNetPvFxSensitivity%", "variableIndex": 1
-		},
-		"gamma": {},
-		"vega": {},
-		"theta": {},
-		"rho": {},
-		"cross": {},
-		"girr": {
-			"callFunction": "pricing", "returnVariable": "%resultBuySideGirrDelta%|%resultSellSideGirrDelta%", "variableIndex": -1
-		}
+		"PRICE": { "callFunction": "pricingFXF", "returnVariable": "%resultNetPv%", "variableIndex": -1 },
+		"DELTA": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 0 },
+		"VEGA": {},
+		"GAMMA": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 1 },
+		"DURATION": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 2 },
+		"CONVEXITY": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 3 },
+		"SPREADOVERYIELD": {},
+		"PV01": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 4 },
+		"FRTB_DELTA_GIRR": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideGirrDelta%|%resultSellSideGirrDelta%", "variableIndex": -1 },
+		"FRTB_DELTA_CSR": {},
+		"FRTB_DELTA_FX": {},
+		"FRTB_DELTA_EQ": {},
+		"FRTB_DELTA_CM": {},
+		"FRTB_VEGA_GIRR": {},
+		"FRTB_VEGA_FX": {},
+		"FRTB_VEGA_EQ": {},
+		"FRTB_VEGA_CM": {},
+		"FRTB_CVR_GIRR": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideGirrCvr%|%resultSellSideGirrCvr%", "variableIndex": -1 },
+		"FRTB_CVR_FX": {},
+		"FRTB_CVR_EQ": {},
+		"FRTB_CVR_CM": {},
+		"CASHFLOW": {}
 	}
 }

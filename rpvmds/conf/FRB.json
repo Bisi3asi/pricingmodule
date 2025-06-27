@@ -1,5 +1,5 @@
 {
-	"_comment": "ex)FRB_REL@45657,0,44175,47827,6000000000.0,0.015,5,12,45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644|47827,45636|45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644,45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644|47827,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0337|0.0317|0.0285|0.0272|0.0269|0.0271|0.0278|0.0272|0.0254|0.0222,1,1,1,1,0.001389,1,1,5,183|365|1095|1825|3650,0.0|0.0|0.0|0.0005|0.001,3,1@1",
+	"_comment": "ex)FRB_REL@45657,0,44175,47827,6000000000.0,0.015,5,0,1,12,45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644|47827,45636|45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644,45818|46001|46183|46366|46548|46731|46916|47098|47280|47462|47644|47827,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0337|0.0317|0.0285|0.0272|0.0269|0.0271|0.0278|0.0272|0.0254|0.0222,1,1,1,1,0.001389,1,1,5,183|365|1095|1825|3650,0.0|0.0|0.0|0.0005|0.001,5536303734.68839,0.05,0.05,3,1@1",
  	"name" : "bond",
 	"product": "FRB_REL",
 	"inputArguments":[
@@ -10,6 +10,8 @@
 		  	{ "field": "notional", "type": "double" },
 		  	{ "field": "couponRate", "type": "double" },
 		  	{ "field": "couponDayCounter", "type": "int" },
+		  	{ "field": "couponCalendar", "type": "int" },
+		  	{ "field": "couponFrequency", "type": "int" },
 		  	{ "field": "numberOfCoupons", "type": "int" },
 		  	{ "field": "paymentDates", "type": "int_ptr" },
 		  	{ "field": "realStartDates", "type": "int_ptr" },
@@ -27,6 +29,9 @@
 			{ "field": "numberOfCsrTenors",	"type": "int" },
 			{ "field": "csrTenorDays", "type": "int_ptr" },
 			{ "field": "csrRates", "type": "double_ptr" },
+			{ "field": "marketPrice", "type": "double" },
+			{ "field": "girrRiskWeight", "type": "double" },
+			{ "field": "csrRiskWeight", "type": "double" },
 			{ "field": "calType", "type": "int", "defaultValue": 1 },
 			{ "field": "logYn", "type": "int", "defaultValue": 0 }
 		],
@@ -42,6 +47,8 @@
 		  	{ "field": "notional" },
 		  	{ "field": "couponRate" },
 		  	{ "field": "couponDayCounter" },
+		  	{ "field": "couponCalendar" },
+		  	{ "field": "couponFrequency" },
 		  	{ "field": "numberOfCoupons" },
 		  	{ "field": "paymentDates" },
 		  	{ "field": "realStartDates" },
@@ -59,29 +66,42 @@
 			{ "field": "numberOfCsrTenors" },
 			{ "field": "csrTenorDays" },
 			{ "field": "csrRates" },
+			{ "field": "marketPrice" },
+			{ "field": "girrRiskWeight" },
+			{ "field": "csrRiskWeight" },
 			{ "field": "calType" },
 			{ "field": "logYn" },
+			{ "field": "resultBasel2", "type": "double_ptr", "size": "50" },
 			{ "field": "resultGirrDelta", "type": "double_ptr", "size": "50" },
-			{ "field": "resultCsrDelta", "type": "double_ptr", "size": "50" }
+			{ "field": "resultCsrDelta", "type": "double_ptr", "size": "50" },
+			{ "field": "resultGirrCvr", "type": "double_ptr", "size": "50" },
+			{ "field": "resultCsrCvr", "type": "double_ptr", "size": "50" }
 		], 
 		  "returnType": "double"
 		}
 	],
 	"results" : {
-		"price": {
-			"callFunction": "pricingFRB", "returnVariable": "%return%"
-		},
-		"delta": {},
-		"gamma": {},
-		"vega": {},
-		"theta": {},
-		"rho": {},
-		"cross": {},
-		"girr": {
-			"callFunction": "pricingFRB", "returnVariable": "%resultGirrDelta%", "variableIndex": -1
-		},
-		"csr": {
-			"callFunction": "pricingFRB", "returnVariable": "%resultCsrDelta%", "variableIndex": -1
-		}
+		"PRICE": { "callFunction": "pricingFRB", "returnVariable": "%return%" },
+		"DELTA": { "callFunction": "pricingFRB", "returnVariable": "%resultBasel2%", "variableIndex": 0 },
+		"VEGA": {},
+		"GAMMA": { "callFunction": "pricingFRB", "returnVariable": "%resultBasel2%", "variableIndex": 1 },
+		"DURATION": { "callFunction": "pricingFRB", "returnVariable": "%resultBasel2%", "variableIndex": 2 },
+		"CONVEXITY": { "callFunction": "pricingFRB", "returnVariable": "%resultBasel2%", "variableIndex": 3 },
+		"SPREADOVERYIELD": { "callFunction": "pricingFRB", "returnVariable": "%return%" },
+		"PV01": { "callFunction": "pricingFRB", "returnVariable": "%resultBasel2%", "variableIndex": 4 },
+		"FRTB_DELTA_GIRR": { "callFunction": "pricingFRB", "returnVariable": "%resultGirrDelta%", "variableIndex": -1 },
+		"FRTB_DELTA_CSR": { "callFunction": "pricingFRB", "returnVariable": "%resultCsrDelta%", "variableIndex": -1 },
+		"FRTB_DELTA_FX": {},
+		"FRTB_DELTA_EQ": {},
+		"FRTB_DELTA_CM": {},
+		"FRTB_VEGA_GIRR": {},
+		"FRTB_VEGA_FX": {},
+		"FRTB_VEGA_EQ": {},
+		"FRTB_VEGA_CM": {},
+		"FRTB_CVR_GIRR": { "callFunction": "pricingFRB", "returnVariable": "%resultGirrCvr%", "variableIndex": -1 },
+		"FRTB_CVR_FX": {},
+		"FRTB_CVR_EQ": {},
+		"FRTB_CVR_CM": {},
+		"CASHFLOW": {}
 	}
 }

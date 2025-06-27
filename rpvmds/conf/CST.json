@@ -25,22 +25,20 @@
 		}
 	],
 	"results" : {
-		"price": {
+		"PRICE": {
 			"callFunction": "stockPricing", "returnVariable": "%ResultPrice%", "variableIndex": 0
 		},
-		"delta": {
-			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 4
-		},
-		"gamma": {
+		"DELTA": {
 			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 1
 		},
-		"vega": {
+		"VEGA": {
 			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 2
 		},
-		"theta": {
+		"GAMMA": {
 			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 3
 		},
-		"rho": {},
-		"cross": {}
+		"DURATION": {
+			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 4
+		}
 	}
 }
