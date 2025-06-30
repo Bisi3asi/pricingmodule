@@ -8,7 +8,7 @@ using namespace std;
 using namespace spdlog;
 
 extern "C" {
-    void EXPORT_API pricingFXF(
+    void EXPORT_API pricingFFW(
         // ===================================================================================================
         const int evaluationDateSerial              // INPUT 1.  평가일 (Revaluation Date)
         , const int settlementDays                  // INPUT 2.  (추가)결제일수

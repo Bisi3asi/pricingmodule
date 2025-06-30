@@ -56,7 +56,7 @@ int main() {
     double resultBuySideGirrCvr[50] = { 0 };
     double resultSellSideGirrCvr[50] = { 0 };
 
-    pricingFXF(
+    pricingFFW(
         evaluationDateSerial
         , settlementDays
         , exchangeRate
