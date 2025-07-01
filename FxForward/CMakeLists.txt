@@ -1,6 +1,6 @@
 ﻿##################################### 기본 프로젝트 설정 #####################################
 cmake_minimum_required(VERSION 3.16)
-project(FXF LANGUAGES CXX)	# 1. 프로젝트명 설정
+project(FxForward LANGUAGES CXX)	# 1. 프로젝트명 설정
 set(TEST_EXEC_NAME "main")	# 2. 테스트용 cpp 파일, 테스트 실행 파일명 설정 (기본값 main.cpp, main.exe)
 set(OUTPUT_FILE_NAME "fxForward")	# 3. 출력 라이브러리 파일명 설정 (.dll, .so)
 ##############################################################################################
