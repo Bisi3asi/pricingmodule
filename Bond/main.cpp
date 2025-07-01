@@ -13,6 +13,7 @@
 int main() {
     /* Fixed Rate Bond 테스트 */
     /* Algo FixedRateBond 입수 데이터 */
+/*
     const int evaluationDate = 45657;   // 2024-12-31
     const int settlementDays = 0;
     const int issueDate = 44175;        // 2020-12-10
@@ -143,7 +144,7 @@ int main() {
     //    std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
     //}
     std::cout << std::endl;
-
+*/
 	/* Floating Rate Bond 테스트 */
 /*
     const int evaluationDate = 45657;   // 2024-12-31
@@ -334,6 +335,74 @@ int main() {
     std::cout << std::endl;
 */
 
+    /* Zero Coupon Bond 테스트 */
+    const int evaluationDate = 45657;   // 2024-12-31
+    const int settlementDays = 0;
+    const int issueDate = 44175;        // 2020-12-10
+    const int maturityDate = 47827;     // 2030-12-10
+    const double notional = 6000000000.0;
+    const int numberOfGirrTenors = 10;
+    const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
+    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
+    const int girrDayCounter = 1; // Actual/365
+    const int girrInterpolator = 1; // Linear
+    const int girrCompounding = 1; // Continuous
+    const int girrFrequency = 1; // Annual
+    const double spreadOverYield = 0.001389;
+    const int numberOfCsrTenors = 5;
+    const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
+    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
+
+    const double marketPrice = 5536303734.68839; // 5536062000.0;
+    const double girrRiskWeight = 0.017;
+    const double csrRiskWeight = 0.05;
+
+
+    const int calType = 2; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
+    const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
+
+    double resultBasel2[50] = { 0 };
+    double resultGirrDelta[50] = { 0 };
+    double resultCsrDelta[50] = { 0 };
+    double resultGirrCvr[50] = { 0 };
+    double resultCsrCvr[50] = { 0 };
+
+    double resutZeroNPV = pricingZCB(
+        // ===================================================================================================
+        evaluationDate            
+        , issueDate
+        , maturityDate
+        , notional
+
+        , numberOfGirrTenors
+        , girrTenorDays
+        , girrRates
+
+        , girrDayCounter
+        , girrInterpolator
+        , girrCompounding
+        , girrFrequency
+
+        , spreadOverYield
+
+        , numberOfCsrTenors
+        , csrTenorDays
+        , csrRates
+
+        , marketPrice
+        , girrRiskWeight
+        , csrRiskWeight
+
+        , calType
+        , logYn
+
+        , resultBasel2
+        , resultGirrDelta
+        , resultCsrDelta
+        , resultGirrCvr
+        , resultCsrCvr
+        // ===================================================================================================
+    );
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
     #ifdef _WIN32
