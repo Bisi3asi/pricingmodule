@@ -1,5 +1,5 @@
 {
-	"_comment": "ex)FFW_REL@45657,0,1532.578,0,EUR,30000,45834,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0264438703|0.0238058648|0.0210763173|0.0197593133|0.0198563969|0.0207148214|0.0225037149|0.0236128877|0.0234768987|0.022255283,KRW,45273000,45834,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.029931427|0.025760797|0.023328592|0.021926168|0.021934282|0.0223125|0.022380958|0.02115366|0.020361275|0.020361275,0.05,0.05,3,1@1",
+	"_comment": "ex)FFW_REL@45657,0,1532.578,0,EUR,30000,45834,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0264438703|0.0238058648|0.0210763173|0.0197593133|0.0198563969|0.0207148214|0.0225037149|0.0236128877|0.0234768987|0.022255283,KRW,45273000,45834,3,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.029931427|0.025760797|0.023328592|0.021926168|0.021934282|0.0223125|0.022380958|0.02115366|0.020361275|0.020361275,0.05,0.05,1,1@1",
  	"name" : "fxForward",
 	"product": "FFW_REL",
 	"inputArguments":[
@@ -29,7 +29,7 @@
 
 	"functions":[
 		{ 
-		  "name": "pricingFXF", 
+		  "name": "pricingFFW", 
 		  "parameters": [
 		  	{ "field": "evaluationDateSerial" },
 		  	{ "field": "settlementDays" },
@@ -65,15 +65,15 @@
 		}
 	],
 	"results" : {
-		"PRICE": { "callFunction": "pricingFXF", "returnVariable": "%resultNetPv%", "variableIndex": -1 },
-		"DELTA": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 0 },
+		"PRICE": { "callFunction": "pricingFFW", "returnVariable": "%resultNetPv%", "variableIndex": -1 },
+		"DELTA": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 0 },
 		"VEGA": {},
-		"GAMMA": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 1 },
-		"DURATION": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 2 },
-		"CONVEXITY": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 3 },
+		"GAMMA": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 1 },
+		"DURATION": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 2 },
+		"CONVEXITY": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 3 },
 		"SPREADOVERYIELD": {},
-		"PV01": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 4 },
-		"FRTB_DELTA_GIRR": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideGirrDelta%|%resultSellSideGirrDelta%", "variableIndex": -1 },
+		"PV1": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 4 },
+		"FRTB_DELTA_GIRR": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideGirrDelta%|%resultSellSideGirrDelta%", "variableIndex": -1 },
 		"FRTB_DELTA_CSR": {},
 		"FRTB_DELTA_FX": {},
 		"FRTB_DELTA_EQ": {},
@@ -82,7 +82,7 @@
 		"FRTB_VEGA_FX": {},
 		"FRTB_VEGA_EQ": {},
 		"FRTB_VEGA_CM": {},
-		"FRTB_CVR_GIRR": { "callFunction": "pricingFXF", "returnVariable": "%resultBuySideGirrCvr%|%resultSellSideGirrCvr%", "variableIndex": -1 },
+		"FRTB_CVR_GIRR": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideGirrCvr%|%resultSellSideGirrCvr%", "variableIndex": -1 },
 		"FRTB_CVR_FX": {},
 		"FRTB_CVR_EQ": {},
 		"FRTB_CVR_CM": {},
