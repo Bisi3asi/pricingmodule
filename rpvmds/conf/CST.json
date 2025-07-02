@@ -29,16 +29,13 @@
 			"callFunction": "stockPricing", "returnVariable": "%ResultPrice%", "variableIndex": 0
 		},
 		"DELTA": {
+			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 4
+		},
+		"GAMMA": {
 			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 1
 		},
 		"VEGA": {
 			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 2
-		},
-		"GAMMA": {
-			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 3
-		},
-		"DURATION": {
-			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 4
 		}
 	}
 }
