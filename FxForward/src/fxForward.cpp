@@ -33,8 +33,8 @@ extern "C" {
         , const int* sellCurveTenorDays		        // INPUT 17. 매도 커브 만기 기간 (Sell Curve Term)
         , const double* sellCurveRates              // INPUT 18. 매도 커브 마켓 데이터 (Sell Curve Market Data)
 
-		, const double buyGirrRw                    // INPUT 19. Buy GIRR 리스크요소 위험 가중치
-		, const double sellGirrRw                   // INPUT 20. Sell GIRR 리스크요소 위험 가중치
+		, const double buyGirrRiskWeight            // INPUT 19. Buy GIRR 리스크요소 위험 가중치
+		, const double sellGirrRiskWeight           // INPUT 20. Sell GIRR 리스크요소 위험 가중치
 
         , const int calType                         // INPUT 21. 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity)
         , const int logYn                           // INPUT 22. 로그 파일 생성 여부 (0: No, 1: Yes)
