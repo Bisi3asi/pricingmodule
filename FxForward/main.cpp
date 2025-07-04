@@ -12,9 +12,8 @@
 
 int main() {
     // 테스트 데이터 정의 (기본정보)
-    const int evaluationDateSerial = 45657; // 2024-12-31
-    const int settlementDays = 0;
-    const double exchangeRate = 1532.578;
+    const int evaluationDate = 45657; // 2024-12-31
+	const int settlementDays = 0; // 결제일수 (기본값 0)
     const int isBuySideDomestic = 0; // 0: 매도 통화 원화
 
     // 테스트 데이터 정의 (Buy Side Valuation CashFlow)
@@ -57,10 +56,7 @@ int main() {
     double resultSellSideGirrCvr[50] = { 0 };
 
     pricingFFW(
-        evaluationDateSerial
-        , settlementDays
-        , exchangeRate
-        , isBuySideDomestic
+        evaluationDate
 
         , buySideCurrency
         , buySideNotional
