@@ -12,10 +12,7 @@
 
 int main() {
     /* Fixed Rate Bond 테스트 */
-    /* Algo FixedRateBond 입수 데이터 */
-/*
     const int evaluationDate = 45657;   // 2024-12-31
-    const int settlementDays = 0;
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
     const double notional = 6000000000.0;
@@ -23,27 +20,29 @@ int main() {
     const int couponDayCounter = 5; //Actual/Actual(Bond)
     const int couponCalendar = 0;
     const int couponFrequency = 1;
+    const int scheduleGenRule = 1;
+    const int paymentBDC = 1;
+    const int paymentLag = 1;
+
     const int numberOfCpnSch = 12;
     const int paymentDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
     const int realStartDates[] = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
     const int realEndDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+    
     const int numberOfGirrTenors = 10;
     const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int girrDayCounter = 1; // Actual/365
-    const int girrInterpolator = 1; // Linear
-    const int girrCompounding = 1; // Continuous
-    const int girrFrequency = 1; // Annual
+	const int girrConvention[] = {1, 1, 1, 1}; // DayCounter, Interpolator, Compounding, Frequency
+
     const double spreadOverYield = 0.001389;
-    const int spreadOverYieldCompounding = 1; // Continuous
-    const int spreadOverYieldDayCounter = 1; // Actual/365
+    
     const int numberOfCsrTenors = 5;
     const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
     const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
 
     const double marketPrice = 5536303734.68839; // 5536062000.0;
     const double csrRiskWeight = 0.05;
-	const double girrRiskWeight = 0.05;
+	const double girrRiskWeight = 0.017;
 
     const int calType = 3; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
     const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
@@ -54,53 +53,37 @@ int main() {
     double resultGirrCvr[50] = { 0 };
     double resultCsrCvr[50] = { 0 };
 
-    double resultNetPV = pricingFRB(
-        evaluationDate,
-        settlementDays,
-        issueDate,
-        maturityDate,
-        notional,
-        couponRate,
-        couponDayCounter,
-        couponCalendar,
-        couponFrequency,
-        numberOfCpnSch,
-        paymentDates,
-        realStartDates,
-        realEndDates,
-        numberOfGirrTenors,
-        girrTenorDays,
-        girrRates,
-        girrDayCounter,
-        girrInterpolator,
-        girrCompounding,
-        girrFrequency,
-        spreadOverYield,
-        spreadOverYieldCompounding,
-        spreadOverYieldDayCounter,
-        numberOfCsrTenors,
-        csrTenorDays,
-        csrRates,
-
-        marketPrice,
-        girrRiskWeight,
-        csrRiskWeight,
-
-        calType,
-        logYn,
-
-        resultBasel2,
-        resultGirrDelta,
-        resultCsrDelta,
-        resultGirrCvr,
-        resultCsrCvr
+    double result = pricingFRB(
+        evaluationDate, issueDate, maturityDate, notional,
+        couponRate, couponDayCounter, couponCalendar, couponFrequency,
+        scheduleGenRule, paymentBDC, paymentLag,
+        numberOfCpnSch, paymentDates, realStartDates, realEndDates,
+        numberOfGirrTenors, girrTenorDays, girrRates, girrConvention,
+        spreadOverYield, numberOfCsrTenors, csrTenorDays, csrRates,
+        marketPrice, girrRiskWeight, csrRiskWeight,
+        calType, logYn,
+        resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr
     );
 
 	// OUTPUT 1 결과 출력
-	std::cout << "[Net PV]: " << std::setprecision(20) << resultNetPV << std::endl;
+    if (calType == 9) {
+        std::cout << "[Spread Over Yield]: " << std::setprecision(20) << result << std::endl;
+    }
+    else {
+        std::cout << "[Net PV]: " << std::setprecision(20) << result << std::endl;
+    }
     std::cout << std::endl;
 
 	// OUTPUT 2 결과 출력
+	std::cout << "[Basel 2 Result] " << std::endl;
+	std::cout << "Delta: " << std::setprecision(20) << resultBasel2[0] << std::endl; // index 0: Delta
+	std::cout << "Gamma: " << std::setprecision(20) << resultBasel2[1] << std::endl; // index 1: Gamma
+	std::cout << "Duration: " << std::setprecision(20) << resultBasel2[2] << std::endl; // index 2: Duration
+	std::cout << "Convexity: " << std::setprecision(20) << resultBasel2[3] << std::endl; // index 3: Convexity
+	std::cout << "PV01: " << std::setprecision(20) << resultBasel2[4] << std::endl; // index 4: PV01
+    std::cout << std::endl;
+
+	// OUTPUT 3 결과 출력
     int girrSize = static_cast<int>(resultGirrDelta[0]);
     std::cout << "[GIRR Data Size]: " << girrSize << std::endl;     // index 0: size
     std::cout << "[GIRR Delta Tenor]: ";
@@ -121,7 +104,7 @@ int main() {
     //}
 	std::cout << std::endl;
 
-    // OUTPUT 3 결과 출력
+	// OUTPUT 4 결과 출력
     // index 0 : csr delta size    
     int csrSize = static_cast<int>(resultCsrDelta[0]);
     std::cout << "[CSR Data Size]: " << csrSize << std::endl;     // index 0: size
@@ -144,7 +127,18 @@ int main() {
     //    std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
     //}
     std::cout << std::endl;
-*/
+
+	// OUTPUT 5 결과 출력
+	std::cout << "[GIRR Curvature] " << std::endl;
+	std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultGirrCvr[0] << std::endl; // index 0: BumpUp Curvature
+	std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultGirrCvr[1] << std::endl; // index 1: BumpDown Curvature
+	std::cout << std::endl;
+
+	// OUTPUT 6 결과 출력
+	std::cout << "[CSR Curvature] " << std::endl;
+	std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
+	std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
+
 	/* Floating Rate Bond 테스트 */
 /*
     const int evaluationDate = 45657;   // 2024-12-31
@@ -336,6 +330,7 @@ int main() {
 */
 
     /* Zero Coupon Bond 테스트 */
+/*
     const int evaluationDate = 45657;   // 2024-12-31
     const int settlementDays = 0;
     const int issueDate = 44175;        // 2020-12-10
@@ -403,6 +398,7 @@ int main() {
         , resultCsrCvr
         // ===================================================================================================
     );
+*/
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
     #ifdef _WIN32

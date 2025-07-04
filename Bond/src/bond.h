@@ -14,13 +14,14 @@
 
 #pragma once
 
-// include
+/* include */
 #include <iostream>
 #include <iomanip>
 
-// include (QuantLib)
+/* include(QuantLib) */
 #include "ql/currency.hpp"
 #include "ql/currencies/all.hpp"
+#include "ql/cashflows/fixedratecoupon.hpp"
 #include "ql/time/calendars/southkorea.hpp"
 #include "ql/time/schedule.hpp"
 #include "ql/time/daycounters/actualactual.hpp"
@@ -28,57 +29,53 @@
 #include "ql/termstructures/yield/zerocurve.hpp"
 #include "ql/quotes/simplequote.hpp"
 #include "ql/indexes/iborindex.hpp"
+#include "ql/instruments/bond.hpp"
 #include "ql/instruments/bonds/zerocouponbond.hpp"
 #include "ql/instruments/bonds/fixedratebond.hpp"
 #include "ql/instruments/bonds/floatingratebond.hpp"
 #include "ql/pricingengines/bond/discountingbondengine.hpp"
 #include "ql/cashflows/cashflows.hpp"
 
-
-// dll export method (extern "C", EXPORT 명시 필요)
+/* dll export method(extern "C", EXPORT 명시 필요) */
 extern "C" double EXPORT pricingFRB(
     // ===================================================================================================
     const int evaluationDate                // INPUT 1. 평가일 (serial number)
-    , const int settlementDays              // INPUT 2. 결제일 offset
-    , const int issueDate                   // INPUT 3. 발행일 (serial number)
-    , const int maturityDate                // INPUT 4. 만기일 (serial number)
-    , const double notional                 // INPUT 5. 채권 원금
-    , const double couponRate               // INPUT 6. 쿠폰 이율
-    , const int couponDayCounter            // INPUT 7. DayCounter code (TODO)
-    , const int couponCalendar              // INPUT 8. Calendar code (TODO)
-    , const int couponFrequency             // INPUT 9. Frequency code (TODO)
+    , const int issueDate                   // INPUT 2. 발행일 (serial number)
+    , const int maturityDate                // INPUT 3. 만기일 (serial number)
+    , const double notional                 // INPUT 4. 채권 원금
+    , const double couponRate               // INPUT 5. 쿠폰 이율
+    , const int couponDayCounter            // INPUT 6. DayCounter code (TODO)
+    , const int couponCalendar              // INPUT 7. (추가) Calendar code (TODO)
+    , const int couponFrequency             // INPUT 8. (추가) Frequency code (TODO)
+    , const int scheduleGenRule             // INPUT 9. 스케쥴 생성 기준(Forward/Backward) (TODO)
+    , const int paymentBDC                  // INPUT 10. 지급일 휴일 적용 기준 (TODO)
+    , const int paymentLag                  // INPUT 11. 지급일 지연 일수
 
-    , const int numberOfCoupons             // INPUT 10. 쿠폰 개수
-    , const int* paymentDates               // INPUT 11. 지급일 배열
-    , const int* realStartDates             // INPUT 12. 각 구간 시작일
-    , const int* realEndDates               // INPUT 13. 각 구간 종료일
+    , const int numberOfCoupons             // INPUT 12. 쿠폰 개수
+    , const int* paymentDates               // INPUT 13. 지급일 배열
+    , const int* realStartDates             // INPUT 14. 각 구간 시작일
+    , const int* realEndDates               // INPUT 15. 각 구간 종료일
 
-    , const int numberOfGirrTenors          // INPUT 14. GIRR 만기 수
-    , const int* girrTenorDays              // INPUT 15. GIRR 만기 (startDate로부터의 일수)
-    , const double* girrRates               // INPUT 16. GIRR 금리
+    , const int numberOfGirrTenors          // INPUT 16. GIRR 만기 수
+    , const int* girrTenorDays              // INPUT 17. GIRR 만기 (startDate로부터의 일수)
+    , const double* girrRates               // INPUT 18. GIRR 금리
+    , const int* girrConvention             // INPUT 19. (추가) GIRR 컨벤션 [index 0 ~ 3: GIRR DayCounter, 보간법, 이자 계산 방식, 이자 빈도] (TODO)
 
-    , const int girrDayCounter              // INPUT 17. GIRR DayCountern (TODO)
-    , const int girrInterpolator            // INPUT 18. 보간법 (TODO)
-    , const int girrCompounding             // INPUT 19. 이자 계산 방식 (TODO)
-    , const int girrFrequency               // INPUT 20. 이자 빈도 (TODO)
+    , const double spreadOverYield          // INPUT 20. 채권의 종목 Credit Spread
 
-    , const double spreadOverYield          // INPUT 21. 채권의 종목 Credit Spread
-    , const int spreadOverYieldCompounding  // INPUT 22. 이자 계산 방식 (TODO)
-    , const int spreadOverYieldDayCounter   // INPUT 23. DCB (TODO)
+    , const int numberOfCsrTenors           // INPUT 21. CSR 만기 수
+    , const int* csrTenorDays               // INPUT 22. CSR 만기 (startDate로부터의 일수)
+    , const double* csrRates                // INPUT 23. CSR 스프레드 (금리 차이)
 
-    , const int numberOfCsrTenors           // INPUT 24. CSR 만기 수
-    , const int* csrTenorDays               // INPUT 25. CSR 만기 (startDate로부터의 일수)
-    , const double* csrRates                // INPUT 26. CSR 스프레드 (금리 차이)
+    , const double marketPrice              // INPUT 24. (추가) 시장가격(Spread Over Yield 산출 시 사용)
+    , const double girrRiskWeight           // INPUT 25. (추가) girr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용) (TODO)
+    , const double csrRiskWeight            // INPUT 26. (추가) csr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용) (TODO)
 
-    , const double marketPrice              // INPUT 27. 시장가격(Spread Over Yield 산출 시 사용)
-    , const double girrRiskWeight           // INPUT 28. GIRR 리스크요소 버킷의 위험 가중치(TODO, Curvature 산출 시 사용)
-    , const double csrRiskWeight            // INPUT 29. CSR 리스크요소 버킷의 위험 가중치(TODO, Curvature 산출 시 사용)
-
-    , const int calType			            // INPUT 30. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
-    , const int logYn                       // INPUT 31. 로그 파일 생성 여부 (0: No, 1: Yes)
+    , const int calType			            // INPUT 27. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
+    , const int logYn                       // INPUT 28. 로그 파일 생성 여부 (0: No, 1: Yes)
 
     // OUTPUT 1. Net PV (리턴값)
-    , double* resultBasel2                  // OUTPUT 2. Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
+    , double* resultBasel2                  // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
@@ -182,14 +179,42 @@ extern "C" double EXPORT pricingZCB(
     , const int logYn                       // INPUT 20. 로그 파일 생성 여부 (0: No, 1: Yes)
 
                                             // OUTPUT 1. Net PV (리턴값)
-    , double* resultBasel2                  // OUTPUT 2. (추가)Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
+    , double* resultBasel2                  // OUTPUT 2. (추가) Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
-    , double* resultGirrCvr			        // OUTPUT 5. (추가)GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
-    , double* resultCsrCvr			        // OUTPUT 6. (추가)CSR Curvature [BumpUp Curvature, BumpDownCurvature]
+    , double* resultGirrCvr			        // OUTPUT 5. (추가) GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
+    , double* resultCsrCvr			        // OUTPUT 6. (추가) CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     // ===================================================================================================
 );
 
+/* Wrapper class */
+class FixedRateBondCustom : public QuantLib::Bond {
+public:
+    FixedRateBondCustom(QuantLib::Natural settlementDays,
+        QuantLib::Real faceAmount,
+        QuantLib::Schedule schedule,
+        const std::vector<QuantLib::Rate>& coupons,
+        const QuantLib::DayCounter& accrualDayCounter,
+        QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
+        QuantLib::Integer paymentLag = 0,
+        QuantLib::Real redemption = 100.0,
+        const QuantLib::Date& issueDate = QuantLib::Date(),
+        const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
+        const QuantLib::Period& exCouponPeriod = QuantLib::Period(),
+        const QuantLib::Calendar& exCouponCalendar = QuantLib::Calendar(),
+        QuantLib::BusinessDayConvention exCouponConvention = QuantLib::Unadjusted,
+        bool exCouponEndOfMonth = false,
+        const QuantLib::DayCounter& firstPeriodDayCounter = QuantLib::DayCounter());
+
+    QuantLib::Frequency frequency() const { return frequency_; }
+    const QuantLib::DayCounter& dayCounter() const { return dayCounter_; }
+    const QuantLib::DayCounter& firstPeriodDayCounter() const { return firstPeriodDayCounter_; }
+
+protected:
+    QuantLib::Frequency frequency_;
+    QuantLib::DayCounter dayCounter_;
+    QuantLib::DayCounter firstPeriodDayCounter_;
+};
 
 /* FOR UTIL */
 void initResult(double* result, const int size);
@@ -200,34 +225,13 @@ void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib
 std::string qDateToString(const QuantLib::Date& date);
 
 void printAllInputDataFRB(
-    const int evaluationDate,
-    const int settlementDays,
-    const int issueDate,
-    const int maturityDate,
-    const double notional,
-    const double couponRate,
-    const int couponDayCounter,
-    const int couponCalendar,
-    const int couponFrequency,
-    const int numberOfCoupons,
-    const int* paymentDates,
-    const int* realStartDates,
-    const int* realEndDates,
-    const int numberOfGirrTenors,
-    const int* girrTenorDays,
-    const double* girrRates,
-    const int girrDayCounter,
-    const int girrInterpolator,
-    const int girrCompounding,
-    const int girrFrequency,
-    const double spreadOverYield,
-    const int spreadOverYieldCompounding,
-    const int spreadOverYieldDayCounter,
-    const int numberOfCsrTenors,
-    const int* csrTenorDays,
-    const double* csrRates,
-    const double marketPrice,
-    const double csrRiskWeight,
+    const int evaluationDate, const int issueDate, const int maturityDate, const double notional,
+    const double couponRate, const int couponDayCounter, const int couponCalendar, const int couponFrequency,
+    const int scheduleGenRule, const int paymentBDC, const int paymentLag,
+    const int numberOfCoupons, const int* paymentDates, const int* realStartDates, const int* realEndDates,
+    const int numberOfGirrTenors, const int* girrTenorDays, const double* girrRates, const int* girrConvention,
+    const double spreadOverYield, const int numberOfCsrTenors, const int* csrTenorDays, const double* csrRates,
+    const double marketPrice, const double girrRiskWeight, const double csrRiskWeight,
     const int calType
 );
 
