@@ -3,17 +3,17 @@
  	"name" : "fxForward",
 	"product": "FFW_REL",
 	"inputArguments":[
-		  	{ "field": "evaluationDate", "type": "datelong" },
+		  	{ "field": "evaluationDate", "type": "dateint" },
 		  	{ "field": "buySideCurrency", "type": "char" },
 		  	{ "field": "buySideNotional", "type": "double" },
-		  	{ "field": "buySidePayDate", "type": "datelong" },
+		  	{ "field": "buySidePayDate", "type": "dateint" },
 		  	{ "field": "buySideDcb", "type": "int" },
 		  	{ "field": "buyCurveDataSize", "type": "int" },
 		  	{ "field": "buyCurveTenorDays",	"type": "int_ptr" },
 		  	{ "field": "buyCurveRates",	"type": "double_ptr" },
 			{ "field": "sellSideCurrency", "type": "char" },
 		  	{ "field": "sellSideNotional", "type": "double" },
-		  	{ "field": "sellSidePayDate", "type": "datelong" },
+		  	{ "field": "sellSidePayDate", "type": "dateint" },
 		  	{ "field": "sellSideDcb", "type": "int" },
 			{ "field": "sellCurveDataSize",	"type": "int" },
 		  	{ "field": "sellCurveTenorDays", "type": "int_ptr" },
@@ -23,7 +23,6 @@
 		  	{ "field": "calType", "type": "int", "defaultValue": 1 },
 			{ "field": "logYn", "type": "int", "defaultValue": 0 }
 		],
-
 	"functions":[
 		{ 
 		  "name": "pricingFFW", 
