@@ -65,11 +65,11 @@
 			{ "field": "csrRiskWeight", "type": "double" },
 			{ "field": "calType", "type": "int" },
 			{ "field": "logYn", "type": "int" },
-			{ "field": "resultBasel2", "type": "double_ptr", "size": "50" },
-			{ "field": "resultGirrDelta", "type": "double_ptr", "size": "50" },
-			{ "field": "resultCsrDelta", "type": "double_ptr", "size": "50" },
-			{ "field": "resultGirrCvr", "type": "double_ptr", "size": "50" },
-			{ "field": "resultCsrCvr", "type": "double_ptr", "size": "50" }
+			{ "field": "resultBasel2", "type": "double_ptr", "size": "5" },
+			{ "field": "resultGirrDelta", "type": "double_ptr", "size": "23" },
+			{ "field": "resultCsrDelta", "type": "double_ptr", "size": "13" },
+			{ "field": "resultGirrCvr", "type": "double_ptr", "size": "2" },
+			{ "field": "resultCsrCvr", "type": "double_ptr", "size": "2" }
 		], 
 		  "returnType": "double"
 		}
