@@ -57,12 +57,12 @@ extern "C" {
 
         // 결과 데이터 초기화
         initResult(resultNetPv, 2);
-        initResult(resultBuySideBasel2, 50);
-        initResult(resultSellSideBasel2, 50);
-        initResult(resultBuySideGirrDelta, 50);
-        initResult(resultSellSideGirrDelta, 50);
-        initResult(resultBuySideGirrCvr, 50);
-        initResult(resultSellSideGirrCvr, 50);
+        initResult(resultBuySideBasel2, 5);
+        initResult(resultSellSideBasel2, 5);
+        initResult(resultBuySideGirrDelta, 23);
+        initResult(resultSellSideGirrDelta, 23);
+        initResult(resultBuySideGirrCvr, 2);
+        initResult(resultSellSideGirrCvr, 2);
 
         Date asOfDate_ = Date(evaluationDate);
 		const int settlementDays = 0; // 결제일수 (기본값 0, 필요시 수정 가능)

@@ -47,11 +47,11 @@ int main() {
     const int calType = 3; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
     const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
 
-    double resultBasel2[50] = { 0 };
-    double resultGirrDelta[50] = { 0 };
-    double resultCsrDelta[50] = { 0 };
-    double resultGirrCvr[50] = { 0 };
-    double resultCsrCvr[50] = { 0 };
+    double resultBasel2[5] = { 0 };
+    double resultGirrDelta[23] = { 0 };
+    double resultCsrDelta[13] = { 0 }; 
+    double resultGirrCvr[2] = { 0 };
+    double resultCsrCvr[2] = { 0 };
 
     double result = pricingFRB(
         evaluationDate, issueDate, maturityDate, notional,
@@ -139,7 +139,7 @@ int main() {
 	std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
 	std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
 
-	/* Floating Rate Bond 테스트 */
+	/* Floating Rate Note 테스트 */
 /*
     const int evaluationDate = 45657;   // 2024-12-31
     const int settlementDays = 0;

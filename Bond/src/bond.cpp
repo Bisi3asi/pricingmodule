@@ -16,8 +16,8 @@ extern "C" double EXPORT pricingFRB(
     , const double notional                 // INPUT 4. 채권 원금
     , const double couponRate               // INPUT 5. 쿠폰 이율
     , const int couponDayCounter            // INPUT 6. DayCounter code (TODO)
-    , const int couponCalendar              // INPUT 7. (추가) Calendar code (TODO)
-    , const int couponFrequency             // INPUT 8. (추가) Frequency code (TODO)
+    , const int couponCalendar              // INPUT 7. Calendar code (TODO)
+    , const int couponFrequency             // INPUT 8. Frequency code (TODO)
     , const int scheduleGenRule             // INPUT 9. 스케쥴 생성 기준(Forward/Backward) (TODO)
     , const int paymentBDC                  // INPUT 10. 지급일 휴일 적용 기준 (TODO)
     , const int paymentLag                  // INPUT 11. 지급일 지연 일수
@@ -30,7 +30,7 @@ extern "C" double EXPORT pricingFRB(
     , const int numberOfGirrTenors          // INPUT 16. GIRR 만기 수
     , const int* girrTenorDays              // INPUT 17. GIRR 만기 (startDate로부터의 일수)
     , const double* girrRates               // INPUT 18. GIRR 금리
-    , const int* girrConvention             // INPUT 19. (추가) GIRR 컨벤션 [index 0 ~ 3: GIRR DayCounter, 보간법, 이자 계산 방식, 이자 빈도] (TODO)
+    , const int* girrConvention             // INPUT 19. GIRR 컨벤션 [index 0 ~ 3: GIRR DayCounter, 보간법, 이자 계산 방식, 이자 빈도] (TODO)
 
     , const double spreadOverYield          // INPUT 20. 채권의 종목 Credit Spread
 
@@ -38,9 +38,9 @@ extern "C" double EXPORT pricingFRB(
     , const int* csrTenorDays               // INPUT 22. CSR 만기 (startDate로부터의 일수)
     , const double* csrRates                // INPUT 23. CSR 스프레드 (금리 차이)
 
-    , const double marketPrice              // INPUT 24. (추가) 시장가격(Spread Over Yield 산출 시 사용)
-	, const double girrRiskWeight           // INPUT 25. (추가) girr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용) (TODO)
-    , const double csrRiskWeight            // INPUT 26. (추가) csr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용) (TODO)
+    , const double marketPrice              // INPUT 24. 시장가격(Spread Over Yield 산출 시 사용)
+	, const double girrRiskWeight           // INPUT 25. girr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용) (TODO)
+    , const double csrRiskWeight            // INPUT 26. csr 리스크요소 버킷의 위험 가중치(Curvature 산출 시 사용) (TODO)
 
     , const int calType			            // INPUT 27. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 28. 로그 파일 생성 여부 (0: No, 1: Yes)
@@ -79,11 +79,11 @@ extern "C" double EXPORT pricingFRB(
     }
 
     // 결과 데이터 초기화
-    initResult(resultBasel2, 50);
-    initResult(resultGirrDelta, 50);
-    initResult(resultCsrDelta, 50);
-    initResult(resultGirrCvr, 50);
-    initResult(resultCsrCvr, 50);
+    initResult(resultBasel2, 5);
+    initResult(resultGirrDelta, 23);
+    initResult(resultCsrDelta, 13);
+    initResult(resultGirrCvr, 2);
+    initResult(resultCsrCvr, 2);
 
     // revaluationDateSerial -> revaluationDate
     Date asOfDate_ = Date(evaluationDate);

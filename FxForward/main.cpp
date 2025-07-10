@@ -48,12 +48,12 @@ int main() {
 
     // OUTPUT
     double resultNetPv[2] = { 0 };
-    double resultBuySideBasel2[50] = { 0 };
-    double resultSellSideBasel2[50] = { 0 };
-    double resultBuySideGirrDelta[50] = { 0 };
-    double resultSellSideGirrDelta[50] = { 0 };
-    double resultBuySideGirrCvr[50] = { 0 };
-    double resultSellSideGirrCvr[50] = { 0 };
+    double resultBuySideBasel2[5] = { 0 };
+    double resultSellSideBasel2[5] = { 0 };
+    double resultBuySideGirrDelta[23] = { 0 };
+    double resultSellSideGirrDelta[23] = { 0 };
+    double resultBuySideGirrCvr[2] = { 0 };
+    double resultSellSideGirrCvr[2] = { 0 };
 
     pricingFFW(
         evaluationDate
