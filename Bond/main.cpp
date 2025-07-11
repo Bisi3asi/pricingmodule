@@ -12,6 +12,7 @@
 
 int main() {
     /* Fixed Rate Bond 테스트 */
+/*
     const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
@@ -138,49 +139,52 @@ int main() {
 	std::cout << "[CSR Curvature] " << std::endl;
 	std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
 	std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
+*/
 
+/* ================================================================================== */
 	/* Floating Rate Note 테스트 */
-/*
+
     const int evaluationDate = 45657;   // 2024-12-31
-    const int settlementDays = 0;
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
-    const int couponDayCounter = 5; //Actual/Actual(Bond)
-    const int numberOfCpnSch = 12;
     const double notional = 6000000000.0;
-    const int paymentDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
-    const int realStartDates[] = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
-    const int realEndDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
-    const int numberOfGirrTenors = 10;
-    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int girrDayCounter = 1; // Actual/365
-    const int girrInterpolator = 1; // Linear
-    const int girrCompounding = 1; // Continuous
-    const int girrFrequency = 1; // Annual
-    const double spreadOverYield = 0.001389;
-    const int spreadOverYieldCompounding = 1; // Continuous
-    const int spreadOverYieldDayCounter = 1; // Actual/365
-    const int numberOfCsrTenors = 5;
-    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
+    const double couponRate = 0.015;
+    const int couponDayCounter = 5;     //Actual/Actual(Bond)
+    const int couponCalendar = 0;
+    const int couponFrequency = 1;
+    const int scheduleGenRule = 1;
+    const int paymentBDC = 1;
+    const int paymentLag = 1;
 
-    const int referenceIndex = 1;
     const int fixingDays = 1;
     const double gearing = 1.0;
     const double spread = 0.0;
     const double lastResetRate = 0.05;
     const double nextResetRate = 0.0;
+
+    const int numberOfCpnSch = 12;
+    const int paymentDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+    const int realStartDates[] = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
+    const int realEndDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+    
+    const double spreadOverYield = 0.001389;
+
+    const int numberOfGirrTenors = 10;
     const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
+    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
+    const int girrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+
+    const int numberOfCsrTenors = 5;
     const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
+    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
+
     const int numberOfIndexGirrTenors = 10;
     const int indexGirrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double indexGirrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int indexGirrDayCounter = 1;   // Actual/365
-    const int indexGirrInterpolator = 1; // Linear
-    const int indexGirrCompounding = 1;  // Continuous
-    const int indexGirrFrequency = 1;    // Annual
+    const int indexGirrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+    const int isSameCurve = 0; // Discounting Curve와 Index Curve의 일치 여부(0: False, others : true)
 
-    const int indexTenorNumber = 3;
-    const int indexTenorUnit = 1;
+    const int indexTenor = 3;
     const int indexFixingDays = 1;
     const int indexCurrency = 1;
     const int indexCalendar = 1;
@@ -188,82 +192,116 @@ int main() {
     const int indexEOM = 1;
     const int indexDayCounter = 1;
 
+    const double marketPrice = 5536303734.68839; // 5536062000.0;
+    const double csrRiskWeight = 0.05;
+    const double girrRiskWeight = 0.017;
+
     const int calType = 3;
     const int logYn = 0;
 
-    double resultGirrDelta[50] = { 0 };
-    double resultIndexGirrDelta[50] = { 0 };
-    double resultCsrDelta[50] = { 0 };
+    double resultGirrBasel2[5] = { 0 };
+    double resultIndexGirrBasel2[5] = { 0 };
+    double resultGirrDelta[23] = { 0 };
+    double resultIndexGirrDelta[23] = { 0 };
+    double resultCsrDelta[13] = { 0 };
+    double resultGirrCvr[2] = { 0 };
+    double resultIndexGirrCvr[2] = { 0 };
+    double resultCsrCvr[2] = { 0 };
 
-    double resultNetPV = 
-    pricingFRN(
-        evaluationDate
-        , settlementDays
-        , issueDate
-        , maturityDate
-        , notional
-        , couponDayCounter
+    double resultNetPV =
+        pricingFRN(
+            evaluationDate,
+            issueDate,
+            maturityDate,
+            notional,
+            couponDayCounter,
+            couponCalendar,
+            couponFrequency,
+            scheduleGenRule,
+            paymentBDC,
+            paymentLag,
 
-        , referenceIndex
-        , fixingDays
-        , gearing
-        , spread
-        , lastResetRate
-        , nextResetRate
+            fixingDays,
+            gearing,
+            spread,
+            lastResetRate,
+            nextResetRate,
 
-        , numberOfCpnSch
-        , paymentDates
-        , realStartDates
-        , realEndDates
+            numberOfCpnSch,
+            paymentDates,
+            realStartDates,
+            realEndDates,
 
-        , spreadOverYield
-        , spreadOverYieldCompounding
-        , spreadOverYieldDayCounter
+            spreadOverYield,
 
-        , numberOfGirrTenors
-        , girrTenorDays
-        , girrRates
+            numberOfGirrTenors,
+            girrTenorDays,
+            girrRates,
+            girrConvention,
 
-        , girrDayCounter
-        , girrInterpolator
-        , girrCompounding
-        , girrFrequency
+            numberOfCsrTenors,
+            csrTenorDays,
+            csrRates,
 
-        , numberOfCsrTenors
-        , csrTenorDays
-        , csrRates
+            numberOfIndexGirrTenors,
+            indexGirrTenorDays,
+            indexGirrRates,
+            indexGirrConvention,
+            isSameCurve,
 
-        , numberOfIndexGirrTenors
-        , indexGirrTenorDays
-        , indexGirrRates
+            indexTenor,
+            indexFixingDays,
+            indexCurrency,
+            indexCalendar,
+            indexBDC,
+            indexEOM,
+            indexDayCounter,
 
-        , indexGirrDayCounter
-        , indexGirrInterpolator
-        , indexGirrCompounding
-        , indexGirrFrequency
+            marketPrice,
+            girrRiskWeight,
+            csrRiskWeight,
 
-        , indexTenorNumber
-        , indexTenorUnit
-        , indexFixingDays
-        , indexCurrency
-        , indexCalendar
-        , indexBDC
-        , indexEOM
-        , indexDayCounter
+            calType,
+            logYn,
 
-        , calType
-        , logYn
-
-        , resultGirrDelta
-        , resultIndexGirrDelta
-        , resultCsrDelta
-    );
+            resultGirrBasel2,
+            resultIndexGirrBasel2,
+            resultGirrDelta,
+            resultIndexGirrDelta,
+            resultCsrDelta,
+            resultGirrCvr,
+            resultIndexGirrCvr,
+            resultCsrCvr
+        );
 
     // OUTPUT 1 결과 출력
-    std::cout << "[Net PV]: " << std::setprecision(20) << resultNetPV << std::endl;
+    if (calType == 9) {
+        std::cout << "[Spread Over Yield]: " << std::setprecision(20) << resultNetPV << std::endl;
+    }
+    else {
+        std::cout << "[Net PV]: " << std::setprecision(20) << resultNetPV << std::endl;
+    }
     std::cout << std::endl;
 
     // OUTPUT 2 결과 출력
+    std::cout << "[GIrr Basel 2 Result] " << std::endl;
+    std::cout << "Delta: " << std::setprecision(20) << resultGirrBasel2[0] << std::endl; // index 0: Delta
+    std::cout << "Gamma: " << std::setprecision(20) << resultGirrBasel2[1] << std::endl; // index 1: Gamma
+    std::cout << "Duration: " << std::setprecision(20) << resultGirrBasel2[2] << std::endl; // index 2: Duration
+    std::cout << "Convexity: " << std::setprecision(20) << resultGirrBasel2[3] << std::endl; // index 3: Convexity
+    std::cout << "PV01: " << std::setprecision(20) << resultGirrBasel2[4] << std::endl; // index 4: PV01
+    std::cout << std::endl;
+
+    // OUTPUT 3 결과 출력
+    std::cout << "[Index GIrr Basel 2 Result] " << std::endl;
+    std::cout << "Delta: " << std::setprecision(20) << resultIndexGirrBasel2[0] << std::endl; // index 0: Delta
+    std::cout << "Gamma: " << std::setprecision(20) << resultIndexGirrBasel2[1] << std::endl; // index 1: Gamma
+    std::cout << "Duration: " << std::setprecision(20) << resultIndexGirrBasel2[2] << std::endl; // index 2: Duration
+    std::cout << "Convexity: " << std::setprecision(20) << resultIndexGirrBasel2[3] << std::endl; // index 3: Convexity
+    std::cout << "PV01: " << std::setprecision(20) << resultIndexGirrBasel2[4] << std::endl; // index 4: PV01
+    std::cout << std::endl;
+
+    // OUTPUT 4 결과 출력
     int girrSize = static_cast<int>(resultGirrDelta[0]);
     std::cout << "[GIRR Data Size]: " << girrSize << std::endl;     // index 0: size
     std::cout << "[GIRR Delta Tenor]: ";
@@ -278,13 +316,14 @@ int main() {
     for (int i = 0; i < girrSize; ++i) {
         std::cout << "index " << (i + 1 + girrSize) << ": " << std::setprecision(20) << resultGirrDelta[i + 1 + girrSize] << std::endl; // index size + 1 ~ 2 * size: sensitivity
     }
+
     //for (int i = girrSize * 2 + 1; i < 50; ++i) {
     //    std::cout << i << ". Empty : " << resultGirrDelta[i] << std::endl; // Empty
     //}
     std::cout << std::endl;
 
-    // OUTPUT 3 결과 출력
-    int indexGirrSize = static_cast<int>(resultGirrDelta[0]);
+    // OUTPUT 5 결과 출력
+    int indexGirrSize = static_cast<int>(resultIndexGirrDelta[0]);
     std::cout << "[Index GIRR Data Size]: " << indexGirrSize << std::endl;     // index 0: size
     std::cout << "[Index GIRR Delta Tenor]: ";
     for (int i = 0; i < indexGirrSize; ++i) {
@@ -298,9 +337,155 @@ int main() {
     for (int i = 0; i < indexGirrSize; ++i) {
         std::cout << "index " << (i + 1 + indexGirrSize) << ": " << std::setprecision(20) << resultIndexGirrDelta[i + 1 + indexGirrSize] << std::endl; // index size + 1 ~ 2 * size: sensitivity
     }
+
+    //for (int i = girrSize * 2 + 1; i < 50; ++i) {
+    //    std::cout << i << ". Empty : " << resultGirrDelta[i] << std::endl; // Empty
+    //}
+    std::cout << std::endl;
+
+    // OUTPUT 6 결과 출력
+    // index 0 : csr delta size    
+    int csrSize = static_cast<int>(resultCsrDelta[0]);
+    std::cout << "[CSR Data Size]: " << csrSize << std::endl;     // index 0: size
+
+    std::cout << "[CSR Delta Tenor]: ";
+    for (int i = 0; i < csrSize; ++i) {
+        std::cout << std::fixed << std::setprecision(2) << resultCsrDelta[i + 1]; // index 1 ~ size: tenor
+        if (i != csrSize - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << std::endl;
+
+    std::cout << "[CSR Delta Sensitivity] " << std::endl;
+    for (int i = 0; i < csrSize; ++i) {
+        std::cout << "index " << (i + 1 + csrSize) << ": " << std::setprecision(20) << resultCsrDelta[i + 1 + csrSize] << std::endl; // index size + 1 ~ 2 * size: sensitivity
+    }
+
+    //for (int i = csrSize * 2 + 1; i < 50; ++i) {
+    //    std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
+    //}
+    std::cout << std::endl;
+
+    // OUTPUT 7 결과 출력
+    std::cout << "[GIRR Curvature] " << std::endl;
+    std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultGirrCvr[0] << std::endl; // index 0: BumpUp Curvature
+    std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultGirrCvr[1] << std::endl; // index 1: BumpDown Curvature
+    std::cout << std::endl;
+
+    // OUTPUT 8 결과 출력
+    std::cout << "[Index GIRR Curvature] " << std::endl;
+    std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultIndexGirrCvr[0] << std::endl; // index 0: BumpUp Curvature
+    std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultIndexGirrCvr[1] << std::endl; // index 1: BumpDown Curvature
+    std::cout << std::endl;
+
+    // OUTPUT 9 결과 출력
+    std::cout << "[CSR Curvature] " << std::endl;
+    std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
+    std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
+
+/* ================================================================================== */
+    /* Zero Coupon Bond 테스트 */
+/*
+    const int evaluationDate = 45657;   // 2024-12-31
+    const int issueDate = 44175;        // 2020-12-10
+    const int maturityDate = 47827;     // 2030-12-10
+    const double notional = 6000000000.0;
     
-    //for (int i = indexGirrSize * 2 + 1; i < 50; ++i) {
-    //    std::cout << i << ". Empty : " << resultIndexGirrDelta[i] << std::endl; // Empty
+    const int numberOfGirrTenors = 10;
+    const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
+    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
+    const int girrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+    
+    const double spreadOverYield = 0.001389;
+    
+    const int numberOfCsrTenors = 5;
+    const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
+    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
+
+    const double marketPrice = 5536303734.68839; // 5536062000.0;
+    const double girrRiskWeight = 0.017;
+    const double csrRiskWeight = 0.05;
+
+
+    const int calType = 9; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
+    const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
+
+    double resultBasel2[5] = { 0 };
+    double resultGirrDelta[23] = { 0 };
+    double resultCsrDelta[13] = { 0 };
+    double resultGirrCvr[2] = { 0 };
+    double resultCsrCvr[2] = { 0 };
+
+    double resultZeroNPV = pricingZCB(
+        // ===================================================================================================
+        evaluationDate            
+        , issueDate
+        , maturityDate
+        , notional
+
+        , numberOfGirrTenors
+        , girrTenorDays
+        , girrRates
+        , girrConvention
+
+        , spreadOverYield
+
+        , numberOfCsrTenors
+        , csrTenorDays
+        , csrRates
+
+        , marketPrice
+        , girrRiskWeight
+        , csrRiskWeight
+
+        , calType
+        , logYn
+
+        , resultBasel2
+        , resultGirrDelta
+        , resultCsrDelta
+        , resultGirrCvr
+        , resultCsrCvr
+        // ===================================================================================================
+    );
+
+    // OUTPUT 1 결과 출력
+    if (calType == 9) {
+        std::cout << "[Spread Over Yield]: " << std::setprecision(20) << resultZeroNPV << std::endl;
+    }
+    else {
+        std::cout << "[Net PV]: " << std::setprecision(20) << resultZeroNPV << std::endl;
+    }
+    std::cout << std::endl;
+
+    // OUTPUT 2 결과 출력
+    std::cout << "[Basel 2 Result] " << std::endl;
+    std::cout << "Delta: " << std::setprecision(20) << resultBasel2[0] << std::endl; // index 0: Delta
+    std::cout << "Gamma: " << std::setprecision(20) << resultBasel2[1] << std::endl; // index 1: Gamma
+    std::cout << "Duration: " << std::setprecision(20) << resultBasel2[2] << std::endl; // index 2: Duration
+    std::cout << "Convexity: " << std::setprecision(20) << resultBasel2[3] << std::endl; // index 3: Convexity
+    std::cout << "PV01: " << std::setprecision(20) << resultBasel2[4] << std::endl; // index 4: PV01
+    std::cout << std::endl;
+
+    // OUTPUT 3 결과 출력
+    int girrSize = static_cast<int>(resultGirrDelta[0]);
+    std::cout << "[GIRR Data Size]: " << girrSize << std::endl;     // index 0: size
+    std::cout << "[GIRR Delta Tenor]: ";
+    for (int i = 0; i < girrSize; ++i) {
+        std::cout << std::fixed << std::setprecision(2) << resultGirrDelta[i + 1]; // index 1 ~ size: tenor
+        if (i != girrSize - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << std::endl;
+    std::cout << "[GIRR Delta Sensitivity] " << std::endl;
+    for (int i = 0; i < girrSize; ++i) {
+        std::cout << "index " << (i + 1 + girrSize) << ": " << std::setprecision(20) << resultGirrDelta[i + 1 + girrSize] << std::endl; // index size + 1 ~ 2 * size: sensitivity
+    }
+
+    //for (int i = girrSize * 2 + 1; i < 50; ++i) {
+    //    std::cout << i << ". Empty : " << resultGirrDelta[i] << std::endl; // Empty
     //}
     std::cout << std::endl;
 
@@ -327,78 +512,19 @@ int main() {
     //    std::cout << i << ". Empty : " << resultCsrDelta[i] << std::endl; // Empty
     //}
     std::cout << std::endl;
+
+    // OUTPUT 5 결과 출력
+    std::cout << "[GIRR Curvature] " << std::endl;
+    std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultGirrCvr[0] << std::endl; // index 0: BumpUp Curvature
+    std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultGirrCvr[1] << std::endl; // index 1: BumpDown Curvature
+    std::cout << std::endl;
+
+    // OUTPUT 6 결과 출력
+    std::cout << "[CSR Curvature] " << std::endl;
+    std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
+    std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
 */
-
-    /* Zero Coupon Bond 테스트 */
-/*
-    const int evaluationDate = 45657;   // 2024-12-31
-    const int settlementDays = 0;
-    const int issueDate = 44175;        // 2020-12-10
-    const int maturityDate = 47827;     // 2030-12-10
-    const double notional = 6000000000.0;
-    const int numberOfGirrTenors = 10;
-    const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
-    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int girrDayCounter = 1; // Actual/365
-    const int girrInterpolator = 1; // Linear
-    const int girrCompounding = 1; // Continuous
-    const int girrFrequency = 1; // Annual
-    const double spreadOverYield = 0.001389;
-    const int numberOfCsrTenors = 5;
-    const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
-    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
-
-    const double marketPrice = 5536303734.68839; // 5536062000.0;
-    const double girrRiskWeight = 0.017;
-    const double csrRiskWeight = 0.05;
-
-
-    const int calType = 2; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
-    const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
-
-    double resultBasel2[50] = { 0 };
-    double resultGirrDelta[50] = { 0 };
-    double resultCsrDelta[50] = { 0 };
-    double resultGirrCvr[50] = { 0 };
-    double resultCsrCvr[50] = { 0 };
-
-    double resutZeroNPV = pricingZCB(
-        // ===================================================================================================
-        evaluationDate            
-        , issueDate
-        , maturityDate
-        , notional
-
-        , numberOfGirrTenors
-        , girrTenorDays
-        , girrRates
-
-        , girrDayCounter
-        , girrInterpolator
-        , girrCompounding
-        , girrFrequency
-
-        , spreadOverYield
-
-        , numberOfCsrTenors
-        , csrTenorDays
-        , csrRates
-
-        , marketPrice
-        , girrRiskWeight
-        , csrRiskWeight
-
-        , calType
-        , logYn
-
-        , resultBasel2
-        , resultGirrDelta
-        , resultCsrDelta
-        , resultGirrCvr
-        , resultCsrCvr
-        // ===================================================================================================
-    );
-*/
+/* ================================================================================== */
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
     #ifdef _WIN32
