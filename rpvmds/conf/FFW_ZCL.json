@@ -45,7 +45,7 @@
 		"GAMMA": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 1 },
 		"DURATION": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 2 },
 		"CONVEXITY": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 3 },
-		"SPREADOVERYIELD": { "callFunction": "pricingZCL", "returnVariable": "%return%" },
+		"SPREADOVERYIELD": {},
 		"PV01": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 4 },
 		"FRTB_DELTA_GIRR": { "callFunction": "pricingZCL", "returnVariable": "%resultGirrDelta%", "variableIndex": -1 },
 		"FRTB_DELTA_CSR": {},

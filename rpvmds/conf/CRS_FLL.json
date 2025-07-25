@@ -105,7 +105,7 @@
 		"GAMMA": { "callFunction": "pricingFLL", "returnVariable": "%resultGirrBasel2%|%resultIndexGirrBasel2%", "variableIndex": 1 },
 		"DURATION": { "callFunction": "pricingFLL", "returnVariable": "%resultGirrBasel2%|%resultIndexGirrBasel2%", "variableIndex": 2 },
 		"CONVEXITY": { "callFunction": "pricingFLL", "returnVariable": "%resultGirrBasel2%|%resultIndexGirrBasel2%", "variableIndex": 3 },
-		"SPREADOVERYIELD": { "callFunction": "pricingFLL", "returnVariable": "%return%" },
+		"SPREADOVERYIELD": {},
 		"PV01": { "callFunction": "pricingFLL", "returnVariable": "%resultGirrBasel2%|%resultIndexGirrBasel2%", "variableIndex": 4 },
 		"FRTB_DELTA_GIRR": { "callFunction": "pricingFLL", "returnVariable": "%resultGirrDelta%|%resultIndexGirrDelta%", "variableIndex": -1 },
 		"FRTB_DELTA_CSR": {},

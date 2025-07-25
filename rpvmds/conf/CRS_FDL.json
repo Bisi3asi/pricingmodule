@@ -70,7 +70,7 @@
 		"GAMMA": { "callFunction": "pricingFDL", "returnVariable": "%resultBasel2%", "variableIndex": 1 },
 		"DURATION": { "callFunction": "pricingFDL", "returnVariable": "%resultBasel2%", "variableIndex": 2 },
 		"CONVEXITY": { "callFunction": "pricingFDL", "returnVariable": "%resultBasel2%", "variableIndex": 3 },
-		"SPREADOVERYIELD": { "callFunction": "pricingFDL", "returnVariable": "%return%" },
+		"SPREADOVERYIELD": {},
 		"PV01": { "callFunction": "pricingFDL", "returnVariable": "%resultBasel2%", "variableIndex": 4 },
 		"FRTB_DELTA_GIRR": { "callFunction": "pricingFDL", "returnVariable": "%resultGirrDelta%", "variableIndex": -1 },
 		"FRTB_DELTA_CSR": {},
