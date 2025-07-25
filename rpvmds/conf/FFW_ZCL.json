@@ -1,0 +1,65 @@
+{
+	"_comment": "ex)FFW_ZCL@20241231,20201210,20301210,6000000000.0,10,91|183|365|730|1095|1825|3650|5475|7300|10950,0.0264438703|0.0238058648|0.0210763173|0.0197593133|0.0198563969|0.0207148214|0.0225037149|0.0236128877|0.0234768987|0.022255283,0|0|0|0,0.017,1,0@1",
+ 	"name" : "leg",
+	"product": "FFW_ZCL",
+	"inputArguments":[
+			{ "field": "evaluationDate", "type": "dateint" },  
+		  	{ "field": "issueDate", "type": "dateint" },
+		  	{ "field": "maturityDate", "type": "dateint" },
+		  	{ "field": "notional", "type": "double" },
+			{ "field": "numberOfGirrTenors", "type": "int" },
+		  	{ "field": "girrTenorDays",	"type": "int_ptr" },
+		  	{ "field": "girrRates",	"type": "double_ptr" },
+		  	{ "field": "girrConvention", "type": "int_ptr" },
+			{ "field": "girrRiskWeight", "type": "double" },
+			{ "field": "calType", "type": "int", "defaultValue": 1 },
+			{ "field": "logYn", "type": "int", "defaultValue": 0 }
+		],
+	"functions":[
+		{ 
+		  "name": "pricingZCL", 
+		  "parameters": [
+			{ "field": "evaluationDate" },  
+		  	{ "field": "issueDate" },
+		  	{ "field": "maturityDate" },
+		  	{ "field": "notional" },
+			{ "field": "numberOfGirrTenors" },
+		  	{ "field": "girrTenorDays" },
+		  	{ "field": "girrRates" },
+		  	{ "field": "girrConvention" },
+			{ "field": "girrRiskWeight" },
+			{ "field": "calType" },
+			{ "field": "logYn" },
+			{ "field": "resultBasel2", "type": "double_ptr", "size": "5" },
+			{ "field": "resultGirrDelta", "type": "double_ptr", "size": "23" },
+			{ "field": "resultGirrCvr", "type": "double_ptr", "size": "2" },
+			{ "field": "resultCashFlow", "type": "double_ptr", "size": "1000" }
+		], 
+		  "returnType": "double"
+		}
+	],
+	"results" : {
+		"PRICE": { "callFunction": "pricingZCL", "returnVariable": "%return%" },
+		"DELTA": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 0 },
+		"VEGA": {},
+		"GAMMA": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 1 },
+		"DURATION": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 2 },
+		"CONVEXITY": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 3 },
+		"SPREADOVERYIELD": { "callFunction": "pricingZCL", "returnVariable": "%return%" },
+		"PV01": { "callFunction": "pricingZCL", "returnVariable": "%resultBasel2%", "variableIndex": 4 },
+		"FRTB_DELTA_GIRR": { "callFunction": "pricingZCL", "returnVariable": "%resultGirrDelta%", "variableIndex": -1 },
+		"FRTB_DELTA_CSR": {},
+		"FRTB_DELTA_FX": {},
+		"FRTB_DELTA_EQ": {},
+		"FRTB_DELTA_CM": {},
+		"FRTB_VEGA_GIRR": {},
+		"FRTB_VEGA_FX": {},
+		"FRTB_VEGA_EQ": {},
+		"FRTB_VEGA_CM": {},
+		"FRTB_CVR_GIRR": { "callFunction": "pricingZCL", "returnVariable": "%resultGirrCvr%", "variableIndex": -1 },
+		"FRTB_CVR_FX": {},
+		"FRTB_CVR_EQ": {},
+		"FRTB_CVR_CM": {},
+		"CASHFLOW": { "callFunction": "pricingZCL", "returnVariable": "%resultCashFlow%", "variableIndex": -1 }
+	}
+}

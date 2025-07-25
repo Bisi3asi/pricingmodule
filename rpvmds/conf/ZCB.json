@@ -47,7 +47,8 @@
 			{ "field": "resultGirrDelta", "type": "double_ptr", "size": "23" },
 			{ "field": "resultCsrDelta", "type": "double_ptr", "size": "13" },
 			{ "field": "resultGirrCvr", "type": "double_ptr", "size": "2" },
-			{ "field": "resultCsrCvr", "type": "double_ptr", "size": "2" }
+			{ "field": "resultCsrCvr", "type": "double_ptr", "size": "2" },
+			{ "field": "resultCashFlow", "type": "double_ptr", "size": "1000" }
 		], 
 		  "returnType": "double"
 		}
@@ -74,6 +75,6 @@
 		"FRTB_CVR_FX": {},
 		"FRTB_CVR_EQ": {},
 		"FRTB_CVR_CM": {},
-		"CASHFLOW": {}
+		"CASHFLOW": { "callFunction": "pricingZCB", "returnVariable": "%resultCashFlow%", "variableIndex": -1 }
 	}
 }
