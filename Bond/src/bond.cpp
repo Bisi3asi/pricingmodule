@@ -1,12 +1,11 @@
 ﻿#include "bond.h"
-#include "logger.h"
-
-#include <spdlog/spdlog.h>
+#include "logger.hpp"
+#include "common.hpp"
 
 // namespace
 using namespace QuantLib;
 using namespace std;
-using namespace spdlog;
+using namespace logger;
 
 extern "C" double EXPORT pricingFRB(
     // ===================================================================================================
@@ -45,13 +44,15 @@ extern "C" double EXPORT pricingFRB(
     , const int calType			            // INPUT 27. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 28. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
-    // ===================================================================================================
+    , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+// ===================================================================================================
 ) {
     /* TODO / NOTE */
     // 1. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
@@ -73,8 +74,8 @@ extern "C" double EXPORT pricingFRB(
         marketPrice, girrRiskWeight, csrRiskWeight,
         calType
     );
-    if (calType != 1 && calType != 2 && calType != 3 && calType != 9) {
-        error("[princingFRB]: Invalid calculation type. Only 1, 2, 3, 9 are supported.");
+    if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
+        error("[princingFRB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
         return -1; // Invalid calculation type
     }
 
@@ -84,6 +85,7 @@ extern "C" double EXPORT pricingFRB(
     initResult(resultCsrDelta, 13);
     initResult(resultGirrCvr, 2);
     initResult(resultCsrCvr, 2);
+    initResult(resultCashFlow, 1000);
 
     // revaluationDateSerial -> revaluationDate
     Date asOfDate_ = Date(evaluationDate);
@@ -98,17 +100,13 @@ extern "C" double EXPORT pricingFRB(
     // 고정 쿠폰율 벡터 생성
     std::vector<Rate> couponRate_ = std::vector<Rate>(1, couponRate);
 
-    // 쿠폰 이자 계산을 위한 일수계산 방식 설정
-    DayCounter couponDayCounter_ = ActualActual(ActualActual::ISDA); // TODO 변환 함수 적용 (DayCounter)
-
     // GIRR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> girrDates_;
     std::vector<Real> girrRates_;
 
     // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
-    std::vector<Period> girrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
-                                       Period(3, Years), Period(5, Years), Period(10, Years), Period(15, Years),
-                                       Period(20, Years), Period(30, Years) };
+    std::vector<Period> girrPeriod =
+        makePeriodArrayFromTenorDaysArray(girrTenorDays, numberOfGirrTenors);
 
     // GIRR 커브 시작점 (revaluationDate 기준) 입력
     girrDates_.emplace_back(asOfDate_);
@@ -121,10 +119,11 @@ extern "C" double EXPORT pricingFRB(
     }
 
     // GIRR 커브 계산 사용 추가 요소
-    DayCounter girrDayCounter_ = Actual365Fixed(); // DCB, TODO 변환 함수 적용
+    DayCounter girrDayCounter_ = makeDayCounterFromInt(girrConvention[0]); // DCB
     Linear girrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
-    Compounding girrCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    Frequency girrFrequency_ = Frequency::Annual; // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
+    Compounding girrCompounding_ = makeCompoundingFromInt(girrConvention[2]); // 이자 계산 방식(Compounding)
+    Frequency girrFrequency_ = makeFrequencyFromInt(girrConvention[3]); // 이자 지급 빈도(Frequency)
+
 
     // GIRR 커브 생성
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
@@ -136,13 +135,14 @@ extern "C" double EXPORT pricingFRB(
 
     // spreadOverYiled 값을 interest Rate 객체로 래핑 (CSR 계산용)
     double tmpSpreadOverYield = spreadOverYield;
-    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DCB, TODO 변환 함수 적용 (DayCounter)
+    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, Continuous만 지원
+    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DCB, DayCounter, Actual/365 Fixed만 지원
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
 
     // CSR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> csrDates_;
-    std::vector<Period> csrPeriod = { Period(6, Months), Period(1, Years), Period(3, Years), Period(5, Years), Period(10, Years) };
+    std::vector<Period> csrPeriod =
+        makePeriodArrayFromTenorDaysArray(csrTenorDays, numberOfCsrTenors);
 
     // CSR 커브 시작점 (revaluationDate 기준) 입력
     csrDates_.emplace_back(asOfDate_);
@@ -173,6 +173,9 @@ extern "C" double EXPORT pricingFRB(
 
     // Schedule 객체 생성 (지급일)
     Schedule fixedBondSchedule_;
+    BusinessDayConvention paymentBDC_ = makeBDCFromInt(paymentBDC); // 지급일 휴일 적용 기준  
+    DayCounter couponDayCounter_ = makeDayCounterFromInt(couponDayCounter); // 쿠폰 이자 계산을 위한 일수계산 방식 설정
+    Calendar couponCalendar_ = makeCalendarFromInt(couponCalendar);
 
     // Coupon Schedule 생성
     if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
@@ -185,23 +188,21 @@ extern "C" double EXPORT pricingFRB(
         }
         fixedBondSchedule_ = Schedule(couponSch_);
     }
-
     else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
         //        info("[Coupon Schedule]: GENERATED BY MODULE");
 
-        Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
-        //Date effectiveDate = Date(issueDate); // 기존 코드
-        Calendar couponCalendar_ = SouthKorea();
-        Frequency couponFrequency_ = Frequency::Semiannual; // Period(Tenor)형태도 가능
-        DateGeneration::Rule genRule = DateGeneration::Backward;
-        BusinessDayConvention couponBDC = Following;
+        //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
+        Date effectiveDate = Date(issueDate); // 기존 코드
+        Calendar couponCalendar_ = makeCalendarFromInt(couponCalendar);
+        Frequency couponFrequency_ = makeFrequencyFromInt(couponFrequency); // Period(Tenor)형태도 가능
+        DateGeneration::Rule genRule = makeScheduleGenRuleFromInt(scheduleGenRule); // Forward, Backward 등
 
 
         fixedBondSchedule_ = MakeSchedule().from(effectiveDate)
             .to(Date(maturityDate))
             .withFrequency(couponFrequency_)
             .withCalendar(couponCalendar_)
-            .withConvention(couponBDC)
+            .withConvention(paymentBDC_)
             .withRule(genRule); // payment Lag는 Bond 스케쥴 생성 시 적용
     }
 
@@ -209,10 +210,9 @@ extern "C" double EXPORT pricingFRB(
     //    printAllData(fixedBondSchedule_);
 
     Integer paymentLag_ = paymentLag;
-    BusinessDayConvention paymentBDC_ = ModifiedFollowing;
+
     Real redemptionRatio = 100.0;
     // FixedRateBond 객체 생성
-    Calendar couponCalendar_ = NullCalendar(); // TODO 변환 함수 적용(Calendar)
     FixedRateBondCustom fixedRateBond(
         settlementDays_,
         notional_,
@@ -531,6 +531,52 @@ extern "C" double EXPORT pricingFRB(
         return npv;
     }
 
+    if (calType == 4) {
+        const Leg& bondCFs = fixedRateBond.cashflows();
+        Size numberOfCoupons = bondCFs.size();
+        Size numberOfFields = 7;
+        Size n_startDateField = 1;
+        Size n_endDateField = 2;
+        Size n_notionalField = 3;
+        Size n_rateField = 4;
+        Size n_payDateField = 5;
+        Size n_CFField = 6;
+        Size n_DFField = 7;
+
+        resultCashFlow[0] = static_cast<double>(numberOfCoupons);
+        for (Size couponNum = 0; couponNum < numberOfCoupons; ++couponNum) {
+            const auto& cp = ext::dynamic_pointer_cast<FixedRateCoupon>(bondCFs[couponNum]);
+            if (cp != nullptr) {
+                resultCashFlow[couponNum * numberOfFields + n_startDateField] = static_cast<double>(cp->accrualStartDate().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_endDateField] = static_cast<double>(cp->accrualEndDate().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_notionalField] = cp->nominal();
+                resultCashFlow[couponNum * numberOfFields + n_rateField] = cp->rate();
+                resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(cp->date().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_CFField] = cp->amount();
+                resultCashFlow[couponNum * numberOfFields + n_DFField] = discountingCurve->discount(cp->date());
+
+            }
+            else {
+                const auto& redemption = ext::dynamic_pointer_cast<Redemption>(bondCFs[couponNum]);
+                if (redemption != nullptr) {
+                    resultCashFlow[couponNum * numberOfFields + n_startDateField] = -1.0;
+                    resultCashFlow[couponNum * numberOfFields + n_endDateField] = -1.0;
+                    resultCashFlow[couponNum * numberOfFields + n_notionalField] = redemption->amount();
+                    resultCashFlow[couponNum * numberOfFields + n_rateField] = -1.0;
+                    resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(redemption->date().serialNumber());
+                    resultCashFlow[couponNum * numberOfFields + n_CFField] = redemption->amount();
+                    resultCashFlow[couponNum * numberOfFields + n_DFField] = discountingCurve->discount(redemption->date());
+
+                }
+                else {
+                    QL_FAIL("[pricingFRB]Coupon is not a FixedRateCoupon");
+                }
+            }
+        }
+        return npv;
+    }
+
+
     // NPV : clean, dirty, accured Interest
     Real cleanPrice = fixedRateBond.cleanPrice() / 100.0 * notional;
     Real dirtyPrice = fixedRateBond.dirtyPrice() / 100.0 * notional;
@@ -647,7 +693,7 @@ extern "C" double EXPORT pricingFRN(
     , const int calType			            // INPUT 43. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR, 9. SOY)
     , const int logYn                       // INPUT 44. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultGirrBasel2              // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultIndexGirrBasel2         // OUTPUT 3. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 4. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
@@ -656,8 +702,9 @@ extern "C" double EXPORT pricingFRN(
     , double* resultGirrCvr			        // OUTPUT 7. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultIndexGirrCvr			// OUTPUT 8. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 9. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
-
-    // ===================================================================================================
+    , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+// ===================================================================================================
 ) {
     /* TODO / NOTE */
     // 1. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
@@ -668,68 +715,9 @@ extern "C" double EXPORT pricingFRN(
         initLogger("bond.log"); // 생성 파일명 지정
     }
 
-    //info("==============[Bond: pricingFRN Logging Started!]==============");
-    // INPUT 데이터 로깅
-   // printAllInputDataFRN(
-   //     evaluationDate,
-   //     settlementDays,
-   //     issueDate,
-   //     maturityDate,
-   //     notional,
-   //     couponDayCounter,
-
-   //     referenceIndex,
-   //     fixingDays,
-   //     gearing,
-   //     spread,
-   //     lastResetRate,
-   //     nextResetRate,
-
-   //     numberOfCoupons,
-   //     paymentDates,
-   //     realStartDates,
-   //     realEndDates,
-
-   //     spreadOverYield,
-   //     spreadOverYieldCompounding,
-   //     spreadOverYieldDayCounter,
-
-   //     numberOfGirrTenors,
-   //     girrTenorDays,
-   //     girrRates,
-
-   //     girrDayCounter,
-   //     girrInterpolator,
-   //     girrCompounding,
-   //     girrFrequency,
-
-   //     numberOfCsrTenors,
-   //     csrTenorDays,
-   //     csrRates,
-
-   //     numberOfIndexGirrTenors,
-   //     indexGirrTenorDays,
-   //     indexGirrRates,
-
-   //     indexGirrDayCounter,
-   //     indexGirrInterpolator,
-   //     indexGirrCompounding,
-   //     indexGirrFrequency,
-
-   //     indexTenorNumber,
-   //     indexTenorUnit,
-   //     indexFixingDays,
-   //     indexCurrency,
-   //     indexCalendar,
-   //     indexBDC,
-   //     indexEOM,
-   //     indexDayCounter,
-
-   //     calType
-   // );
-
-    if (calType != 1 && calType != 2 && calType != 3 && calType != 9) {
-        error("[princingFRB]: Invalid calculation type. Only 1, 2, 3, 9 are supported.");
+    // info("==============[Bond: pricingFRN Logging Started!]==============");
+    if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
+        error("[pricingFRN]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
         return -1; // Invalid calculation type
     }
 
@@ -742,7 +730,7 @@ extern "C" double EXPORT pricingFRN(
     initResult(resultGirrCvr, 2);
     initResult(resultIndexGirrCvr, 2);
     initResult(resultCsrCvr, 2);
-
+    initResult(resultCashFlow, 1000);
 
     // revaluationDateSerial -> revaluationDate
     Date asOfDate_ = Date(evaluationDate);
@@ -753,18 +741,18 @@ extern "C" double EXPORT pricingFRN(
 
     Real notional_ = notional;
 
-    DayCounter couponDayCounter_ = Actual365Fixed();
-    Calendar couponCalendar_ = SouthKorea();
-    Frequency couponFrequency_ = Frequency::Annual;
+    DayCounter couponDayCounter_ = makeDayCounterFromInt(couponDayCounter);
+    Calendar couponCalendar_ = makeCalendarFromInt(couponCalendar);
+    Frequency couponFrequency_ = makeFrequencyFromInt(couponFrequency);
+    BusinessDayConvention paymentBDC_ = makeBDCFromInt(paymentBDC);
 
     // index Reference 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> indexGirrDates_;
     std::vector<Real> indexGirrRates_;
 
     // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
-    std::vector<Period> indexGirrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
-                                            Period(3, Years), Period(5, Years), Period(10, Years), Period(15, Years),
-                                            Period(20, Years), Period(30, Years) };
+    std::vector<Period> indexGirrPeriod =
+        makePeriodArrayFromTenorDaysArray(indexGirrTenorDays, numberOfIndexGirrTenors);
 
     // GIRR 커브 시작점 (revaluationDate 기준) 입력
     indexGirrDates_.emplace_back(asOfDate_);
@@ -777,10 +765,10 @@ extern "C" double EXPORT pricingFRN(
     }
 
     // GIRR 커브 계산 사용 추가 요소
-    DayCounter indexGirrDayCounter_ = Actual365Fixed(); // DCB, TODO 변환 함수 적용
+    DayCounter indexGirrDayCounter_ = makeDayCounterFromInt(indexGirrConvention[0]); // DCB, TODO 변환 함수 적용
     Linear indexGirrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
-    Compounding indexGirrCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    Frequency indexGirrFrequency_ = Frequency::Annual; // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
+    Compounding indexGirrCompounding_ = makeCompoundingFromInt(indexGirrConvention[2]); // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
+    Frequency indexGirrFrequency_ = makeFrequencyFromInt(indexGirrConvention[3]); // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
 
     // GIRR 커브 생성
     ext::shared_ptr<YieldTermStructure> indexGirrTermstructure = ext::make_shared<ZeroCurve>(indexGirrDates_, indexGirrRates_,
@@ -793,20 +781,20 @@ extern "C" double EXPORT pricingFRN(
     indexGirrCurve->enableExtrapolation(); // 외삽 허용
 
     // Index 클래스 생성
-    Period index1Tenor_ = Period(3, Months);
-    Calendar index1FixingCalendar_ = SouthKorea();
-    DayCounter index1DayCounter_ = Actual365Fixed();
+    Period index1Tenor_ = makePeriodFromDays(indexTenor); // 금리 인덱스 만기 설정 (1 Month = 30 기준)
+    Calendar index1FixingCalendar_ = makeCalendarFromInt(indexCalendar); // 금리 인덱스의 휴일 적용 기준 달력 
+    DayCounter index1DayCounter_ = makeDayCounterFromInt(indexDayCounter); // 금리 인덱스의 날짜 계산 기준 
 
     // Define default data -  index1
     std::string indexFamilyName_ = "CD";
-    Natural indexFixingDays_ = fixingDays;
-    Currency indexCurrency_ = KRWCurrency();
-    BusinessDayConvention indexBusinessDayConvention_ = ModifiedFollowing;
-    bool index1EndOfMonth_ = false;
+    Natural index1FixingDays_ = fixingDays;
+    Currency index1Currency_ = makeCurrencyFromInt(indexCurrency); // 금리 인덱스의 표시 통화
+    BusinessDayConvention index1BusinessDayConvention_ = makeBDCFromInt(indexBDC); //
+    bool index1EndOfMonth_ = makeBoolFromInt(indexEOM); // 금리 인덱스의 월말 여부 
 
     // Make index instance
-    ext::shared_ptr<IborIndex> refIndex = ext::make_shared<IborIndex>(indexFamilyName_, index1Tenor_, indexFixingDays_
-        , indexCurrency_, index1FixingCalendar_, indexBusinessDayConvention_
+    ext::shared_ptr<IborIndex> refIndex = ext::make_shared<IborIndex>(indexFamilyName_, index1Tenor_, index1FixingDays_
+        , index1Currency_, index1FixingCalendar_, index1BusinessDayConvention_
         , index1EndOfMonth_, index1DayCounter_, indexGirrCurve);
 
 
@@ -815,9 +803,8 @@ extern "C" double EXPORT pricingFRN(
     std::vector<Real> girrRates_;
 
     // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
-    std::vector<Period> girrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
-                                       Period(3, Years), Period(5, Years), Period(10, Years), Period(15, Years),
-                                       Period(20, Years), Period(30, Years) };
+    std::vector<Period> girrPeriod =
+        makePeriodArrayFromTenorDaysArray(girrTenorDays, numberOfGirrTenors);
 
     // GIRR 커브 시작점 (revaluationDate 기준) 입력
     girrDates_.emplace_back(asOfDate_);
@@ -830,10 +817,10 @@ extern "C" double EXPORT pricingFRN(
     }
 
     // GIRR 커브 계산 사용 추가 요소
-    DayCounter girrDayCounter_ = Actual365Fixed(); // DCB, TODO 변환 함수 적용
+    DayCounter girrDayCounter_ = makeDayCounterFromInt(girrConvention[0]); // DCB
     Linear girrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
-    Compounding girrCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    Frequency girrFrequency_ = Frequency::Annual; // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
+    Compounding girrCompounding_ = makeCompoundingFromInt(girrConvention[2]); // 이자 계산 방식(Compounding)
+    Frequency girrFrequency_ = makeFrequencyFromInt(girrConvention[3]); // 이자 지급 빈도(Frequency)
 
     // GIRR 커브 생성
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
@@ -846,14 +833,15 @@ extern "C" double EXPORT pricingFRN(
 
     // spreadOverYiled 값을 interest Rate 객체로 래핑 (CSR 계산용)
     double tmpSpreadOverYield = spreadOverYield;
-    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DCB, TODO 변환 함수 적용 (DayCounter)
+    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, Continuous로 설정
+    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DayCounter Actual/365 Fixed로 설정
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
     double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
 
     // CSR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> csrDates_;
-    std::vector<Period> csrPeriod = { Period(6, Months), Period(1, Years), Period(3, Years), Period(5, Years), Period(10, Years) };
+    std::vector<Period> csrPeriod =
+        makePeriodArrayFromTenorDaysArray(csrTenorDays, numberOfCsrTenors);
 
     // CSR 커브 시작점 (revaluationDate 기준) 입력
     csrDates_.emplace_back(asOfDate_);
@@ -883,6 +871,7 @@ extern "C" double EXPORT pricingFRN(
 
     // Schedule 객체 생성 (지급일)
     Schedule FRNSchedule_;
+    BusinessDayConvention couponBDC_ = makeBDCFromInt(paymentBDC); // 지급일 휴일 적용 기준
 
     // Coupon Schedule 생성
     if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
@@ -898,16 +887,16 @@ extern "C" double EXPORT pricingFRN(
     else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
         //        info("[Coupon Schedule]: GENERATED BY MODULE");
 
-        Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
-        //Date effectiveDate = Date(issueDate); // 기존 코드
-        BusinessDayConvention couponBDC = Following;
-        DateGeneration::Rule genRule = DateGeneration::Backward;
+                //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
+        Date effectiveDate = Date(issueDate); // 기존 코드
+        DateGeneration::Rule genRule = makeScheduleGenRuleFromInt(scheduleGenRule); // Forward, Backward 등
+
 
         FRNSchedule_ = MakeSchedule().from(effectiveDate)
             .to(Date(maturityDate))
             .withFrequency(couponFrequency_)
             .withCalendar(couponCalendar_)
-            .withConvention(couponBDC)
+            .withConvention(couponBDC_)
             .withRule(genRule);
     }
 
@@ -924,7 +913,7 @@ extern "C" double EXPORT pricingFRN(
         FRNSchedule_,
         refIndex,
         couponDayCounter_,
-        ModifiedFollowing, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
+        couponBDC_, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
         fixingDays,
         paymentLag,
         { gearing },
@@ -939,9 +928,9 @@ extern "C" double EXPORT pricingFRN(
     // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
     if (calType == 1) {
         // OUTPUT 데이터 로깅
-        //printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
+        printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
         /* OUTPUT 1. Net PV 리턴 */
-        //info("==============[Bond: pricingFRN Logging Ended!]==============");
+        // info("==============[Bond: pricingFRN Logging Ended!]==============");
         return npv;
     }
 
@@ -1349,10 +1338,56 @@ extern "C" double EXPORT pricingFRN(
         Real dirtyPrice = floatingRateBond.dirtyPrice() / 100.0 * notional;
         Real accruedInterest = floatingRateBond.accruedAmount() / 100.0 * notional;
 
-        //printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
-        //info("==============[Bond: pricingFRN Logging Ended!]==============");
+        //       printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
+        //       info("==============[Bond: pricingFRN Logging Ended!]==============");
 
-        /* OUTPUT 1. Net PV 리턴 */
+                /* OUTPUT 1. Net PV 리턴 */
+        return npv;
+    }
+
+    if (calType == 4) {
+        const Leg& bondCFs = floatingRateBond.cashflows();
+        Size numberOfCoupons = bondCFs.size();
+        Size numberOfFields = 7;
+        Size n_startDateField = 1;
+        Size n_endDateField = 2;
+        Size n_notionalField = 3;
+        Size n_rateField = 4;
+        Size n_payDateField = 5;
+        Size n_CFField = 6;
+        Size n_DFField = 7;
+
+        resultCashFlow[0] = static_cast<double>(numberOfCoupons);
+        for (Size couponNum = 0; couponNum < numberOfCoupons; ++couponNum) {
+            const auto& cp = ext::dynamic_pointer_cast<FloatingRateCoupon>(bondCFs[couponNum]);
+            if (cp != nullptr) {
+                resultCashFlow[couponNum * numberOfFields + n_startDateField] = static_cast<double>(cp->accrualStartDate().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_endDateField] = static_cast<double>(cp->accrualEndDate().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_notionalField] = cp->nominal();
+                resultCashFlow[couponNum * numberOfFields + n_rateField] = cp->rate();
+                resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(cp->date().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_CFField] = cp->amount();
+                resultCashFlow[couponNum * numberOfFields + n_DFField] = discountingCurve->discount(cp->date());
+
+            }
+            else {
+                const auto& redemption = ext::dynamic_pointer_cast<Redemption>(bondCFs[couponNum]);
+                if (redemption != nullptr) {
+                    resultCashFlow[couponNum * numberOfFields + n_startDateField] = -1.0;
+                    resultCashFlow[couponNum * numberOfFields + n_endDateField] = -1.0;
+                    resultCashFlow[couponNum * numberOfFields + n_notionalField] = redemption->amount();
+                    resultCashFlow[couponNum * numberOfFields + n_rateField] = -1.0;
+                    resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(redemption->date().serialNumber());
+                    resultCashFlow[couponNum * numberOfFields + n_CFField] = redemption->amount();
+                    resultCashFlow[couponNum * numberOfFields + n_DFField] = discountingCurve->discount(redemption->date());
+
+                }
+                else {
+                    QL_FAIL("[pricingFRN]Coupon is not a FloatingRateCoupon");
+                }
+            }
+        }
+
         return npv;
     }
 
@@ -1431,19 +1466,21 @@ extern "C" double EXPORT pricingZCB(
     , const int calType			            // INPUT 16. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. (추가)Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. (추가)GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. (추가)CSR Curvature [BumpUp Curvature, BumpDownCurvature]
-    // ===================================================================================================
+    , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+// ===================================================================================================
 ) {
     /* TODO / NOTE */
     // 1. 로거, 로깅 로직 함수 정의 필요
 
-    if (calType != 1 && calType != 2 && calType != 3 && calType != 9) {
-        //        error("[princingZCB]: Invalid calculation type. Only 1, 2, 3, 9 are supported.");
+    if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
+        //        error("[princingZCB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
         return -1; // Invalid calculation type
     }
 
@@ -1453,6 +1490,7 @@ extern "C" double EXPORT pricingZCB(
     initResult(resultCsrDelta, 13);
     initResult(resultGirrCvr, 2);
     initResult(resultCsrCvr, 2);
+    initResult(resultCashFlow, 1000);
 
     // revaluationDateSerial -> revaluationDate
     Date asOfDate_ = Date(evaluationDate);
@@ -1471,9 +1509,8 @@ extern "C" double EXPORT pricingZCB(
     std::vector<Real> girrRates_;
 
     // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
-    std::vector<Period> girrPeriod = { Period(3, Months), Period(6, Months), Period(1, Years), Period(2, Years),
-                                       Period(3, Years), Period(5, Years), Period(10, Years), Period(15, Years),
-                                       Period(20, Years), Period(30, Years) };
+    std::vector<Period> girrPeriod =
+        makePeriodArrayFromTenorDaysArray(girrTenorDays, numberOfGirrTenors);
 
     // GIRR 커브 시작점 (revaluationDate 기준) 입력
     girrDates_.emplace_back(asOfDate_);
@@ -1486,10 +1523,10 @@ extern "C" double EXPORT pricingZCB(
     }
 
     // GIRR 커브 계산 사용 추가 요소
-    DayCounter girrDayCounter_ = Actual365Fixed(); // DCB, TODO 변환 함수 적용
+    DayCounter girrDayCounter_ = makeDayCounterFromInt(girrConvention[0]); // DCB
     Linear girrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
-    Compounding girrCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    Frequency girrFrequency_ = Frequency::Annual; // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
+    Compounding girrCompounding_ = makeCompoundingFromInt(girrConvention[2]); // 이자 계산 방식(Compounding)
+    Frequency girrFrequency_ = makeFrequencyFromInt(girrConvention[3]); // 이자 지급 빈도(Frequency)
 
     // GIRR 커브 생성
     ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
@@ -1501,13 +1538,14 @@ extern "C" double EXPORT pricingZCB(
 
     // spreadOverYiled 값을 interest Rate 객체로 래핑 (CSR 계산용)
     double tmpSpreadOverYield = spreadOverYield;
-    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
-    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DCB, TODO 변환 함수 적용 (DayCounter)
+    Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, Continuous만 지원
+    DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DayCounter Actual/365 Fixed만 지원
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
 
     // CSR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> csrDates_;
-    std::vector<Period> csrPeriod = { Period(6, Months), Period(1, Years), Period(3, Years), Period(5, Years), Period(10, Years) };
+    std::vector<Period> csrPeriod =
+        makePeriodArrayFromTenorDaysArray(csrTenorDays, numberOfCsrTenors);
 
     // CSR 커브 시작점 (revaluationDate 기준) 입력
     csrDates_.emplace_back(asOfDate_);
@@ -1544,7 +1582,7 @@ extern "C" double EXPORT pricingZCB(
         couponCalendar_,
         notional_,
         maturityDate_,
-        ModifiedFollowing, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
+        ModifiedFollowing, // Business Day Convention
         100.0,
         issueDate_);
 
@@ -1842,6 +1880,39 @@ extern "C" double EXPORT pricingZCB(
         return npv;
     }
 
+    if (calType == 4) {
+        const Leg& bondCFs = zeroCouponBond.cashflows();
+        Size numberOfCoupons = bondCFs.size();
+        Size numberOfFields = 7;
+        Size n_startDateField = 1;
+        Size n_endDateField = 2;
+        Size n_notionalField = 3;
+        Size n_rateField = 4;
+        Size n_payDateField = 5;
+        Size n_CFField = 6;
+        Size n_DFField = 7;
+
+        resultCashFlow[0] = static_cast<double>(numberOfCoupons);
+        for (Size couponNum = 0; couponNum < numberOfCoupons; ++couponNum) {
+            const auto& redemption = ext::dynamic_pointer_cast<Redemption>(bondCFs[couponNum]);
+            if (redemption != nullptr) {
+                // redemption is the last cashflow
+                resultCashFlow[couponNum * numberOfFields + n_startDateField] = -1.0;
+                resultCashFlow[couponNum * numberOfFields + n_endDateField] = -1.0;
+                resultCashFlow[couponNum * numberOfFields + n_notionalField] = redemption->amount();
+                resultCashFlow[couponNum * numberOfFields + n_rateField] = -1.0;
+                resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(redemption->date().serialNumber());
+                resultCashFlow[couponNum * numberOfFields + n_CFField] = redemption->amount();
+                resultCashFlow[couponNum * numberOfFields + n_DFField] = discountingCurve->discount(redemption->date());
+
+            }
+            else {
+                QL_FAIL("[PricingZCB]Coupon is not a Redemption");
+            }
+        }
+        return npv;
+    }
+
     // NPV : clean, dirty, accured Interest
     Real cleanPrice = zeroCouponBond.cleanPrice() / 100.0 * notional;
     Real dirtyPrice = zeroCouponBond.dirtyPrice() / 100.0 * notional;
@@ -1852,48 +1923,6 @@ extern "C" double EXPORT pricingZCB(
 
     /* OUTPUT 1. Net PV 리턴 */
     return npv;
-}
-
-
-void initResult(double* result, const int size) {
-
-    fill_n(result, size, 0.0);
-}
-
-void processResultArray(vector<Real> tenors, vector<Real> sensitivities, Size originalSize, double* resultArray) {
-    vector<double> filteredTenor;
-    vector<double> filteredSensitivity;
-
-    // 1. 전처리: sensitivity가 0이 아닌 것만 걸러냄
-    for (Size i = 0; i < originalSize; ++i) {
-        if (sensitivities[i] != 0.0) {
-            filteredTenor.push_back(tenors[i]);
-            filteredSensitivity.push_back(sensitivities[i]);
-        }
-    }
-
-    Size filteredSize = filteredTenor.size();
-
-    // 2. resultArray 구성
-    resultArray[0] = filteredSize;  // 유효 데이터 개수
-
-    // 3. Tenor 입력 (index 1 ~ filteredSize)
-    for (Size i = 0; i < filteredSize; ++i) {
-        resultArray[i + 1] = filteredTenor[i];
-    }
-
-    // 4. girrSensitivity 입력 (index 1 + filteredSize ~ 2 + 2 * filteredSize)
-    for (Size i = 0; i < filteredSize; ++i) {
-        resultArray[i + 1 + filteredSize] = filteredSensitivity[i];
-    }
-}
-
-/* FOR DEBUG */
-string qDateToString(const Date& date) {
-
-    ostringstream oss;
-    oss << date;
-    return oss.str();
 }
 
 void printAllInputDataFRB(
@@ -2100,7 +2129,6 @@ void printAllInputDataFRN(
 
     const int calType
 ) {
-
     info("------------------------------------------------------------");
     info("[Print All - FRN Input Data]");
 

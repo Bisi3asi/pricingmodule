@@ -5,7 +5,7 @@
 
 // 분기문 처리
 #ifdef _WIN32
-#include <windows.h>`
+#include <windows.h>
 #elif defined(__linux__) || defined(__unix__)
 #include <unistd.h>
 #endif
@@ -53,6 +53,7 @@ int main() {
     double resultCsrDelta[13] = { 0 }; 
     double resultGirrCvr[2] = { 0 };
     double resultCsrCvr[2] = { 0 };
+    double resultCashFlow[1000] = { 0 };
 
     double result = pricingFRB(
         evaluationDate, issueDate, maturityDate, notional,
@@ -63,7 +64,7 @@ int main() {
         spreadOverYield, numberOfCsrTenors, csrTenorDays, csrRates,
         marketPrice, girrRiskWeight, csrRiskWeight,
         calType, logYn,
-        resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr
+        resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, resultCashFlow
     );
 
 	// OUTPUT 1 결과 출력
@@ -140,10 +141,9 @@ int main() {
 	std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
 	std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
 */
-
 /* ================================================================================== */
 	/* Floating Rate Note 테스트 */
-/*
+
     const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
@@ -207,6 +207,7 @@ int main() {
     double resultGirrCvr[2] = { 0 };
     double resultIndexGirrCvr[2] = { 0 };
     double resultCsrCvr[2] = { 0 };
+	double resultCashFlow[1000] = { 0 };
 
     double resultNetPV =
         pricingFRN(
@@ -271,7 +272,8 @@ int main() {
             resultCsrDelta,
             resultGirrCvr,
             resultIndexGirrCvr,
-            resultCsrCvr
+            resultCsrCvr,
+            resultCashFlow
         );
 
     // OUTPUT 1 결과 출력
@@ -383,10 +385,10 @@ int main() {
     std::cout << "[CSR Curvature] " << std::endl;
     std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
     std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
-*/
+
 /* ================================================================================== */
     /* Zero Coupon Bond 테스트 */
-
+/*
     const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
@@ -523,7 +525,7 @@ int main() {
     std::cout << "[CSR Curvature] " << std::endl;
     std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
     std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
-
+*/
 /* ================================================================================== */
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)
