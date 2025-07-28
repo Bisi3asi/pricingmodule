@@ -76,14 +76,14 @@ extern "C" double EXPORT pricingFRB(
     , const int calType			            // INPUT 27. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 28. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. Net PV (리턴값)
+    // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+    //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 );
 
@@ -182,68 +182,68 @@ extern "C" double EXPORT pricingZCB(
     , const int calType			            // INPUT 16. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. Net PV (리턴값)
+    // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. (추가)Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. (추가)GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. (추가)CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+    //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 );
 
-/* Wrapper class */
-class FixedRateBondCustom : public QuantLib::Bond {
-public:
-    FixedRateBondCustom(QuantLib::Natural settlementDays,
-        QuantLib::Real faceAmount,
-        QuantLib::Schedule schedule,
-        const std::vector<QuantLib::Rate>& coupons,
-        const QuantLib::DayCounter& accrualDayCounter,
-        QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
-        QuantLib::Integer paymentLag = 0,
-        QuantLib::Real redemption = 100.0,
-        const QuantLib::Date& issueDate = QuantLib::Date(),
-        const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
-        const QuantLib::Period& exCouponPeriod = QuantLib::Period(),
-        const QuantLib::Calendar& exCouponCalendar = QuantLib::Calendar(),
-        QuantLib::BusinessDayConvention exCouponConvention = QuantLib::Unadjusted,
-        bool exCouponEndOfMonth = false,
-        const QuantLib::DayCounter& firstPeriodDayCounter = QuantLib::DayCounter());
+// /* Wrapper class */
+ class FixedRateBondCustom : public QuantLib::Bond {
+ public:
+     FixedRateBondCustom(QuantLib::Natural settlementDays,
+         QuantLib::Real faceAmount,
+         QuantLib::Schedule schedule,
+         const std::vector<QuantLib::Rate>& coupons,
+         const QuantLib::DayCounter& accrualDayCounter,
+         QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
+         QuantLib::Integer paymentLag = 0,
+         QuantLib::Real redemption = 100.0,
+         const QuantLib::Date& issueDate = QuantLib::Date(),
+         const QuantLib::Calendar& paymentCalendar = QuantLib::Calendar(),
+         const QuantLib::Period& exCouponPeriod = QuantLib::Period(),
+         const QuantLib::Calendar& exCouponCalendar = QuantLib::Calendar(),
+         QuantLib::BusinessDayConvention exCouponConvention = QuantLib::Unadjusted,
+         bool exCouponEndOfMonth = false,
+         const QuantLib::DayCounter& firstPeriodDayCounter = QuantLib::DayCounter());
 
-    QuantLib::Frequency frequency() const { return frequency_; }
-    const QuantLib::DayCounter& dayCounter() const { return dayCounter_; }
-    const QuantLib::DayCounter& firstPeriodDayCounter() const { return firstPeriodDayCounter_; }
+     QuantLib::Frequency frequency() const { return frequency_; }
+     const QuantLib::DayCounter& dayCounter() const { return dayCounter_; }
+     const QuantLib::DayCounter& firstPeriodDayCounter() const { return firstPeriodDayCounter_; }
 
-protected:
-    QuantLib::Frequency frequency_;
-    QuantLib::DayCounter dayCounter_;
-    QuantLib::DayCounter firstPeriodDayCounter_;
-};
+ protected:
+     QuantLib::Frequency frequency_;
+     QuantLib::DayCounter dayCounter_;
+     QuantLib::DayCounter firstPeriodDayCounter_;
+ };
 
-class FloatingRateBondCustom : public QuantLib::Bond {
-public:
-    FloatingRateBondCustom(QuantLib::Natural settlementDays,
-        QuantLib::Real faceAmount,
-        QuantLib::Schedule schedule,
-        const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex,
-        const QuantLib::DayCounter& accrualDayCounter,
-        QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
-        QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Natural>(),
-        QuantLib::Integer paymentLag = 0,
-        const std::vector<QuantLib::Real>& gearings = { 1.0 },
-        const std::vector<QuantLib::Spread>& spreads = { 0.0 },
-        const std::vector<QuantLib::Rate>& caps = {},
-        const std::vector<QuantLib::Rate>& floors = {},
-        bool inArrears = false,
-        QuantLib::Real redemption = 100.0,
-        const QuantLib::Date& issueDate = QuantLib::Date(),
-        const QuantLib::Period& exCouponPeriod = QuantLib::Period(),
-        const QuantLib::Calendar& exCouponCalendar = QuantLib::Calendar(),
-        QuantLib::BusinessDayConvention exCouponConvention = QuantLib::Unadjusted,
-        bool exCouponEndOfMonth = false);
-};
+ class FloatingRateBondCustom : public QuantLib::Bond {
+ public:
+     FloatingRateBondCustom(QuantLib::Natural settlementDays,
+         QuantLib::Real faceAmount,
+         QuantLib::Schedule schedule,
+         const QuantLib::ext::shared_ptr<QuantLib::IborIndex>& iborIndex,
+         const QuantLib::DayCounter& accrualDayCounter,
+         QuantLib::BusinessDayConvention paymentConvention = QuantLib::Following,
+         QuantLib::Natural fixingDays = QuantLib::Null<QuantLib::Natural>(),
+         QuantLib::Integer paymentLag = 0,
+         const std::vector<QuantLib::Real>& gearings = { 1.0 },
+         const std::vector<QuantLib::Spread>& spreads = { 0.0 },
+         const std::vector<QuantLib::Rate>& caps = {},
+         const std::vector<QuantLib::Rate>& floors = {},
+         bool inArrears = false,
+         QuantLib::Real redemption = 100.0,
+         const QuantLib::Date& issueDate = QuantLib::Date(),
+         const QuantLib::Period& exCouponPeriod = QuantLib::Period(),
+         const QuantLib::Calendar& exCouponCalendar = QuantLib::Calendar(),
+         QuantLib::BusinessDayConvention exCouponConvention = QuantLib::Unadjusted,
+         bool exCouponEndOfMonth = false);
+ };
 
 
 /* FOR DEBUG */

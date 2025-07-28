@@ -44,14 +44,14 @@ extern "C" double EXPORT pricingFRB(
     , const int calType			            // INPUT 27. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 28. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. Net PV (리턴값)
+    // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+    //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 ) {
     /* TODO / NOTE */
@@ -151,7 +151,9 @@ extern "C" double EXPORT pricingFRB(
     std::vector<Handle<Quote>> csrSpreads_;
 
     // 첫번째 CSR 스프레드에 spreadOverYield 값을 설정
-    double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
+    QL_REQUIRE(!csrPeriod.empty(), "[pricingFRB]csrPeriod is empty");
+    double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_,
+        girrDayCounter_.yearFraction(asOfDate_, asOfDate_ + 1));
     csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(spreadOverYield_));
 
     // 나머지 CSR 커브 기간별 스프레드 입력
@@ -309,15 +311,15 @@ extern "C" double EXPORT pricingFRB(
         Real gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
         const DayCounter& ytmDayCounter = Actual365Fixed();
-        Compounding ytmCompounding = Continuous;
-        Frequency ytmFrequency = Annual;
+        Compounding ytmCompounding = Compounded;//Continuous;
+        Frequency ytmFrequency = Semiannual;//Annual;
         Rate ytmValue = CashFlows::yield(fixedRateBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
             couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
             1.0e-15, 100, 0.005);
         InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
 
         // Duration 계산
-        Duration::Type durationType = Duration::Modified;
+        Duration::Type durationType = Duration::Macaulay;//Duration::Modified;
         Real duration = CashFlows::duration(fixedRateBond.cashflows(), ytm, durationType, false,
             couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
@@ -592,48 +594,48 @@ extern "C" double EXPORT pricingFRB(
     return npv;
 }
 
-/* FRB Custom Class */
-FixedRateBondCustom::FixedRateBondCustom(Natural settlementDays,
-    Real faceAmount,
-    Schedule schedule,
-    const std::vector<Rate>& coupons,
-    const DayCounter& accrualDayCounter,
-    BusinessDayConvention paymentConvention,
-    Integer paymentLag,
-    Real redemption,
-    const Date& issueDate,
-    const Calendar& paymentCalendar,
-    const Period& exCouponPeriod,
-    const Calendar& exCouponCalendar,
-    const BusinessDayConvention exCouponConvention,
-    bool exCouponEndOfMonth,
-    const DayCounter& firstPeriodDayCounter)
-    : Bond(settlementDays,
-        paymentCalendar == Calendar() ? schedule.calendar() : paymentCalendar,
-        issueDate),
-    frequency_(schedule.hasTenor() ? schedule.tenor().frequency() : NoFrequency),
-    dayCounter_(accrualDayCounter),
-    firstPeriodDayCounter_(firstPeriodDayCounter) {
+ /* FRB Custom Class */
+ FixedRateBondCustom::FixedRateBondCustom(Natural settlementDays,
+     Real faceAmount,
+     Schedule schedule,
+     const std::vector<Rate>& coupons,
+     const DayCounter& accrualDayCounter,
+     BusinessDayConvention paymentConvention,
+     Integer paymentLag,
+     Real redemption,
+     const Date& issueDate,
+     const Calendar& paymentCalendar,
+     const Period& exCouponPeriod,
+     const Calendar& exCouponCalendar,
+     const BusinessDayConvention exCouponConvention,
+     bool exCouponEndOfMonth,
+     const DayCounter& firstPeriodDayCounter)
+     : Bond(settlementDays,
+         paymentCalendar == Calendar() ? schedule.calendar() : paymentCalendar,
+         issueDate),
+     frequency_(schedule.hasTenor() ? schedule.tenor().frequency() : NoFrequency),
+     dayCounter_(accrualDayCounter),
+     firstPeriodDayCounter_(firstPeriodDayCounter) {
 
-    maturityDate_ = schedule.endDate();
+     maturityDate_ = schedule.endDate();
 
-    cashflows_ = FixedRateLeg(std::move(schedule))
-        .withNotionals(faceAmount)
-        .withCouponRates(coupons, accrualDayCounter)
-        .withFirstPeriodDayCounter(firstPeriodDayCounter)
-        .withPaymentCalendar(calendar_)
-        .withPaymentAdjustment(paymentConvention)
-        .withPaymentLag(paymentLag)
-        .withExCouponPeriod(exCouponPeriod,
-            exCouponCalendar,
-            exCouponConvention,
-            exCouponEndOfMonth);
+     cashflows_ = FixedRateLeg(std::move(schedule))
+         .withNotionals(faceAmount)
+         .withCouponRates(coupons, accrualDayCounter)
+         .withFirstPeriodDayCounter(firstPeriodDayCounter)
+         .withPaymentCalendar(calendar_)
+         .withPaymentAdjustment(paymentConvention)
+         .withPaymentLag(paymentLag)
+         .withExCouponPeriod(exCouponPeriod,
+             exCouponCalendar,
+             exCouponConvention,
+             exCouponEndOfMonth);
 
-    addRedemptionsToCashflows(std::vector<Real>(1, redemption));
+     addRedemptionsToCashflows(std::vector<Real>(1, redemption));
 
-    QL_ENSURE(!cashflows().empty(), "bond with no cashflows!");
-    QL_ENSURE(redemptions_.size() == 1, "multiple redemptions created");
-}
+     QL_ENSURE(!cashflows().empty(), "bond with no cashflows!");
+     QL_ENSURE(redemptions_.size() == 1, "multiple redemptions created");
+ }
 
 
 
@@ -693,7 +695,7 @@ extern "C" double EXPORT pricingFRN(
     , const int calType			            // INPUT 43. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR, 9. SOY)
     , const int logYn                       // INPUT 44. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. Net PV (리턴값)
+    // OUTPUT 1. Net PV (리턴값)
     , double* resultGirrBasel2              // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultIndexGirrBasel2         // OUTPUT 3. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 4. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
@@ -703,7 +705,7 @@ extern "C" double EXPORT pricingFRN(
     , double* resultIndexGirrCvr			// OUTPUT 8. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 9. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+    //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 ) {
     /* TODO / NOTE */
@@ -716,6 +718,65 @@ extern "C" double EXPORT pricingFRN(
     }
 
     // info("==============[Bond: pricingFRN Logging Started!]==============");
+    // INPUT 데이터 로깅
+   // printAllInputDataFRN(
+   //     evaluationDate,
+   //     settlementDays,
+   //     issueDate,
+   //     maturityDate,
+   //     notional,
+   //     couponDayCounter,
+
+   //     referenceIndex,
+   //     fixingDays,
+   //     gearing,
+   //     spread,
+   //     lastResetRate,
+   //     nextResetRate,
+
+   //     numberOfCoupons,
+   //     paymentDates,
+   //     realStartDates,
+   //     realEndDates,
+
+   //     spreadOverYield,
+   //     spreadOverYieldCompounding,
+   //     spreadOverYieldDayCounter,
+
+   //     numberOfGirrTenors,
+   //     girrTenorDays,
+   //     girrRates,
+
+   //     girrDayCounter,
+   //     girrInterpolator,
+   //     girrCompounding,
+   //     girrFrequency,
+
+   //     numberOfCsrTenors,
+   //     csrTenorDays,
+   //     csrRates,
+
+   //     numberOfIndexGirrTenors,
+   //     indexGirrTenorDays,
+   //     indexGirrRates,
+
+   //     indexGirrDayCounter,
+   //     indexGirrInterpolator,
+   //     indexGirrCompounding,
+   //     indexGirrFrequency,
+
+   //     indexTenorNumber,
+   //     indexTenorUnit,
+   //     indexFixingDays,
+   //     indexCurrency,
+   //     indexCalendar,
+   //     indexBDC,
+   //     indexEOM,
+   //     indexDayCounter,
+
+   //     calType
+   // );
+
     if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
         error("[pricingFRN]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
         return -1; // Invalid calculation type
@@ -836,7 +897,6 @@ extern "C" double EXPORT pricingFRN(
     Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, Continuous로 설정
     DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DayCounter Actual/365 Fixed로 설정
     InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
-    double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
 
     // CSR 커브 구성용 날짜 및 금리 벡터
     std::vector<Date> csrDates_;
@@ -850,6 +910,9 @@ extern "C" double EXPORT pricingFRN(
     std::vector<Handle<Quote>> csrSpreads_;
 
     // 첫번째 CSR 스프레드에 spreadOverYield 값을 설정
+    QL_REQUIRE(!csrPeriod.empty(), "[pricingFRB]csrPeriod is empty");
+    double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_,
+        girrDayCounter_.yearFraction(asOfDate_, asOfDate_ + 1));
     csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(spreadOverYield_));
 
     // 나머지 CSR 커브 기간별 스프레드 입력
@@ -1394,50 +1457,50 @@ extern "C" double EXPORT pricingFRN(
     return npv;
 }
 
-FloatingRateBondCustom::FloatingRateBondCustom(
-    Natural settlementDays,
-    Real faceAmount,
-    Schedule schedule,
-    const ext::shared_ptr<IborIndex>& iborIndex,
-    const DayCounter& paymentDayCounter,
-    BusinessDayConvention paymentConvention,
-    Natural fixingDays,
-    Integer paymentLag,
-    const std::vector<Real>& gearings,
-    const std::vector<Spread>& spreads,
-    const std::vector<Rate>& caps,
-    const std::vector<Rate>& floors,
-    bool inArrears,
-    Real redemption,
-    const Date& issueDate,
-    const Period& exCouponPeriod,
-    const Calendar& exCouponCalendar,
-    const BusinessDayConvention exCouponConvention,
-    bool exCouponEndOfMonth)
-    : Bond(settlementDays, schedule.calendar(), issueDate) {
+ FloatingRateBondCustom::FloatingRateBondCustom(
+     Natural settlementDays,
+     Real faceAmount,
+     Schedule schedule,
+     const ext::shared_ptr<IborIndex>& iborIndex,
+     const DayCounter& paymentDayCounter,
+     BusinessDayConvention paymentConvention,
+     Natural fixingDays,
+     Integer paymentLag,
+     const std::vector<Real>& gearings,
+     const std::vector<Spread>& spreads,
+     const std::vector<Rate>& caps,
+     const std::vector<Rate>& floors,
+     bool inArrears,
+     Real redemption,
+     const Date& issueDate,
+     const Period& exCouponPeriod,
+     const Calendar& exCouponCalendar,
+     const BusinessDayConvention exCouponConvention,
+     bool exCouponEndOfMonth)
+     : Bond(settlementDays, schedule.calendar(), issueDate) {
 
-    maturityDate_ = schedule.endDate();
+     maturityDate_ = schedule.endDate();
 
-    cashflows_ = IborLeg(std::move(schedule), iborIndex)
-        .withNotionals(faceAmount)
-        .withPaymentDayCounter(paymentDayCounter)
-        .withPaymentAdjustment(paymentConvention)
-        .withFixingDays(fixingDays)
-        .withPaymentLag(paymentLag)
-        .withGearings(gearings)
-        .withSpreads(spreads)
-        .withCaps(caps)
-        .withFloors(floors)
-        .inArrears(inArrears)
-        .withExCouponPeriod(exCouponPeriod, exCouponCalendar, exCouponConvention, exCouponEndOfMonth);
+     cashflows_ = IborLeg(std::move(schedule), iborIndex)
+         .withNotionals(faceAmount)
+         .withPaymentDayCounter(paymentDayCounter)
+         .withPaymentAdjustment(paymentConvention)
+         .withFixingDays(fixingDays)
+         .withPaymentLag(paymentLag)
+         .withGearings(gearings)
+         .withSpreads(spreads)
+         .withCaps(caps)
+         .withFloors(floors)
+         .inArrears(inArrears)
+         .withExCouponPeriod(exCouponPeriod, exCouponCalendar, exCouponConvention, exCouponEndOfMonth);
 
-    addRedemptionsToCashflows(std::vector<Real>(1, redemption));
+     addRedemptionsToCashflows(std::vector<Real>(1, redemption));
 
-    QL_ENSURE(!cashflows().empty(), "bond with no cashflows!");
-    QL_ENSURE(redemptions_.size() == 1, "multiple redemptions created");
+     QL_ENSURE(!cashflows().empty(), "bond with no cashflows!");
+     QL_ENSURE(redemptions_.size() == 1, "multiple redemptions created");
 
-    registerWith(iborIndex);
-}
+     registerWith(iborIndex);
+ }
 
 
 
@@ -1466,14 +1529,14 @@ extern "C" double EXPORT pricingZCB(
     , const int calType			            // INPUT 16. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-                                            // OUTPUT 1. Net PV (리턴값)
+    // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. (추가)Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. (추가)GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. (추가)CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
+    //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 ) {
     /* TODO / NOTE */
@@ -1554,7 +1617,9 @@ extern "C" double EXPORT pricingZCB(
     std::vector<Handle<Quote>> csrSpreads_;
 
     // 첫번째 CSR 스프레드에 spreadOverYield 값을 설정
-    double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, asOfDate_));
+    QL_REQUIRE(!csrPeriod.empty(), "[pricingFRB]csrPeriod is empty");
+    double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_,
+        girrDayCounter_.yearFraction(asOfDate_, asOfDate_ + 1));
     csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(spreadOverYield_));
 
     // 나머지 CSR 커브 기간별 스프레드 입력
@@ -1666,15 +1731,15 @@ extern "C" double EXPORT pricingZCB(
         Real gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
         const DayCounter& ytmDayCounter = Actual365Fixed();
-        Compounding ytmCompounding = Continuous;
-        Frequency ytmFrequency = Annual;
+        Compounding ytmCompounding = Compounded;//Continuous;
+        Frequency ytmFrequency = Semiannual;//Annual;
         Rate ytmValue = CashFlows::yield(zeroCouponBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
             couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
             1.0e-15, 100, 0.005);
         InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
 
         // Duration 계산
-        Duration::Type durationType = Duration::Modified;
+        Duration::Type durationType = Duration::Macaulay;//Duration::Modified;
         Real duration = CashFlows::duration(zeroCouponBond.cashflows(), ytm, durationType, false,
             couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
