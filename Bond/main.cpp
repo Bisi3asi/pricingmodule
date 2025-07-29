@@ -143,7 +143,7 @@ int main() {
 */
 /* ================================================================================== */
 	/* Floating Rate Note 테스트 */
-
+/*
     const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
@@ -154,7 +154,7 @@ int main() {
     const int couponFrequency = 0;
     const int scheduleGenRule = 0;
     const int paymentBDC = 0;
-    const int paymentLag = 0;
+    const int paymentLag = 1;
 
     const int fixingDays = 1;
     const double gearing = 1.0;
@@ -172,7 +172,7 @@ int main() {
     const int numberOfGirrTenors = 10;
     const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int girrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+    const int girrConvention[] = { 0, 0, 0, 0 }; // DayCounter, Interpolator, Compounding, Frequency
 
     const int numberOfCsrTenors = 5;
     const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
@@ -181,7 +181,7 @@ int main() {
     const int numberOfIndexGirrTenors = 10;
     const int indexGirrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double indexGirrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int indexGirrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+    const int indexGirrConvention[] = { 0, 0, 0, 0 }; // DayCounter, Interpolator, Compounding, Frequency
     const int isSameCurve = 0; // Discounting Curve와 Index Curve의 일치 여부(0: False, others : true)
 
     const int indexTenor = 90;
@@ -190,7 +190,7 @@ int main() {
     const int indexCalendar = 0;
     const int indexBDC = 0;
     const int indexEOM = 0;
-    const int indexDayCounter = 1;
+    const int indexDayCounter = 0;
 
     const double marketPrice = 5536303734.68839; // 5536062000.0;
     const double csrRiskWeight = 0.05;
@@ -385,10 +385,10 @@ int main() {
     std::cout << "[CSR Curvature] " << std::endl;
     std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
     std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
-
+*/
 /* ================================================================================== */
     /* Zero Coupon Bond 테스트 */
-/*
+
     const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
@@ -410,14 +410,15 @@ int main() {
     const double csrRiskWeight = 0.05;
 
 
-    const int calType = 1; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
-    const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
+    const int calType = 4; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
+    const int logYn = 0; // 로그 파일 생성 (0: No, 1: Yes)
 
     double resultBasel2[5] = { 0 };
     double resultGirrDelta[23] = { 0 };
     double resultCsrDelta[13] = { 0 };
     double resultGirrCvr[2] = { 0 };
     double resultCsrCvr[2] = { 0 };
+	double resultCashflow[1000] = { 0 };
 
     double resultZeroNPV = pricingZCB(
         // ===================================================================================================
@@ -449,6 +450,7 @@ int main() {
         , resultCsrDelta
         , resultGirrCvr
         , resultCsrCvr
+        , resultCashflow
         // ===================================================================================================
     );
 
@@ -525,7 +527,33 @@ int main() {
     std::cout << "[CSR Curvature] " << std::endl;
     std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
     std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
-*/
+
+    // OUTPUT 7 결과 출력
+    std::cout << "[Cash Flow] " << std::endl;
+
+    int cfSize = static_cast<int>(resultCashflow[0]);
+    int numFields = 7;
+    const char* fieldNames[] = {
+        "startDate", "endDate", "notional", "rate", "payDate", "CF", "DF"
+    };
+
+    for (int i = 0; i < cfSize; ++i) {
+        std::cout << "[cashflow " << (i + 1) << "]" << std::endl;
+        for (int j = 0; j < numFields; ++j) {
+            int idx = i * numFields + j + 1; // +1: 첫 원소는 size
+            double val = resultCashflow[idx];
+            std::cout << fieldNames[j] << ": ";
+            if (val == -1.0) {
+                std::cout << "empty" << std::endl;
+            }
+            else {
+                std::cout << std::setprecision(10) << val << std::endl;
+            }
+        }
+        std::cout << std::endl;
+    }
+
+
 /* ================================================================================== */
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)

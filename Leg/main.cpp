@@ -19,9 +19,9 @@ int main() {
     const double couponRate = 0.015;
     const int couponDayCounter = 5;     //Actual/Actual(Bond)
     const int couponCalendar = 0;
-    const int couponFrequency = 1;
-    const int scheduleGenRule = 1;
-    const int paymentBDC = 1;
+    const int couponFrequency = 0;
+    const int scheduleGenRule = 0;
+    const int paymentBDC = 0;
     const int paymentLag = 1;
 	const int isNotionalExchange = 1; // 0: 이자만 지급, others: 이자 + 원금 지급
 
@@ -39,25 +39,25 @@ int main() {
     const int numberOfGirrTenors = 10;
     const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int girrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+    const int girrConvention[] = { 0, 0, 0, 0 }; // DayCounter, Interpolator, Compounding, Frequency
 
     const int numberOfIndexGirrTenors = 10;
     const int indexGirrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
     const double indexGirrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-    const int indexGirrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
+    const int indexGirrConvention[] = { 0, 0, 0, 0 }; // DayCounter, Interpolator, Compounding, Frequency
     const int isSameCurve = 0; // Discounting Curve와 Index Curve의 일치 여부(0: False, others : true)
 
-    const int indexTenor = 3;
+    const int indexTenor = 90;
     const int indexFixingDays = 1;
-    const int indexCurrency = 1;
-    const int indexCalendar = 1;
-    const int indexBDC = 1;
-    const int indexEOM = 1;
-    const int indexDayCounter = 1;
+    const int indexCurrency = 0;
+    const int indexCalendar = 0;
+    const int indexBDC = 0;
+    const int indexEOM = 0;
+    const int indexDayCounter = 0;
 
     const double girrRiskWeight = 0.017;
 
-    const int calType = 3;
+    const int calType = 2;
     const int logYn = 0;
 
     double resultGirrBasel2[5] = { 0 };
