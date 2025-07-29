@@ -151,10 +151,10 @@ int main() {
     const double couponRate = 0.015;
     const int couponDayCounter = 5;     //Actual/Actual(Bond)
     const int couponCalendar = 0;
-    const int couponFrequency = 1;
-    const int scheduleGenRule = 1;
-    const int paymentBDC = 1;
-    const int paymentLag = 1;
+    const int couponFrequency = 0;
+    const int scheduleGenRule = 0;
+    const int paymentBDC = 0;
+    const int paymentLag = 0;
 
     const int fixingDays = 1;
     const double gearing = 1.0;
@@ -184,12 +184,12 @@ int main() {
     const int indexGirrConvention[] = { 1, 1, 1, 1 }; // DayCounter, Interpolator, Compounding, Frequency
     const int isSameCurve = 0; // Discounting Curve와 Index Curve의 일치 여부(0: False, others : true)
 
-    const int indexTenor = 3;
+    const int indexTenor = 90;
     const int indexFixingDays = 1;
-    const int indexCurrency = 1;
-    const int indexCalendar = 1;
-    const int indexBDC = 1;
-    const int indexEOM = 1;
+    const int indexCurrency = 0;
+    const int indexCalendar = 0;
+    const int indexBDC = 0;
+    const int indexEOM = 0;
     const int indexDayCounter = 1;
 
     const double marketPrice = 5536303734.68839; // 5536062000.0;
