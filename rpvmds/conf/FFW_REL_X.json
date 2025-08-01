@@ -65,7 +65,7 @@
 		"DURATION": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 2 },
 		"CONVEXITY": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 3 },
 		"SPREADOVERYIELD": {},
-		"PV1": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 4 },
+		"PV01": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideBasel2%|%resultSellSideBasel2%", "variableIndex": 4 },
 		"FRTB_DELTA_GIRR": { "callFunction": "pricingFFW", "returnVariable": "%resultBuySideGirrDelta%|%resultSellSideGirrDelta%", "variableIndex": -1 },
 		"FRTB_DELTA_CSR": {},
 		"FRTB_DELTA_FX": {},

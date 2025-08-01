@@ -1,41 +1,56 @@
 {
-	"_comment": "ex)CST_REL@1200,1000,1000,1.2,0@1",
- 	"name" : "OtStock",
+	"_comment": "ex)CST_REL@10000,9000,9500,1.2,9200,9400,1,1,0@1",
+ 	"name" : "otStock",
 	"product": "CST_REL",
 	"inputArguments":[
-			{ "field": "amt", "type": "double" },  
+			{ "field": "amount", "type": "double" },  
 		  	{ "field": "price", "type": "double" },
 		  	{ "field": "basePrice", "type": "double" },
 		  	{ "field": "beta", "type": "double" },
-		  	{ "field": "fx", "type": "double" }
+		  	{ "field": "calType", "type": "int", "defaultValue": 1 },
+		  	{ "field": "scenCalcu", "type": "int", "defaultValue": 0 },
+		  	{ "field": "logYn", "type": "int", "defaultValue": 0 }
 		],
 	"functions":[
 		{ 
-		  "name": "stockPricing", 
+		  "name": "pricing", 
 		  "parameters": [
-		  	{ "field": "amt", "type": "double" },  
-		  	{ "field": "price", "type": "double" },
-		  	{ "field": "basePrice", "type": "double" },
-		  	{ "field": "beta", "type": "double" },
-		  	{ "field": "fx", "type": "double" },
-		  	{ "field": "p", "type": "double_ptr", "size": "5" },
-		  	{ "field": "ResultPrice", "type": "double_ptr", "size": "1" }
+			{ "field": "amount" },  
+		  	{ "field": "price" },
+		  	{ "field": "basePrice" },
+		  	{ "field": "beta" },
+		  	{ "field": "calType"},
+		  	{ "field": "scenCalcu"},
+		  	{ "field": "logYn"},
+		  	{ "field": "resultBasel2", "type": "double_ptr", "size": 6 },
+		  	{ "field": "resultBasel3", "type": "double_ptr", "size": 1 },
+		  	{ "field": "resultCashflow", "type": "double_ptr", "size": 1 }
 		  ], 
-		  "returnType": "long"
+		  "returnType": "double"
 		}
 	],
 	"results" : {
-		"PRICE": {
-			"callFunction": "stockPricing", "returnVariable": "%ResultPrice%", "variableIndex": 0
-		},
-		"DELTA": {
-			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 4
-		},
-		"GAMMA": {
-			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 1
-		},
-		"VEGA": {
-			"callFunction": "stockPricing", "returnVariable": "%p%", "variableIndex": 2
-		}
+		"PRICE": { "callFunction": "pricing", "returnVariable": "%return%"},
+		"DELTA": { "callFunction": "pricing", "returnVariable": "%resultBasel2%", "variableIndex": 0 },
+		"VEGA": { "callFunction": "pricing", "returnVariable": "%resultBasel2%", "variableIndex": 2 },
+		"GAMMA": { "callFunction": "pricing", "returnVariable": "%resultBasel2%", "variableIndex": 1 },
+		"DURATION": {},
+		"CONVEXITY": {},
+		"SPREADOVERYIELD": {},
+		"PV01": {},
+		"FRTB_DELTA_GIRR": {},
+		"FRTB_DELTA_CSR": {},
+		"FRTB_DELTA_FX": {},
+		"FRTB_DELTA_EQ": { "callFunction": "pricing", "returnVariable": "%resultBasel3%", "variableIndex": 0 },
+		"FRTB_DELTA_CM": {},
+		"FRTB_VEGA_GIRR": {},
+		"FRTB_VEGA_FX": {},
+		"FRTB_VEGA_EQ": {},
+		"FRTB_VEGA_CM": {},
+		"FRTB_CVR_GIRR": {},
+		"FRTB_CVR_FX": {},
+		"FRTB_CVR_EQ": {},
+		"FRTB_CVR_CM": {},
+		"CASHFLOW": {}
 	}
 }
