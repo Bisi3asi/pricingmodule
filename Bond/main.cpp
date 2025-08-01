@@ -389,7 +389,7 @@ int main() {
 /* ================================================================================== */
     /* Zero Coupon Bond 테스트 */
 
-    const int evaluationDate = 45657;   // 2024-12-31
+    const int evaluationDate = 2;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
     const double notional = 6000000000.0;
@@ -527,6 +527,7 @@ int main() {
     std::cout << "[CSR Curvature] " << std::endl;
     std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
     std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
+    std::cout << std::endl;
 
     // OUTPUT 7 결과 출력
     std::cout << "[Cash Flow] " << std::endl;
