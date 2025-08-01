@@ -1,13 +1,32 @@
 ﻿#ifndef OTSTOCK_H
 #define OTSTOCK_H
 
+// function 외부 인터페이스 export 정의
 #ifdef _WIN32
+#ifdef BUILD_LIBRARY
+#define EXPORT __declspec(dllexport) __stdcall
+#else
 #define EXPORT __declspec(dllimport) __stdcall
+#endif
 #elif defined(__linux__) || defined(__unix__)
 #define EXPORT
 #endif
 
+#pragma once
+
 // extern "C" 처리하여 C 스타일로 외부에서 함수가 호출될 수 있도록 처리
-extern "C" long EXPORT stockPricing(double amt, double price, double basePrice, double beta, double fx, double* p, double* ResultPrice);
+extern "C" double EXPORT pricing(
+	const double amount				// 현재가치금액 - SPOT_PRICE
+	, const double price            // 종가 (시나리오 분석시 시나리오 적용가 )  - 커브적용 분석시 종가  CURVE_EQ_SPOT        : IC-KOSPI200
+	, const double basePrice        // 기준가		- BOOK_PRIC
+	, const double beta             // 지수기준 이용시 종목 Beta값
+	, const int calType             // (1:pric, 2:basel2 sensitivity, 3:basel3 sensitivity, 4:cashflow)
+	, const int scenCalcu           // 일반(이론가) : 0 , 일반시나리오분석작업 : 1 , RM시나리오분석 : 2
+	, const int logYn               // (0:No, 1:Yes)
+	, double* resultBasel2          // (basel2 sensitivity, Delta, Gamma, Vega, duration, convexitym pv01 )
+	, double* resultBasel3			// (basel3 sensitivity, GIRR, CSR-nSec, CSR-nCTP, CSR-CTP, EQ, CM, FX ) 
+	, double* resultCashflow		// (Cashflow)  -
+);
+
 
 #endif
