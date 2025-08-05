@@ -598,7 +598,7 @@ extern "C" double EXPORT pricingFRB(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {]", e.what());
+            error("Exception occurred: {}", e.what());
             return -1;
         }
         catch (...) {
@@ -1476,7 +1476,7 @@ extern "C" double EXPORT pricingFRN(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {]", e.what());
+            error("Exception occurred: {}", e.what());
             return -1;
         }
         catch (...) {
@@ -2024,7 +2024,7 @@ extern "C" double EXPORT pricingZCB(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {]", e.what());
+            error("Exception occurred: {}", e.what());
             return -1;
         }
         catch (...) {

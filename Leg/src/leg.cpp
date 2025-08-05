@@ -297,7 +297,7 @@ extern "C" double EXPORT pricingZCL(
 
                 }
                 else {
-                    QL_FAIL("[PricingZeroCouponLeg]Coupon is not a Redemption");
+                    QL_FAIL("[pricingZCL]Coupon is not a Redemption");
                 }
             }
             return npv;
@@ -316,7 +316,7 @@ extern "C" double EXPORT pricingZCL(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {]", e.what());
+            error("Exception occurred: {}", e.what());
             return -1;
         }
         catch (...) {
@@ -704,7 +704,7 @@ extern "C" double EXPORT pricingFDL(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {]", e.what());
+            error("Exception occurred: {}", e.what());
             return -1;
         }
         catch (...) {
@@ -1299,7 +1299,7 @@ extern "C" double EXPORT pricingFLL(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {]", e.what());
+            error("Exception occurred: {}", e.what());
             return -1;
         }
         catch (...) {
