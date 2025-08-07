@@ -1,0 +1,19 @@
+{
+  "name": "rockylinux8-dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools",
+        "twxs.cmake"
+      ]
+    }
+  },
+  "postCreateCommand": "yum install -y epel-release && yum install -y cmake3 gcc gcc-c++ make git which"
+}
