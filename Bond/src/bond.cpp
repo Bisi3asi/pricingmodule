@@ -56,6 +56,7 @@ extern "C" double EXPORT pricingFRB(
 ) {
     /* TODO / NOTE */
     // 1. DayCounter, Frequency 등 QuantLib Class Get 함수 정의 필요
+
     try {
         /* 로거 초기화 */
         disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
@@ -79,6 +80,23 @@ extern "C" double EXPORT pricingFRB(
             return -1; // Invalid calculation type
         }
 
+        // Input Data Check
+        // Maturity date >= evaluation Date
+        if (maturityDate < evaluationDate) {
+            error("[princingFRB]: Maturity Date is less than evaluation Date");
+            return -1;
+        }
+        // Maturity Date >= issue Date
+        if (maturityDate < issueDate) {
+            error("[pricingFRB]: Maturity Date is less than issue Date");
+            return -1;
+        }
+        // Last Payment date >= evaluation Date
+        if ((numberOfCoupons > 0) && (paymentDates[numberOfCoupons - 1] < evaluationDate)) {
+            error("[princingFRB]: PaymentDate Date is less than evaluation Date");
+            return -1;
+        }
+
         // 결과 데이터 초기화
         initResult(resultBasel2, 5);
         initResult(resultGirrDelta, 23);
@@ -94,6 +112,7 @@ extern "C" double EXPORT pricingFRB(
         // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
         Settings::instance().evaluationDate() = asOfDate_;
         Size settlementDays_ = 0;
+        bool includeSettlementDateFlows_ = true;
 
         Real notional_ = notional;
 
@@ -171,7 +190,7 @@ extern "C" double EXPORT pricingFRB(
         discountingCurve.linkTo(discountingTermStructure);
 
         // Discounting 엔진 생성 (채권 가격 계산용)
-        auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve);
+        auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve, includeSettlementDateFlows_);
 
         // Schedule 객체 생성 (지급일)
         Schedule fixedBondSchedule_;
@@ -238,7 +257,7 @@ extern "C" double EXPORT pricingFRB(
                 ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, tmpCsrSpreads_, csrDates_);
             RelinkableHandle<YieldTermStructure> tmpDiscountingCurve;
             tmpDiscountingCurve.linkTo(tmpDiscountingTermStructure);
-            auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve);
+            auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve, includeSettlementDateFlows_);
             fixedRateBond.setPricingEngine(tmpBondEngine);
             // SettlementDays 관행 무시(Algo
             Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
@@ -296,7 +315,7 @@ extern "C" double EXPORT pricingFRB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 fixedRateBond.setPricingEngine(bumpBondEngine);
@@ -370,7 +389,7 @@ extern "C" double EXPORT pricingFRB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 fixedRateBond.setPricingEngine(bumpBondEngine);
@@ -383,8 +402,14 @@ extern "C" double EXPORT pricingFRB(
             }
 
             /* OUTPUT 2. GIRR Delta 결과 적재 */
-            std::vector<Real> girrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+            std::vector<Real> girrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
             Size girrDataSize = girrTenor.size();
+
+            // Parallel 민감도 추가
+            double tmpCcyDelta = std::accumulate(disCountingGirr.begin(), disCountingGirr.end(), 0.0);
+            disCountingGirr.insert(disCountingGirr.begin(), tmpCcyDelta);
+            QL_REQUIRE(girrDataSize == disCountingGirr.size(), "[pricingFRB]Girr result Size mismatch.");
+
             // 0인 민감도를 제외하고 적재
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
@@ -422,7 +447,7 @@ extern "C" double EXPORT pricingFRB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 fixedRateBond.setPricingEngine(bumpBondEngine);
@@ -474,7 +499,7 @@ extern "C" double EXPORT pricingFRB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 fixedRateBond.setPricingEngine(bumpBondEngine);
@@ -513,7 +538,7 @@ extern "C" double EXPORT pricingFRB(
 
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 fixedRateBond.setPricingEngine(bumpBondEngine);
@@ -797,6 +822,23 @@ extern "C" double EXPORT pricingFRN(
             return -1; // Invalid calculation type
         }
 
+        // Input Data Check
+        // Maturity date >= evaluation Date
+        if (maturityDate < evaluationDate) {
+            error("[princingFRN]: Maturity Date is less than evaluation Date");
+            return -1;
+        }
+        // Maturity Date >= issue Date
+        if (maturityDate < issueDate) {
+            error("[pricingFRN]: Maturity Date is less than issue Date");
+            return -1;
+        }
+        // Last Payment date >= evaluation Date
+        if ((numberOfCoupons > 0) && (paymentDates[numberOfCoupons - 1] < evaluationDate)) {
+            error("[princingFRN]: PaymentDate Date is less than evaluation Date");
+            return -1;
+        }
+
         // 결과 데이터 초기화
         initResult(resultGirrBasel2, 5);
         initResult(resultIndexGirrBasel2, 5);
@@ -814,6 +856,7 @@ extern "C" double EXPORT pricingFRN(
         // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
         Settings::instance().evaluationDate() = asOfDate_;
         Size settlementDays_ = 0;
+        bool includeSettlementDateFlows_ = true;
 
         Real notional_ = notional;
 
@@ -945,7 +988,7 @@ extern "C" double EXPORT pricingFRN(
         discountingCurve.linkTo(discountingTermStructure);
 
         // Discounting 엔진 생성 (채권 가격 계산용)
-        auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve);
+        auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve, includeSettlementDateFlows_);
 
         // Schedule 객체 생성 (지급일)
         Schedule FRNSchedule_;
@@ -1023,7 +1066,7 @@ extern "C" double EXPORT pricingFRN(
                 ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, tmpCsrSpreads_, csrDates_);
             RelinkableHandle<YieldTermStructure> tmpDiscountingCurve;
             tmpDiscountingCurve.linkTo(tmpDiscountingTermStructure);
-            auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve);
+            auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve, includeSettlementDateFlows_);
             floatingRateBond.setPricingEngine(tmpBondEngine);
             // SettlementDays 관행 무시
             Real soy = CashFlows::zSpread(floatingRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
@@ -1072,7 +1115,7 @@ extern "C" double EXPORT pricingFRN(
                 }
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 floatingRateBond.setPricingEngine(bumpBondEngine);
@@ -1193,7 +1236,7 @@ extern "C" double EXPORT pricingFRN(
                 }
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 floatingRateBond.setPricingEngine(bumpBondEngine);
@@ -1209,8 +1252,13 @@ extern "C" double EXPORT pricingFRN(
 
 
             /* OUTPUT 2. (Discounting Curve) GIRR Delta 결과 적재 */
-            std::vector<Real> girrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+            std::vector<Real> girrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
             Size girrDataSize = girrTenor.size();
+
+            // Parallel 민감도 추가
+            double tmpCcyDelta = std::accumulate(disCountingGirr.begin(), disCountingGirr.end(), 0.0);
+            disCountingGirr.insert(disCountingGirr.begin(), tmpCcyDelta);
+            QL_REQUIRE(girrDataSize == disCountingGirr.size(), "[pricingFRN]Girr result Size mismatch.");
             // 0인 민감도를 제외하고 적재
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
@@ -1242,8 +1290,14 @@ extern "C" double EXPORT pricingFRN(
                 indexGirrCurve.linkTo(indexGirrTermstructure);
 
                 /* OUTPUT 3. GIRR Delta 결과 적재 */
-                std::vector<Real> indexGirrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+                std::vector<Real> indexGirrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
                 Size indexGirrDataSize = indexGirrTenor.size();
+
+                // Parallel 민감도 추가
+                double tmpCcyDelta = std::accumulate(indexGirr.begin(), indexGirr.end(), 0.0);
+                indexGirr.insert(indexGirr.begin(), tmpCcyDelta);
+                QL_REQUIRE(indexGirrDataSize == indexGirr.size(), "[pricingFRN]Girr result Size mismatch.");
+
                 // 0인 민감도를 제외하고 적재
                 processResultArray(indexGirrTenor, indexGirr, indexGirrDataSize, resultIndexGirrDelta);
             }
@@ -1283,7 +1337,7 @@ extern "C" double EXPORT pricingFRN(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 floatingRateBond.setPricingEngine(bumpBondEngine);
@@ -1333,7 +1387,7 @@ extern "C" double EXPORT pricingFRN(
                 }
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 floatingRateBond.setPricingEngine(bumpBondEngine);
@@ -1396,7 +1450,7 @@ extern "C" double EXPORT pricingFRN(
 
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 floatingRateBond.setPricingEngine(bumpBondEngine);
@@ -1573,9 +1627,22 @@ extern "C" double EXPORT pricingZCB(
 
     try {
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
-            //        error("[princingZCB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
+            error("[princingZCB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return -1; // Invalid calculation type
         }
+
+        // Input Data Check
+        // Maturity date >= evaluation Date
+        if (maturityDate < evaluationDate) {
+            error("[princingZCB]: Maturity Date is less than evaluation Date");
+            return -1;
+        }
+        // Maturity Date >= issue Date
+        if (maturityDate < issueDate) {
+            error("[pricingZCB]: Maturity Date is less than issue Date");
+            return -1;
+        }
+
 
         // 결과 데이터 초기화
         initResult(resultBasel2, 5);
@@ -1593,6 +1660,7 @@ extern "C" double EXPORT pricingZCB(
         // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
         Settings::instance().evaluationDate() = asOfDate_;
         Size settlementDays_ = 0;
+        bool includeSettlementDateFlows_ = true;
 
         Real notional_ = notional;
 
@@ -1667,7 +1735,7 @@ extern "C" double EXPORT pricingZCB(
         discountingCurve.linkTo(discountingTermStructure);
 
         // Discounting 엔진 생성 (채권 가격 계산용)
-        auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve);
+        auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve, includeSettlementDateFlows_);
 
 
         // ZeroCouponBond 객체 생성
@@ -1692,7 +1760,7 @@ extern "C" double EXPORT pricingZCB(
                 ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, tmpCsrSpreads_, csrDates_);
             RelinkableHandle<YieldTermStructure> tmpDiscountingCurve;
             tmpDiscountingCurve.linkTo(tmpDiscountingTermStructure);
-            auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve);
+            auto tmpBondEngine = ext::make_shared<DiscountingBondEngine>(tmpDiscountingCurve, includeSettlementDateFlows_);
             zeroCouponBond.setPricingEngine(tmpBondEngine);
             // SettlementDays 관행 무시(Algo
             Real soy = CashFlows::zSpread(zeroCouponBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
@@ -1746,7 +1814,7 @@ extern "C" double EXPORT pricingZCB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 zeroCouponBond.setPricingEngine(bumpBondEngine);
@@ -1816,7 +1884,7 @@ extern "C" double EXPORT pricingZCB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 zeroCouponBond.setPricingEngine(bumpBondEngine);
@@ -1829,8 +1897,14 @@ extern "C" double EXPORT pricingZCB(
             }
 
             /* OUTPUT 2. GIRR Delta 결과 적재 */
-            std::vector<Real> girrTenor = { 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
+            std::vector<Real> girrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
             Size girrDataSize = girrTenor.size();
+
+            // Parallel 민감도 추가
+            double tmpCcyDelta = std::accumulate(disCountingGirr.begin(), disCountingGirr.end(), 0.0);
+            disCountingGirr.insert(disCountingGirr.begin(), tmpCcyDelta);
+            QL_REQUIRE(girrDataSize == disCountingGirr.size(), "[PricingZCB]Girr result Size mismatch.");
+
             // 0인 민감도를 제외하고 적재
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
@@ -1868,7 +1942,7 @@ extern "C" double EXPORT pricingZCB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 zeroCouponBond.setPricingEngine(bumpBondEngine);
@@ -1919,7 +1993,7 @@ extern "C" double EXPORT pricingZCB(
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 zeroCouponBond.setPricingEngine(bumpBondEngine);
@@ -1928,7 +2002,7 @@ extern "C" double EXPORT pricingZCB(
                 bumpedNpv[bumpNo] = zeroCouponBond.NPV();
             }
 
-            QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            QL_REQUIRE(bumpedNpv.size() > 1, "[PricingZCB]Failed to calculate bumpedNPV.");
             resultGirrCvr[0] = (bumpedNpv[0] - npv);
             resultGirrCvr[1] = (bumpedNpv[1] - npv);
 
@@ -1958,7 +2032,7 @@ extern "C" double EXPORT pricingZCB(
 
 
                 // discountingCurve로 새로운 pricing engine 생성
-                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve);
+                auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
                 // FixedRateBond에 bump된 pricing engine 연결
                 zeroCouponBond.setPricingEngine(bumpBondEngine);
@@ -1967,7 +2041,7 @@ extern "C" double EXPORT pricingZCB(
                 bumpedNpv[bumpNo] = zeroCouponBond.NPV();
             }
 
-            QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            QL_REQUIRE(bumpedNpv.size() > 1, "[PricingZCB]Failed to calculate bumpedNPV.");
             resultCsrCvr[0] = (bumpedNpv[0] - npv);
             resultCsrCvr[1] = (bumpedNpv[1] - npv);
 

@@ -389,7 +389,7 @@ int main() {
 /* ================================================================================== */
     /* Zero Coupon Bond 테스트 */
 
-    const int evaluationDate = 2;   // 2024-12-31
+    const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
     const double notional = 6000000000.0;
@@ -410,7 +410,7 @@ int main() {
     const double csrRiskWeight = 0.05;
 
 
-    const int calType = 4; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
+    const int calType = 3; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
     const int logYn = 0; // 로그 파일 생성 (0: No, 1: Yes)
 
     double resultBasel2[5] = { 0 };
