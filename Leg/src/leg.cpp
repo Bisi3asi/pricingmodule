@@ -46,16 +46,17 @@ extern "C" double EXPORT pricingZCL(
         }
 
         // Input Data Check
-        // Maturity Date < evaluation Date
+        // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
-            error("[princingZCL]: Maturity Date is less than evaluation Date");
+            error("[pricingZCL]: Maturity Date is less than evaluation Date");
             return -1;
         }
-        // Maturity date < issue date
+        // Maturity Date >= issue Date
         if (maturityDate < issueDate) {
-            error("[princingZCL]: Maturity Date is less than issue Date");
+            error("[pricingZCL]: Maturity Date is less than issue Date");
             return -1;
         }
+
 
         // 결과 데이터 초기화
         initResult(resultBasel2, 5);
@@ -335,7 +336,7 @@ extern "C" double EXPORT pricingZCL(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {}", e.what());
+            error("Exception occurred: {}", string(e.what()));
             return -1;
         }
         catch (...) {
@@ -410,9 +411,9 @@ extern "C" double EXPORT pricingFDL(
             error("[pricingFDL]: Maturity Date is less than issue Date");
             return -1;
         }
-        // Last Payment Date >= evaluation Date
+        // Last Payment date >= evaluation Date
         if ((numberOfCoupons > 0) && (paymentDates[numberOfCoupons - 1] < evaluationDate)) {
-            error("[princingFDL]: PaymentDate Date is less than evaluation Date");
+            error("[princingFRB]: PaymentDate Date is less than evaluation Date");
             return -1;
         }
 
@@ -748,7 +749,7 @@ extern "C" double EXPORT pricingFDL(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {}", e.what());
+            error("Exception occurred: {}", string(e.what()));
             return -1;
         }
         catch (...) {
@@ -845,7 +846,7 @@ extern "C" double EXPORT pricingFLL(
         }
         // Last Payment date >= evaluation Date
         if ((numberOfCoupons > 0) && (paymentDates[numberOfCoupons - 1] < evaluationDate)) {
-            error("[princingFLL]: PaymentDate Date is less than evaluation Date");
+            error("[pricingFLL]: PaymentDate Date is less than evaluation Date");
             return -1;
         }
 
@@ -886,7 +887,7 @@ extern "C" double EXPORT pricingFLL(
         indexGirrRates_.emplace_back(indexGirrRates[0]);
 
         // 나머지 GIRR 커브 구성 요소 입력
-        for (Size dateNum = 0; dateNum < numberOfGirrTenors; ++dateNum) {
+        for (Size dateNum = 0; dateNum < numberOfIndexGirrTenors; ++dateNum) {
             indexGirrDates_.emplace_back(asOfDate_ + indexGirrPeriod[dateNum]);
             indexGirrRates_.emplace_back(indexGirrRates[dateNum]);
         }
@@ -990,10 +991,25 @@ extern "C" double EXPORT pricingFLL(
         }
 
         // fixing data 입력
-        Date lastFixingDate1 = refIndex->fixingDate(Date(realStartDates[0]));
-        Date nextFixingDate1 = refIndex->fixingDate(Date(realStartDates[1]));
-        refIndex->addFixing(lastFixingDate1, lastResetRate);
-        refIndex->addFixing(nextFixingDate1, nextResetRate);
+        Date tmpDate = FRNSchedule_.previousDate(asOfDate_);
+        tmpDate = FRNSchedule_.nextDate(asOfDate_);
+
+        Date lastFixingDate1 = refIndex->fixingDate(FRNSchedule_.previousDate(asOfDate_));
+        Date nextFixingDate1 = refIndex->fixingDate(FRNSchedule_.nextDate(asOfDate_));
+        // Date lastFixingDate1 = refIndex->fixingDate(Date(realStartDates[0]));
+        // Date nextFixingDate1 = refIndex->fixingDate(Date(realStartDates[1]));
+        QuantLib::TimeSeries<Real> ts = refIndex->timeSeries();
+
+        if (ts.find(lastFixingDate1) == ts.end()) {
+            refIndex->addFixing(lastFixingDate1, lastResetRate);
+        }
+
+        if (ts.find(nextFixingDate1) == ts.end()) {
+            refIndex->addFixing(nextFixingDate1, nextResetRate);
+        }
+        
+        //refIndex->addFixing(lastFixingDate1, lastResetRate);
+        //refIndex->addFixing(nextFixingDate1, nextResetRate);
 
         const std::vector<QuantLib::Rate>& caps_ = {};
         const std::vector<QuantLib::Rate>& floors_ = {};
@@ -1373,7 +1389,7 @@ extern "C" double EXPORT pricingFLL(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {}", e.what());
+            error("Exception occurred: {}", string(e.what()));
             return -1;
         }
         catch (...) {
@@ -1382,6 +1398,7 @@ extern "C" double EXPORT pricingFLL(
         }
     }
 }
+
 
 
 // /* FRB Custom Class */

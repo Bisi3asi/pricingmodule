@@ -40,6 +40,7 @@
             "displayName": "Linux Release",
             "generator": "Ninja",
             "binaryDir": "/home/ireoplus/shared_library/Bond", /* Path to your project */
+            /* "binaryDir": "/workspaces/pricingmodule/rocky-linux8/Bond/build", /* Path to your project */
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_STANDARD": "17",

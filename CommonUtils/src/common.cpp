@@ -298,7 +298,7 @@ Period makePeriodFromDays(int days) {
         return Period(days, Days);
     }
 
-    double months = days / 30.44;  // 평균 월 길이 기준
+    double months = days / 30;
     int roundedMonths = static_cast<int>(std::round(months));
 
     if (roundedMonths % 12 == 0) {

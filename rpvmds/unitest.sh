@@ -1,11 +1,9 @@
 #!/bin/bash
 
-. env.sh
-
 if [ "-console" = "$1" ]; then
     echo "Enter the data you want to analyze"
-    java $RPVMS_J_OPTS -jar $RPVMS_HOME/lib/rpvmds-evaluater-0.0.1-jar-with-dependencies.jar
+    java $RPVMS_J_OPTS -jar $RPVMDS_HOME/lib/rpvmds-evaluater-1.0.1.jar
 else
-    echo "simule"
-    java $RPVMS_J_OPTS -classpath $RPVMS_HOME/lib/rpvmds.jar com.icis.RPVM.ds.test.RPVMSimul
+    echo "UnitTest UI Open"
+    java $RPVMS_J_OPTS -classpath $RPVMDS_HOME/lib/rpvmds-main-1.0.1.jar com.icis.RPVM.ds.test.RPVMSimul
 fi

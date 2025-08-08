@@ -12,41 +12,41 @@
 
 int main() {
     /* Fixed Rate Bond 테스트 */
-/*
-    const int evaluationDate = 45657;   // 2024-12-31
-    const int issueDate = 44175;        // 2020-12-10
-    const int maturityDate = 47827;     // 2030-12-10
-    const double notional = 6000000000.0;
-    const double couponRate = 0.015;
+ /*
+    const int evaluationDate = 45107;   // 2023-06-30
+    const int issueDate = 45087;        // 2023-06-10
+    const int maturityDate = 48740;     // 2033-06-10
+    const double notional = 3600000000;
+    const double couponRate = 0.0325;
     const int couponDayCounter = 5; //Actual/Actual(Bond)
     const int couponCalendar = 0;
-    const int couponFrequency = 1;
-    const int scheduleGenRule = 1;
-    const int paymentBDC = 1;
-    const int paymentLag = 1;
+    const int couponFrequency = 2;
+    const int scheduleGenRule = 0;
+    const int paymentBDC = 0;
+    const int paymentLag = 0;
 
-    const int numberOfCpnSch = 12;
-    const int paymentDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
-    const int realStartDates[] = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
-    const int realEndDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+    const int numberOfCpnSch = 0;
+    const int paymentDates[] = { -1 };
+    const int realStartDates[] = { -1 };
+    const int realEndDates[] = { -1 };
     
     const int numberOfGirrTenors = 10;
-    const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
-    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
-	const int girrConvention[] = {1, 1, 1, 1}; // DayCounter, Interpolator, Compounding, Frequency
+    const int girrTenorDays[] = { 90, 180, 360, 720, 1080, 1800, 3600, 5400, 7200, 10800 };
+    const double girrRates[] = { 0.03728534, 0.03770668, 0.03805505, 0.03691913, 0.03594992, 0.03476204, 0.03392737, 0.03392737, 0.03392737, 0.03392737};
+	const int girrConvention[] = {0, 0, 0, 0}; // DayCounter, Interpolator, Compounding, Frequency
 
-    const double spreadOverYield = 0.001389;
+    const double spreadOverYield = -1;
     
     const int numberOfCsrTenors = 5;
-    const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
+    const int csrTenorDays[] = { 180, 360, 1080, 1800, 3600 };
     const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
 
-    const double marketPrice = 5536303734.68839; // 5536062000.0;
-    const double csrRiskWeight = 0.05;
+    const double marketPrice = 3484216800; // 5536062000.0;
+    const double csrRiskWeight = 0.01;
 	const double girrRiskWeight = 0.017;
 
-    const int calType = 3; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
-    const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
+    const int calType = 1; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
+    const int logYn = 0; // 로그 파일 생성 (0: No, 1: Yes)
 
     double resultBasel2[5] = { 0 };
     double resultGirrDelta[23] = { 0 };
@@ -143,44 +143,43 @@ int main() {
 */
 /* ================================================================================== */
 	/* Floating Rate Note 테스트 */
-/*
-    const int evaluationDate = 45657;   // 2024-12-31
-    const int issueDate = 44175;        // 2020-12-10
-    const int maturityDate = 47827;     // 2030-12-10
-    const double notional = 6000000000.0;
-    const double couponRate = 0.015;
-    const int couponDayCounter = 5;     //Actual/Actual(Bond)
-    const int couponCalendar = 0;
-    const int couponFrequency = 0;
+
+    const int evaluationDate = 45107;   // 2023-06-30
+    const int issueDate = 44336;        // 2021-05-20
+    const int maturityDate = 46527;     // 2027-05-20
+    const double notional = 4000000;
+    const int couponDayCounter = 0;     //Actual/Actual(Bond)
+    const int couponCalendar = 13;
+    const int couponFrequency = 2;
     const int scheduleGenRule = 0;
     const int paymentBDC = 0;
-    const int paymentLag = 1;
+    const int paymentLag = 0;
 
-    const int fixingDays = 1;
+    const int fixingDays = 0;
     const double gearing = 1.0;
-    const double spread = 0.0;
-    const double lastResetRate = 0.05;
-    const double nextResetRate = 0.0;
+    const double spread = 1.25;
+    const double lastResetRate = 0.0495;
+    const double nextResetRate = 0.0495;
 
-    const int numberOfCpnSch = 12;
-    const int paymentDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
-    const int realStartDates[] = { 45636, 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644 };
-    const int realEndDates[] = { 45818, 46001, 46183, 46366, 46548, 46731, 46916, 47098, 47280, 47462, 47644, 47827 };
+    const int numberOfCpnSch = 0;
+    const int paymentDates[] = { -1 };
+    const int realStartDates[] = { -1 };
+    const int realEndDates[] = { -1 };
     
-    const double spreadOverYield = 0.001389;
+    const double spreadOverYield = -1;
 
     const int numberOfGirrTenors = 10;
-    const int girrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
-    const double girrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
+    const int girrTenorDays[] = { 90, 180, 360, 720, 1080, 1800, 3600, 5400, 7200, 10800 };
+    const double girrRates[] = { 0.03728534, 0.03770668, 0.03805505, 0.03691913, 0.03594992, 0.03476204, 0.03392737, 0.03392737, 0.03392737, 0.03392737};
     const int girrConvention[] = { 0, 0, 0, 0 }; // DayCounter, Interpolator, Compounding, Frequency
 
     const int numberOfCsrTenors = 5;
-    const int csrTenorDays[] = { 183, 365, 1095, 1825, 3650 };
-    const double csrRates[] = { 0.0, 0.0, 0.0, 0.0005, 0.001 };
+    const int csrTenorDays[] = { 180, 360, 1080, 1800, 3600 };
+    const double csrRates[] = { 0.0, 0.0, 0.00047867, 0.00158286, 0.00254509 };
 
-    const int numberOfIndexGirrTenors = 10;
-    const int indexGirrTenorDays[] = { 91, 183, 365, 730, 1095, 1825, 3650, 5475, 7300, 10950 };
-    const double indexGirrRates[] = { 0.0337, 0.0317, 0.0285, 0.0272, 0.0269, 0.0271, 0.0278, 0.0272, 0.0254, 0.0222 };
+    const int numberOfIndexGirrTenors = 8;
+    const int indexGirrTenorDays[] = { 90, 180, 360, 720, 1080, 1800, 3600, 7200 };
+    const double indexGirrRates[] = { 0.03728534, 0.03770668, 0.03805505, 0.03691913, 0.03642859, 0.0363449, 0.03647245, 0.03326891};
     const int indexGirrConvention[] = { 0, 0, 0, 0 }; // DayCounter, Interpolator, Compounding, Frequency
     const int isSameCurve = 0; // Discounting Curve와 Index Curve의 일치 여부(0: False, others : true)
 
@@ -192,12 +191,12 @@ int main() {
     const int indexEOM = 0;
     const int indexDayCounter = 0;
 
-    const double marketPrice = 5536303734.68839; // 5536062000.0;
+    const double marketPrice = 39276700;
     const double csrRiskWeight = 0.05;
     const double girrRiskWeight = 0.017;
 
-    const int calType = 3;
-    const int logYn = 0;
+    const int calType = 9;
+    const int logYn = 1;
 
     double resultGirrBasel2[5] = { 0 };
     double resultIndexGirrBasel2[5] = { 0 };
@@ -385,10 +384,10 @@ int main() {
     std::cout << "[CSR Curvature] " << std::endl;
     std::cout << "BumpUp Curvature: " << std::setprecision(20) << resultCsrCvr[0] << std::endl; // index 0: BumpUp Curvature
     std::cout << "BumpDown Curvature: " << std::setprecision(20) << resultCsrCvr[1] << std::endl; // index 1: BumpDown Curvature
-*/
+
 /* ================================================================================== */
     /* Zero Coupon Bond 테스트 */
-
+/*
     const int evaluationDate = 45657;   // 2024-12-31
     const int issueDate = 44175;        // 2020-12-10
     const int maturityDate = 47827;     // 2030-12-10
@@ -553,8 +552,7 @@ int main() {
         }
         std::cout << std::endl;
     }
-
-
+*/
 /* ================================================================================== */
 
     // 화면 종료 방지 (윈도우와 리눅스 호환)

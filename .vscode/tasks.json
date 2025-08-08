@@ -1,0 +1,100 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+        "label": "Run Windows Build Tasks",
+        "type": "shell",
+        "command": "code",
+        "args": [
+            "--file-uri",
+            "vscode:extension/ms-vscode.tasks",
+            "-r",
+            "-n",
+            "--task",
+            "Configure Bond (Windows)"
+        ],
+        "problemMatcher": [],
+        "isBackground": false,
+        "runOptions": {
+            "runOn": "default"
+        },
+        "presentation": {
+            "reveal": "always",
+            "panel": "dedicated"
+        },
+        "dependsOn": [],
+        "detail": "Use this to manually trigger Windows build tasks"
+    },
+    {
+        "label": "Run Linux Build Tasks",
+        "type": "shell",
+        "command": "code",
+        "args": [
+            "--file-uri",
+            "vscode:extension/ms-vscode.tasks",
+            "-r",
+            "-n",
+            "--task",
+            "Configure Bond (Linux)"
+        ],
+        "problemMatcher": [],
+        "isBackground": false,
+        "runOptions": {
+            "runOn": "default"
+        },
+        "presentation": {
+            "reveal": "always",
+            "panel": "dedicated"
+        },
+        "dependsOn": [],
+        "detail": "Use this to manually trigger Linux build tasks"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: clean rebuild",
+        "command": "cleanRebuild",
+        "targets": [
+            "[N/A - Select Kit]"
+        ],
+        "group": "build",
+        "problemMatcher": [],
+        "detail": "CMake template clean rebuild task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: install",
+        "command": "install",
+        "problemMatcher": [],
+        "detail": "CMake template install task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: build",
+        "command": "build",
+        "targets": [
+            "[N/A - Select Kit]"
+        ],
+        "group": "build",
+        "problemMatcher": [],
+        "detail": "CMake template build task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: clean rebuild",
+        "command": "cleanRebuild",
+        "targets": [
+            "[N/A - Select Kit]"
+        ],
+        "group": "build",
+        "problemMatcher": [],
+        "detail": "CMake template clean rebuild task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: clean",
+        "command": "clean",
+        "problemMatcher": [],
+        "detail": "CMake template clean task"
+    }
+]
+}

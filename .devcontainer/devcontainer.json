@@ -1,19 +1,22 @@
 {
   "name": "rockylinux8-dev",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "context": ".."
   },
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "cmake.generator": "Ninja",
+        "cmake.buildDirectory": "/workspaces/pricingmodule/rocky-linux8/build/${buildType}/${cmake.targetName}",
+        "cmake.sourceDirectory": "/workspaces/pricingmodule",
+        "cmake.configureOnOpen": true
       },
       "extensions": [
         "ms-vscode.cmake-tools",
-        "ms-vscode.cpptools",
-        "twxs.cmake"
+        "ms-vscode.cpptools"        
       ]
     }
-  },
-  "postCreateCommand": "yum install -y epel-release && yum install -y cmake3 gcc gcc-c++ make git which"
+  }
 }

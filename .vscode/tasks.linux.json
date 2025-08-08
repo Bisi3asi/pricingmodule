@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Configure Bond (Linux)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "-S", "Bond",
+        "-B", "/workspaces/pricingmodule/rocky-linux8/build/Bond",
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "Build Bond (Linux)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build", "/workspaces/pricingmodule/rocky-linux8/build/Bond"
+      ],
+      "group": "build",
+      "dependsOn": "Configure Bond (Linux)"
+    },
+    {
+      "label": "Configure Leg (Linux)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "-S", "Leg",
+        "-B", "/workspaces/pricingmodule/rocky-linux8/build/Leg",
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "Build Leg (Linux)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build", "/workspaces/pricingmodule/rocky-linux8/build/Leg"
+      ],
+      "group": "build",
+      "dependsOn": "Configure Leg (Linux)"
+    }
+  ]
+}

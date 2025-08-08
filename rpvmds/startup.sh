@@ -1,7 +1,8 @@
 #!/bin/bash
 
-. env.sh
+#자바 실행 옵션
+RPVMS_J_OPTS="-Xms32M -Xmx2048M -XX:+UseParallelGC -XX:-UseGCOverheadLimit -Dfile.encoding=UTF-8"
 
 echo "RPVMDs Daemon Start"
-nohup java $RPVMS_J_OPTS -Dlog4j2.configurationFile=$RPVMS_HOME/lib/log4j2.xml -jar $RPVMS_HOME/lib/rpvmds.jar -port=$RPVMS_LISTENER_PORT -bindip=$RPVMS_BIND_IP &
+nohup java $RPVMS_J_OPTS -jar $RPVMDS_HOME/lib/rpvmds-main-1.0.1.jar /dev/null 2>&1 &
 
