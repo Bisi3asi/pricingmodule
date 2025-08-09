@@ -741,7 +741,7 @@ extern "C" double EXPORT pricingFRN(
     , const int calType			            // INPUT 43. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR, 9. SOY)
     , const int logYn                       // INPUT 44. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultGirrBasel2              // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultIndexGirrBasel2         // OUTPUT 3. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 4. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
@@ -751,7 +751,7 @@ extern "C" double EXPORT pricingFRN(
     , double* resultIndexGirrCvr			// OUTPUT 8. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 9. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-    //              startDate, endDate, notional, rate, payDate, CF, DF)
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 ) {
     /* TODO / NOTE */
@@ -759,12 +759,12 @@ extern "C" double EXPORT pricingFRN(
 
     try {
         /* 로거 초기화 */
-        ////disableConsoleLogging);    // 로깅여부 N일시 콘촐 입출력 비활성화
+        disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
         if (logYn == 1) {
-            ////initLogger("bond.log"); // 생성 파일명 지정
+            initLogger("bond.log"); // 생성 파일명 지정
         }
 
-        cout << "==============[Bond: pricingFRN Logging Started!]==============" << endl;
+        // info("==============[Bond: pricingFRN Logging Started!]==============");
         // INPUT 데이터 로깅
        // printAllInputDataFRN(
        //     evaluationDate,
@@ -825,28 +825,28 @@ extern "C" double EXPORT pricingFRN(
        // );
 
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
-            cout << "[pricingFRN]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported." << endl;
+            error("[pricingFRN]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return -1; // Invalid calculation type
         }
 
         // Input Data Check
         // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
-            cout << "[pricingFRN]: Maturity Date is less than evaluation Date" << endl;
+            error("[pricingFRN]: Maturity Date is less than evaluation Date");
             return -1;
         }
         // Maturity Date >= issue Date
         if (maturityDate < issueDate) {
-            cout << "[pricingFRN]: Maturity Date is less than issue Date" << endl;
+            error("[pricingFRN]: Maturity Date is less than issue Date");
             return -1;
         }
         // Last Payment date >= evaluation Date
         if ((numberOfCoupons > 0) && (paymentDates[numberOfCoupons - 1] < evaluationDate)) {
-            cout << "[princingFRN]: PaymentDate Date is less than evaluation Date" << endl;
+            error("[princingFRN]: PaymentDate Date is less than evaluation Date");
             return -1;
         }
 
-        cout << "결과 데이터 초기화" << endl;
+        // 결과 데이터 초기화
         initResult(resultGirrBasel2, 5);
         initResult(resultIndexGirrBasel2, 5);
         initResult(resultGirrDelta, 23);
@@ -857,10 +857,10 @@ extern "C" double EXPORT pricingFRN(
         initResult(resultCsrCvr, 2);
         initResult(resultCashFlow, 1000);
 
-        cout << "revaluationDateSerial -> revaluationDate" << endl;
+        // revaluationDateSerial -> revaluationDate
         Date asOfDate_ = Date(evaluationDate);
 
-        cout << "전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)" << endl;
+        // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
         Settings::instance().evaluationDate() = asOfDate_;
         Size settlementDays_ = 0;
         bool includeSettlementDateFlows_ = true;
@@ -872,138 +872,139 @@ extern "C" double EXPORT pricingFRN(
         Frequency couponFrequency_ = makeFrequencyFromInt(couponFrequency);
         BusinessDayConvention paymentBDC_ = makeBDCFromInt(paymentBDC);
 
-        cout << "index Reference 커브 구성용 날짜 및 금리 벡터" << endl;
+        // index Reference 커브 구성용 날짜 및 금리 벡터
         std::vector<Date> indexGirrDates_;
         std::vector<Real> indexGirrRates_;
 
-        cout << "GIRR 커브의 주요 기간 설정 (시장 표준 테너)" << endl;
+        // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
         std::vector<Period> indexGirrPeriod =
             makePeriodArrayFromTenorDaysArray(indexGirrTenorDays, numberOfIndexGirrTenors);
 
-        cout << "GIRR 커브 시작점 (revaluationDate 기준) 입력" << endl;
+        // GIRR 커브 시작점 (revaluationDate 기준) 입력
         indexGirrDates_.emplace_back(asOfDate_);
         indexGirrRates_.emplace_back(indexGirrRates[0]);
 
-        cout << "나머지 GIRR 커브 구성 요소 입력" << endl;
+        // 나머지 GIRR 커브 구성 요소 입력
         for (Size dateNum = 0; dateNum < numberOfIndexGirrTenors; ++dateNum) {
             indexGirrDates_.emplace_back(asOfDate_ + indexGirrPeriod[dateNum]);
             indexGirrRates_.emplace_back(indexGirrRates[dateNum]);
         }
 
-        cout << "GIRR 커브 계산 사용 추가 요소" << endl;
-        DayCounter indexGirrDayCounter_ = makeDayCounterFromInt(indexGirrConvention[0]);
-        Linear indexGirrInterpolator_ = Linear();
-        Compounding indexGirrCompounding_ = makeCompoundingFromInt(indexGirrConvention[2]);
-        Frequency indexGirrFrequency_ = makeFrequencyFromInt(indexGirrConvention[3]);
+        // GIRR 커브 계산 사용 추가 요소
+        DayCounter indexGirrDayCounter_ = makeDayCounterFromInt(indexGirrConvention[0]); // DCB, TODO 변환 함수 적용
+        Linear indexGirrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
+        Compounding indexGirrCompounding_ = makeCompoundingFromInt(indexGirrConvention[2]); // 이자 계산 방식, TODO 변환 함수 적용 (Compounding)
+        Frequency indexGirrFrequency_ = makeFrequencyFromInt(indexGirrConvention[3]); // 이자 지급 빈도, TODO 변환 함수 적용 (Frequency)
 
-        cout << "GIRR 커브 생성" << endl;
+        // GIRR 커브 생성
         ext::shared_ptr<YieldTermStructure> indexGirrTermstructure = ext::make_shared<ZeroCurve>(indexGirrDates_, indexGirrRates_,
             indexGirrDayCounter_, indexGirrInterpolator_,
             indexGirrCompounding_, indexGirrFrequency_);
 
-        cout << "GIRR 커브를 RelinkableHandle에 연결" << endl;
+        // GIRR 커브를 RelinkableHandle에 연결
         RelinkableHandle<YieldTermStructure> indexGirrCurve;
         indexGirrCurve.linkTo(indexGirrTermstructure);
-        indexGirrCurve->enableExtrapolation();
+        indexGirrCurve->enableExtrapolation(); // 외삽 허용
 
-        cout << "Index 클래스 생성" << endl;
-        Period index1Tenor_ = makePeriodFromDays(indexTenor);
-        Calendar index1FixingCalendar_ = makeCalendarFromInt(indexCalendar);
-        DayCounter index1DayCounter_ = makeDayCounterFromInt(indexDayCounter);
+        // Index 클래스 생성
+        Period index1Tenor_ = makePeriodFromDays(indexTenor); // 금리 인덱스 만기 설정 (1 Month = 30 기준)
+        Calendar index1FixingCalendar_ = makeCalendarFromInt(indexCalendar); // 금리 인덱스의 휴일 적용 기준 달력 
+        DayCounter index1DayCounter_ = makeDayCounterFromInt(indexDayCounter); // 금리 인덱스의 날짜 계산 기준 
 
-        cout << "Define default data -  index1" << endl;
+        // Define default data -  index1
         std::string indexFamilyName_ = "CD";
         Natural index1FixingDays_ = fixingDays;
-        Currency index1Currency_ = makeCurrencyFromInt(indexCurrency);
-        BusinessDayConvention index1BusinessDayConvention_ = makeBDCFromInt(indexBDC);
-        bool index1EndOfMonth_ = makeBoolFromInt(indexEOM);
+        Currency index1Currency_ = makeCurrencyFromInt(indexCurrency); // 금리 인덱스의 표시 통화
+        BusinessDayConvention index1BusinessDayConvention_ = makeBDCFromInt(indexBDC); //
+        bool index1EndOfMonth_ = makeBoolFromInt(indexEOM); // 금리 인덱스의 월말 여부 
 
-        cout << "Make index instance" << endl;
+        // Make index instance
         ext::shared_ptr<IborIndex> refIndex = ext::make_shared<IborIndex>(indexFamilyName_, index1Tenor_, index1FixingDays_
             , index1Currency_, index1FixingCalendar_, index1BusinessDayConvention_
             , index1EndOfMonth_, index1DayCounter_, indexGirrCurve);
 
-        cout << "GIRR 커브 구성용 날짜 및 금리 벡터" << endl;
+
+        // GIRR 커브 구성용 날짜 및 금리 벡터
         std::vector<Date> girrDates_;
         std::vector<Real> girrRates_;
 
-        cout << "GIRR 커브의 주요 기간 설정 (시장 표준 테너)" << endl;
+        // GIRR 커브의 주요 기간 설정 (시장 표준 테너)
         std::vector<Period> girrPeriod =
             makePeriodArrayFromTenorDaysArray(girrTenorDays, numberOfGirrTenors);
 
-        cout << "GIRR 커브 시작점 (revaluationDate 기준) 입력" << endl;
+        // GIRR 커브 시작점 (revaluationDate 기준) 입력
         girrDates_.emplace_back(asOfDate_);
         girrRates_.emplace_back(girrRates[0]);
 
-        cout << "나머지 GIRR 커브 구성 요소 입력" << endl;
+        // 나머지 GIRR 커브 구성 요소 입력
         for (Size dateNum = 0; dateNum < numberOfGirrTenors; ++dateNum) {
             girrDates_.emplace_back(asOfDate_ + girrPeriod[dateNum]);
             girrRates_.emplace_back(girrRates[dateNum]);
         }
 
-        cout << "GIRR 커브 계산 사용 추가 요소" << endl;
-        DayCounter girrDayCounter_ = makeDayCounterFromInt(girrConvention[0]);
-        Linear girrInterpolator_ = Linear();
-        Compounding girrCompounding_ = makeCompoundingFromInt(girrConvention[2]);
-        Frequency girrFrequency_ = makeFrequencyFromInt(girrConvention[3]);
+        // GIRR 커브 계산 사용 추가 요소
+        DayCounter girrDayCounter_ = makeDayCounterFromInt(girrConvention[0]); // DCB
+        Linear girrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
+        Compounding girrCompounding_ = makeCompoundingFromInt(girrConvention[2]); // 이자 계산 방식(Compounding)
+        Frequency girrFrequency_ = makeFrequencyFromInt(girrConvention[3]); // 이자 지급 빈도(Frequency)
 
-        cout << "GIRR 커브 생성" << endl;
+        // GIRR 커브 생성
         ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
             girrDayCounter_, girrInterpolator_, girrCompounding_, girrFrequency_);
 
-        cout << "GIRR 커브를 RelinkableHandle에 연결" << endl;
+        // GIRR 커브를 RelinkableHandle에 연결
         RelinkableHandle<YieldTermStructure> girrCurve;
         girrCurve.linkTo(girrTermstructure);
-        girrCurve->enableExtrapolation();
+        girrCurve->enableExtrapolation(); // 외삽 허용
 
-        cout << "spreadOverYiled 값을 interest Rate 객체로 래핑 (CSR 계산용)" << endl;
+        // spreadOverYiled 값을 interest Rate 객체로 래핑 (CSR 계산용)
         double tmpSpreadOverYield = spreadOverYield;
-        Compounding spreadOverYieldCompounding_ = Compounding::Continuous;
-        DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();
+        Compounding spreadOverYieldCompounding_ = Compounding::Continuous; // 이자 계산 방식, Continuous로 설정
+        DayCounter spreadOverYieldDayCounter_ = Actual365Fixed();  // DayCounter Actual/365 Fixed로 설정
         InterestRate tempRate(tmpSpreadOverYield, spreadOverYieldDayCounter_, spreadOverYieldCompounding_, Frequency::Annual);
 
-        cout << "CSR 커브 구성용 날짜 및 금리 벡터" << endl;
+        // CSR 커브 구성용 날짜 및 금리 벡터
         std::vector<Date> csrDates_;
         std::vector<Period> csrPeriod =
             makePeriodArrayFromTenorDaysArray(csrTenorDays, numberOfCsrTenors);
 
-        cout << "CSR 커브 시작점 (revaluationDate 기준) 입력" << endl;
+        // CSR 커브 시작점 (revaluationDate 기준) 입력
         csrDates_.emplace_back(asOfDate_);
 
-        cout << "CSR 스프레드를 담을 핸들 벡터" << endl;
+        // CSR 스프레드를 담을 핸들 벡터
         std::vector<Handle<Quote>> csrSpreads_;
 
-        cout << "첫번째 CSR 스프레드에 spreadOverYield 값을 설정" << endl;
+        // 첫번째 CSR 스프레드에 spreadOverYield 값을 설정
         QL_REQUIRE(!csrPeriod.empty(), "[pricingFRB]csrPeriod is empty");
         double spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_,
             girrDayCounter_.yearFraction(asOfDate_, asOfDate_ + 1));
         csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(spreadOverYield_));
 
-        cout << "나머지 CSR 커브 기간별 스프레드 입력" << endl;
+        // 나머지 CSR 커브 기간별 스프레드 입력
         for (Size dateNum = 0; dateNum < numberOfCsrTenors; ++dateNum) {
             csrDates_.emplace_back(asOfDate_ + csrPeriod[dateNum]);
             spreadOverYield_ = tempRate.equivalentRate(girrCompounding_, girrFrequency_, girrDayCounter_.yearFraction(asOfDate_, csrDates_.back()));
             csrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(csrRates[dateNum] + spreadOverYield_));
         }
 
-        cout << "GIRR + CSR 스프레드 커브 생성" << endl;
+        // GIRR + CSR 스프레드 커브 생성
         ext::shared_ptr<ZeroYieldStructure> discountingTermStructure = ext::make_shared<PiecewiseZeroSpreadedTermStructure>(girrCurve, csrSpreads_, csrDates_);
 
-        cout << "Discounting 커브 연결" << endl;
+        // Discounting 커브 연결
         RelinkableHandle<YieldTermStructure> discountingCurve;
         discountingCurve.linkTo(discountingTermStructure);
-        discountingCurve->enableExtrapolation();
+        discountingCurve->enableExtrapolation(); // 외삽 허용
 
-        cout << "Discounting 엔진 생성 (채권 가격 계산용)" << endl;
+        // Discounting 엔진 생성 (채권 가격 계산용)
         auto bondEngine = ext::make_shared<DiscountingBondEngine>(discountingCurve, includeSettlementDateFlows_);
 
-        cout << "Schedule 객체 생성 (지급일)" << endl;
+        // Schedule 객체 생성 (지급일)
         Schedule FRNSchedule_;
-        BusinessDayConvention couponBDC_ = makeBDCFromInt(paymentBDC);
+        BusinessDayConvention couponBDC_ = makeBDCFromInt(paymentBDC); // 지급일 휴일 적용 기준
 
-        cout << "Coupon Schedule 생성" << endl;
-        if (numberOfCoupons > 0) {
-            cout << "[Coupon Schedule]: PARAMETER INPUT" << endl;
+        // Coupon Schedule 생성
+        if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
+            //        info("[Coupon Schedule]: PARAMETER INPUT");
 
             std::vector<Date> couponSch_;
             couponSch_.emplace_back(realStartDates[0]);
@@ -1012,12 +1013,13 @@ extern "C" double EXPORT pricingFRN(
             }
             FRNSchedule_ = Schedule(couponSch_);
         }
-        else {
-            cout << "[Coupon Schedule]: GENERATED BY MODULE" << endl;
+        else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
+            //        info("[Coupon Schedule]: GENERATED BY MODULE");
 
-            //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
-            Date effectiveDate = Date(issueDate);
-            DateGeneration::Rule genRule = makeScheduleGenRuleFromInt(scheduleGenRule);
+                    //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
+            Date effectiveDate = Date(issueDate); // 기존 코드
+            DateGeneration::Rule genRule = makeScheduleGenRuleFromInt(scheduleGenRule); // Forward, Backward 등
+
 
             FRNSchedule_ = MakeSchedule().from(effectiveDate)
                 .to(Date(maturityDate))
@@ -1027,53 +1029,43 @@ extern "C" double EXPORT pricingFRN(
                 .withRule(genRule);
         }
 
-        cout << "fixing data 입력" << endl;
-        Date tmpDate = FRNSchedule_.previousDate(asOfDate_);
-        tmpDate = FRNSchedule_.nextDate(asOfDate_);
+        // fixing data 입력
+        Date lastRefDate = FRNSchedule_.previousDate(asOfDate_);
+        Date lastFixingDate1 = refIndex->fixingCalendar().advance(lastRefDate, -static_cast<Integer>(fixingDays)
+            , Days, Preceding);
+        Date nextRefDate = FRNSchedule_.nextDate(asOfDate_);
+        Date nextFixingDate1 = refIndex->fixingCalendar().advance(nextRefDate, -static_cast<Integer>(fixingDays)
+            , Days, Preceding);
+        // Date lastFixingDate1 = refIndex->fixingDate(FRNSchedule_.previousDate(asOfDate_));
+        // Date nextFixingDate1 = refIndex->fixingDate(FRNSchedule_.nextDate(asOfDate_));
+        refIndex->addFixing(lastFixingDate1, lastResetRate, true);
+        refIndex->addFixing(nextFixingDate1, nextResetRate, true);
 
-        Date lastFixingDate1 = refIndex->fixingDate(FRNSchedule_.previousDate(asOfDate_));
-        Date nextFixingDate1 = refIndex->fixingDate(FRNSchedule_.nextDate(asOfDate_));
-        
-
-        cout << "addFixing1" << lastResetRate << endl;
-        refIndex->addFixing(lastFixingDate1, lastResetRate);
-        if (lastFixingDate1 != nextFixingDate1) {
-
-            cout << "addFixing2" << nextResetRate << endl;
-            refIndex->addFixing(nextFixingDate1, nextResetRate);
-        }
-        // 임시, fixingDays error 사유로 넣음
-        //auto ts = refIndex->timeSeries();
-        //if (ts.find(lastFixingDate1) == ts.end())
-            //refIndex->addFixing(lastFixingDate1, lastResetRate);
-
-        //if (ts.find(nextFixingDate1) == ts.end())
-            //refIndex->addFixing(nextFixingDate1, nextResetRate);
-
-        cout << "FixedRateBond 객체 생성" << endl;
+        // FixedRateBond 객체 생성
         FloatingRateBondCustom floatingRateBond(
             settlementDays_,
             notional_,
             FRNSchedule_,
             refIndex,
             couponDayCounter_,
-            couponBDC_,
+            couponBDC_, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
             fixingDays,
             paymentLag,
             { gearing },
             { spread });
 
-        cout << "Fixed Rate Bond에 Discounting 엔진 연결" << endl;
+        // Fixed Rate Bond에 Discounting 엔진 연결
         floatingRateBond.setPricingEngine(bondEngine);
 
-        cout << "채권 가격 Net PV 계산" << endl;
+        // 채권 가격 Net PV 계산
         Real npv = floatingRateBond.NPV();
-		cout << "이 로그가 찍히면 floatingRateBond.NPV()가 성공적으로 호출되었음을 의미합니다." << endl;
 
-        cout << "이론가 산출의 경우 GIRR Delta 산출을 하지 않음" << endl;
+        // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
+            // OUTPUT 데이터 로깅
+            printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
             /* OUTPUT 1. Net PV 리턴 */
-            cout << "==============[Bond: pricingFRN Logging Ended!]==============" << endl;
+            // info("==============[Bond: pricingFRN Logging Ended!]==============");
             return npv;
         }
 
@@ -1288,6 +1280,7 @@ extern "C" double EXPORT pricingFRN(
             // 0인 민감도를 제외하고 적재
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
+
             // (Index Reference Curve) GIRR Delta 적재용 벡터 생성
             if (!isSameCurve_) {
                 floatingRateBond.setPricingEngine(bondEngine);
@@ -1489,14 +1482,15 @@ extern "C" double EXPORT pricingFRN(
             resultCsrCvr[0] = (bumpedNpv[0] - npv);
             resultCsrCvr[1] = (bumpedNpv[1] - npv);
 
+
+
             // NPV : clean, dirty, accured Interest
             Real cleanPrice = floatingRateBond.cleanPrice() / 100.0 * notional;
             Real dirtyPrice = floatingRateBond.dirtyPrice() / 100.0 * notional;
             Real accruedInterest = floatingRateBond.accruedAmount() / 100.0 * notional;
 
             //       printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
-            //       //info("==============[Bond: pricingFRN Logging Ended!]==============");
-            cout << "==============[Bond: pricingFRN Logging Ended!]==============";
+            //       info("==============[Bond: pricingFRN Logging Ended!]==============");
 
                     /* OUTPUT 1. Net PV 리턴 */
             return npv;
@@ -1555,11 +1549,11 @@ extern "C" double EXPORT pricingFRN(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            cout << "Exception occurred: " << string(e.what()) << endl;
+            error("Exception occurred: {}", string(e.what()));
             return -1;
         }
         catch (...) {
-            cout << "[pricingFRN]: Unknown exception occurred." << endl;
+            error("[pricingFRN]: Unknown exception occurred.");
             return -1;
         }
     }

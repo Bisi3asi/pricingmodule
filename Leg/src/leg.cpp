@@ -108,7 +108,7 @@ extern "C" double EXPORT pricingZCL(
         // GIRR 커브를 RelinkableHandle에 연결
         RelinkableHandle<YieldTermStructure> girrCurve;
         girrCurve.linkTo(girrTermstructure);
-
+		girrCurve->enableExtrapolation(); // 외삽 허용
 
         // Discounting 엔진 생성 (채권 가격 계산용)
         auto bondEngine = ext::make_shared<DiscountingBondEngine>(girrCurve, includeSettlementDateFlows_);
@@ -469,6 +469,7 @@ extern "C" double EXPORT pricingFDL(
         // GIRR 커브를 RelinkableHandle에 연결
         RelinkableHandle<YieldTermStructure> girrCurve;
         girrCurve.linkTo(girrTermstructure);
+		girrCurve->enableExtrapolation(); // 외삽 허용
 
         // Discounting 엔진 생성 (채권 가격 계산용)
         auto bondEngine = ext::make_shared<DiscountingBondEngine>(girrCurve, includeSettlementDateFlows_);
@@ -991,25 +992,16 @@ extern "C" double EXPORT pricingFLL(
         }
 
         // fixing data 입력
-        Date tmpDate = FRNSchedule_.previousDate(asOfDate_);
-        tmpDate = FRNSchedule_.nextDate(asOfDate_);
-
-        Date lastFixingDate1 = refIndex->fixingDate(FRNSchedule_.previousDate(asOfDate_));
-        Date nextFixingDate1 = refIndex->fixingDate(FRNSchedule_.nextDate(asOfDate_));
-        // Date lastFixingDate1 = refIndex->fixingDate(Date(realStartDates[0]));
-        // Date nextFixingDate1 = refIndex->fixingDate(Date(realStartDates[1]));
-        QuantLib::TimeSeries<Real> ts = refIndex->timeSeries();
-
-        if (ts.find(lastFixingDate1) == ts.end()) {
-            refIndex->addFixing(lastFixingDate1, lastResetRate);
-        }
-
-        if (ts.find(nextFixingDate1) == ts.end()) {
-            refIndex->addFixing(nextFixingDate1, nextResetRate);
-        }
-        
-        //refIndex->addFixing(lastFixingDate1, lastResetRate);
-        //refIndex->addFixing(nextFixingDate1, nextResetRate);
+        Date lastRefDate = FRNSchedule_.previousDate(asOfDate_);
+        Date lastFixingDate1 = refIndex->fixingCalendar().advance(lastRefDate, -static_cast<Integer>(fixingDays)
+            , Days, Preceding);
+        Date nextRefDate = FRNSchedule_.nextDate(asOfDate_);
+        Date nextFixingDate1 = refIndex->fixingCalendar().advance(nextRefDate, -static_cast<Integer>(fixingDays)
+            , Days, Preceding);
+        // Date lastFixingDate1 = refIndex->fixingDate(FRNSchedule_.previousDate(asOfDate_));
+        // Date nextFixingDate1 = refIndex->fixingDate(FRNSchedule_.nextDate(asOfDate_));
+        refIndex->addFixing(lastFixingDate1, lastResetRate, true);
+        refIndex->addFixing(nextFixingDate1, nextResetRate, true);
 
         const std::vector<QuantLib::Rate>& caps_ = {};
         const std::vector<QuantLib::Rate>& floors_ = {};
