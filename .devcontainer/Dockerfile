@@ -7,19 +7,55 @@ RUN dnf -y update && \
 
 # Development Tools 그룹 및 필수 패키지 설치
 RUN dnf -y groupinstall "Development Tools" && \
-    # 포함 패키지 : cmake gcc-c++ make gdb which
-    dnf clean all
+    dnf -y install wget tar gzip unzip && \
+    dnf clean all -y
 
 # Ninja 설치 (v1.11.1)
-RUN curl -L https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-linux.zip -o /tmp/ninja.zip && \
+RUN NINJA_VERSION=1.11.1 && \
+    curl -L https://github.com/ninja-build/ninja/releases/download/v${NINJA_VERSION}/ninja-linux.zip -o /tmp/ninja.zip && \
     unzip /tmp/ninja.zip -d /usr/local/bin/ && \
     chmod +x /usr/local/bin/ninja && \
     rm -f /tmp/ninja.zip
 
 # CMake 설치 (v.3.27.7)
-RUN curl -L https://github.com/Kitware/CMake/releases/download/v3.27.7/cmake-3.27.7-linux-x86_64.sh -o /tmp/cmake.sh && \
+RUN CMAKE_VERSION=3.27.7 && \
+    curl -L https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh -o /tmp/cmake.sh && \
     sh /tmp/cmake.sh --skip-license --prefix=/usr/local && \
     rm -f /tmp/cmake.sh
+
+# Boost (v.1.87.0) 및 QuantLib (v.1.37) 소스 빌드 및 설치
+RUN BOOST_VERSION=1.87.0 && \
+    BOOST_VERSION_UNDERSCORE=$(echo $BOOST_VERSION | tr . _) && \
+    INSTALL_PREFIX=/usr/lib/boost_${BOOST_VERSION_UNDERSCORE} && \
+    cd /tmp && \
+    echo "--- Installing Boost ${BOOST_VERSION} ---" && \
+    curl -fL https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz/download -o boost.tar.gz && \
+    tar -xzf boost.tar.gz && \
+    cd boost_${BOOST_VERSION_UNDERSCORE} && \
+    ./bootstrap.sh --prefix=${BOOST_INSTALL_PREFIX} && \
+    ./b2 install -j$(nproc) && \
+    echo "--- Install Boost Complete ---" && \
+    \
+    QL_VERSION=1.37 && \
+    QL_INSTALL_PREFIX=/usr/lib/QuantLib_${QL_VERSION} && \
+    cd /tmp && \
+    echo "--- Installing QuantLib ${QL_VERSION} ---" && \
+    curl -fL https://github.com/lballabio/QuantLib/releases/download/v${QL_VERSION}/QuantLib-${QL_VERSION}.tar.gz -o quantlib.tar.gz && \
+    tar -xzf quantlib.tar.gz && \
+    cd QuantLib-${QL_VERSION} && \
+    mkdir build && cd build && \
+    cmake .. \
+        -DCMAKE_INSTALL_PREFIX=${QL_INSTALL_PREFIX} \
+        -DBOOST_ROOT=${BOOST_INSTALL_PREFIX} \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DQL_BUILD_EXAMPLES=OFF \
+        -DQL_BUILD_TEST_SUITE=OFF && \
+    make -j$(nproc) install && \
+    echo "--- Install QuantLib Complete ---" && \
+    \
+    cd / && \
+    rm -rf /tmp/boost* /tmp/QuantLib*
 
 # Custom config
 RUN echo "alias ll='ls -l'" >> /etc/bashrc

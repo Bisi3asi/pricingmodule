@@ -95,6 +95,31 @@
         "command": "clean",
         "problemMatcher": [],
         "detail": "CMake template clean task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: clean",
+        "command": "clean",
+        "problemMatcher": [],
+        "detail": "CMake template clean task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: clean",
+        "command": "clean",
+        "problemMatcher": [],
+        "detail": "CMake template clean task"
+    },
+    {
+        "type": "cmake",
+        "label": "CMake: clean rebuild",
+        "command": "cleanRebuild",
+        "targets": [
+            "all"
+        ],
+        "group": "build",
+        "problemMatcher": [],
+        "detail": "CMake template clean rebuild task"
     }
 ]
 }
