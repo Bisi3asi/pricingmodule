@@ -59,14 +59,14 @@ extern "C" double EXPORT pricingFRB(
 
     try {
         /* 로거 초기화 */
-        //disableConsoleLogging);    // 로깅여부 N일시 콘촐 입출력 비활성화
+        disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
         if (logYn == 1) {
-            //initLogger("bond.log"); // 생성 파일명 지정
+            initLogger("bond.log"); // 생성 파일명 지정
         }
 
-        //info("==============[Bond: pricingFRB Logging Started!]==============");
+        info("==============[Bond: pricingFRB Logging Started!]==============");
         // INPUT 데이터 로깅
-        printAllInputDataFRB(
+        /*printAllInputDataFRB(
             evaluationDate, issueDate, maturityDate, notional,
             couponRate, couponDayCounter, couponCalendar, couponFrequency, scheduleGenRule, paymentBDC, paymentLag,
             numberOfCoupons, paymentDates, realStartDates, realEndDates,
@@ -74,26 +74,26 @@ extern "C" double EXPORT pricingFRB(
             spreadOverYield, numberOfCsrTenors, csrTenorDays, csrRates,
             marketPrice, girrRiskWeight, csrRiskWeight,
             calType
-        );
+        );*/
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
-            //error("[princingFRB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
+            error("[princingFRB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return -1; // Invalid calculation type
         }
 
         // Input Data Check
         // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
-            //error("[pricingFRB]: Maturity Date is less than evaluation Date");
+            error("[pricingFRB]: Maturity Date is less than evaluation Date");
             return -1;
         }
         // Maturity Date >= issue Date
         if (maturityDate < issueDate) {
-            //error("[pricingFRB]: Maturity Date is less than issue Date");
+            error("[pricingFRB]: Maturity Date is less than issue Date");
             return -1;
         }
         // Last Payment date >= evaluation Date
         if ((numberOfCoupons > 0) && (paymentDates[numberOfCoupons - 1] < evaluationDate)) {
-            //error("[princingFRB]: PaymentDate Date is less than evaluation Date");
+            error("[princingFRB]: PaymentDate Date is less than evaluation Date");
             return -1;
         }
 
@@ -270,9 +270,9 @@ extern "C" double EXPORT pricingFRB(
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
 
             // OUTPUT 데이터 로깅
-            printAllOutputDataFRB(soy, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+            //printAllOutputDataFRB(soy, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
             /* OUTPUT SpreadOverYield 리턴 */
-            //info("==============[Bond: pricingFRB Logging Ended!]==============");
+            info("==============[Bond: pricingFRB Logging Ended!]==============");
             return soy;
         }
         // Fixed Rate Bond에 Discounting 엔진 연결
@@ -284,9 +284,9 @@ extern "C" double EXPORT pricingFRB(
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
             // OUTPUT 데이터 로깅
-            printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+            //printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
             /* OUTPUT 1. Net PV 리턴 */
-            //info("==============[Bond: pricingFRB Logging Ended!]==============");
+            info("==============[Bond: pricingFRB Logging Ended!]==============");
             return npv;
         }
 
@@ -359,9 +359,9 @@ extern "C" double EXPORT pricingFRB(
             resultBasel2[4] = PV01;
 
             // OUTPUT 데이터 로깅
-            printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+            //printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
             /* OUTPUT 1. Net PV 리턴 */
-            //info("==============[Bond: pricingFRB Logging Ended!]==============");
+            info("==============[Bond: pricingFRB Logging Ended!]==============");
             return npv;
         }
 
@@ -559,9 +559,9 @@ extern "C" double EXPORT pricingFRB(
             resultCsrCvr[1] = (bumpedNpv[1] - npv);
 
             // OUTPUT 데이터 로깅
-            printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+            //printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
             /* OUTPUT 1. Net PV 리턴 */
-            //info("==============[Bond: pricingFRB Logging Ended!]==============");
+            info("==============[Bond: pricingFRB Logging Ended!]==============");
             return npv;
         }
 
@@ -616,13 +616,13 @@ extern "C" double EXPORT pricingFRB(
         Real dirtyPrice = fixedRateBond.dirtyPrice() / 100.0 * notional;
         Real accruedInterest = fixedRateBond.accruedAmount() / 100.0 * notional;
 
-        //    printAllOutputDataFRB(npv, resultGirrDelta, resultCsrDelta);
-        //    //info("==============[Bond: pricingFRB Logging Ended!]==============");
+            //printAllOutputDataFRB(npv, resultGirrDelta, resultCsrDelta);
+            info("==============[Bond: pricingFRB Logging Ended!]==============");
 
         // OUTPUT 데이터 로깅
-        printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
+        //printAllOutputDataFRB(npv, resultBasel2, resultGirrDelta, resultCsrDelta, resultGirrCvr, resultCsrCvr, calType);
         /* OUTPUT 1. Net PV 리턴 */
-        //info("==============[Bond: pricingFRB Logging Ended!]==============");
+        info("==============[Bond: pricingFRB Logging Ended!]==============");
         return npv;
     }
     catch (...) {
@@ -630,11 +630,11 @@ extern "C" double EXPORT pricingFRB(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            //error("Exception occurred: {}", string(e.what()));
+            error("Exception occurred: {}", string(e.what()));
             return -1;
         }
         catch (...) {
-            //error("[pricingFRB]: Unknown exception occurred.");
+            error("[pricingFRB]: Unknown exception occurred.");
             return -1;
         }
     }
@@ -764,7 +764,7 @@ extern "C" double EXPORT pricingFRN(
             initLogger("bond.log"); // 생성 파일명 지정
         }
 
-        // info("==============[Bond: pricingFRN Logging Started!]==============");
+        info("==============[Bond: pricingFRN Logging Started!]==============");
         // INPUT 데이터 로깅
        // printAllInputDataFRN(
        //     evaluationDate,
@@ -1063,9 +1063,9 @@ extern "C" double EXPORT pricingFRN(
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
             // OUTPUT 데이터 로깅
-            printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
+            //printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
             /* OUTPUT 1. Net PV 리턴 */
-            // info("==============[Bond: pricingFRN Logging Ended!]==============");
+            info("==============[Bond: pricingFRN Logging Ended!]==============");
             return npv;
         }
 
@@ -1490,7 +1490,7 @@ extern "C" double EXPORT pricingFRN(
             Real accruedInterest = floatingRateBond.accruedAmount() / 100.0 * notional;
 
             //       printAllOutputDataFRN(npv, resultGirrDelta, resultIndexGirrDelta, resultCsrDelta);
-            //       info("==============[Bond: pricingFRN Logging Ended!]==============");
+            info("==============[Bond: pricingFRN Logging Ended!]==============");
 
                     /* OUTPUT 1. Net PV 리턴 */
             return npv;
@@ -1631,7 +1631,7 @@ extern "C" double EXPORT pricingZCB(
     , const int calType			            // INPUT 16. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. (추가)Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
@@ -1645,20 +1645,27 @@ extern "C" double EXPORT pricingZCB(
     // 1. 로거, 로깅 로직 함수 정의 필요
 
     try {
+        /* 로거 초기화 */
+        disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
+        if (logYn == 1) {
+            initLogger("bond.log"); // 생성 파일명 지정
+        }
+        info("==============[Bond: pricingZCB Logging Started!]==============");
+
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
-            //error("[princingZCB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
+            error("[princingZCB]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return -1; // Invalid calculation type
         }
 
         // Input Data Check
         // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
-            //error("[pricingZCB]: Maturity Date is less than evaluation Date");
+            error("[pricingZCB]: Maturity Date is less than evaluation Date");
             return -1;
         }
         // Maturity Date >= issue Date
         if (maturityDate < issueDate) {
-            //error("[pricingZCB]: Maturity Date is less than issue Date");
+            error("[pricingZCB]: Maturity Date is less than issue Date");
             return -1;
         }
 
@@ -1802,9 +1809,9 @@ extern "C" double EXPORT pricingZCB(
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
             // OUTPUT 데이터 로깅
-    //        printAllOutputDataZCB(npv, resultGirrDelta, resultCsrDelta);
+            //printAllOutputDataZCB(npv, resultGirrDelta, resultCsrDelta);
             /* OUTPUT 1. Net PV 리턴 */
-    //        //info("==============[Bond: pricingFRB Logging Ended!]==============");
+            info("==============[Bond: pricingZCB Logging Ended!]==============");
             return npv;
         }
 
@@ -2114,7 +2121,7 @@ extern "C" double EXPORT pricingZCB(
         Real accruedInterest = zeroCouponBond.accruedAmount() / 100.0 * notional;
 
         //    printAllOutputDataFRB(npv, resultGirrDelta, resultCsrDelta);
-        //    //info("==============[Bond: pricingFRB Logging Ended!]==============");
+        info("==============[Bond: pricingZCB Logging Ended!]==============");
 
         /* OUTPUT 1. Net PV 리턴 */
         return npv;
@@ -2124,11 +2131,11 @@ extern "C" double EXPORT pricingZCB(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            //error("Exception occurred: {}", string(e.what()));
+            error("Exception occurred: {}", string(e.what()));
             return -1;
         }
         catch (...) {
-            //error("[pricingZCB]: Unknown exception occurred.");
+            error("[pricingZCB]: Unknown exception occurred.");
             return -1;
         }
     }
@@ -2144,53 +2151,53 @@ void printAllInputDataFRB(
     const double marketPrice, const double girrRiskWeight, const double csrRiskWeight,
     const int calType
 ) {
-    //info("------------------------------------------------------------");
-    //info("[Print All - FRB Input Data]");
+    info("------------------------------------------------------------");
+    info("[Print All - FRB Input Data]");
 
-    //info("evaluationDate: {}", evaluationDate);
-    //info("issueDate: {}", issueDate);
-    //info("maturityDate: {}", maturityDate);
-    //info("notional: {:0.5f}", notional);
-    //info("couponRate: {:0.5f}", couponRate);
-    //info("couponDayCounter: {}", couponDayCounter);
-    //info("couponCalendar: {}", couponCalendar);
-    //info("couponFrequency: {}", couponFrequency);
-    //info("scheduleGenRule: {}", scheduleGenRule);
-    //info("paymentBDC: {}", paymentBDC);
-    //info("paymentLag: {}", paymentLag);
-    //info("");
+    info("evaluationDate: {}", evaluationDate);
+    info("issueDate: {}", issueDate);
+    info("maturityDate: {}", maturityDate);
+    info("notional: {:0.5f}", notional);
+    info("couponRate: {:0.5f}", couponRate);
+    info("couponDayCounter: {}", couponDayCounter);
+    info("couponCalendar: {}", couponCalendar);
+    info("couponFrequency: {}", couponFrequency);
+    info("scheduleGenRule: {}", scheduleGenRule);
+    info("paymentBDC: {}", paymentBDC);
+    info("paymentLag: {}", paymentLag);
+    info("");
 
-    //info("numberOfCoupons: {}", numberOfCoupons);
+    info("numberOfCoupons: {}", numberOfCoupons);
     logArrayLine("paymentDates", paymentDates, numberOfCoupons);
     logArrayLine("realStartDates", realStartDates, numberOfCoupons);
     logArrayLine("realEndDates", realEndDates, numberOfCoupons);
-    //info("");
+    info("");
 
-    //info("numberOfGirrTenors: {}", numberOfGirrTenors);
+    info("numberOfGirrTenors: {}", numberOfGirrTenors);
     logArrayLine("girrTenorDays", girrTenorDays, numberOfGirrTenors);
     logArrayLine("girrRates", girrRates, numberOfGirrTenors, 10);
-    //info("");
+    info("");
 
-    //info("girrDayCounter: {}", girrConvention[0]);
-    //info("girrInterpolator: {}", girrConvention[1]);
-    //info("girrCompounding: {}", girrConvention[2]);
-    //info("girrFrequency: {}", girrConvention[3]);
-    //info("");
+    info("girrDayCounter: {}", girrConvention[0]);
+    info("girrInterpolator: {}", girrConvention[1]);
+    info("girrCompounding: {}", girrConvention[2]);
+    info("girrFrequency: {}", girrConvention[3]);
+    info("");
 
-    //info("spreadOverYield: {:0.5f}", spreadOverYield);
-    //info("");
+    info("spreadOverYield: {:0.5f}", spreadOverYield);
+    info("");
 
-    //info("numberOfCsrTenors: {}", numberOfCsrTenors);
+    info("numberOfCsrTenors: {}", numberOfCsrTenors);
     logArrayLine("csrTenorDays", csrTenorDays, numberOfCsrTenors);
     logArrayLine("csrRates", csrRates, numberOfCsrTenors, 5);
-    //info("");
+    info("");
 
-    //info("marketPrice: {:0.5f}", marketPrice);
-    //info("girrRiskWeight: {:0.5f}", girrRiskWeight);
-    //info("csrRiskWeight: {:0.5f}", csrRiskWeight);
-    //info("calType: {}", calType);
-    //info("------------------------------------------------------------");
-    //info("");
+    info("marketPrice: {:0.5f}", marketPrice);
+    info("girrRiskWeight: {:0.5f}", girrRiskWeight);
+    info("csrRiskWeight: {:0.5f}", csrRiskWeight);
+    info("calType: {}", calType);
+    info("------------------------------------------------------------");
+    info("");
 }
 
 void printAllOutputDataFRB(
@@ -2203,82 +2210,82 @@ void printAllOutputDataFRB(
     const int calType
 ) {
 
-    //info("[Print All - FRB Output Data]");
+    info("[Print All - FRB Output Data]");
 
     // Net PV / Spread Over Yield
     if (calType != 9) {
-        //info("[Net PV]");
-        //info("Net Present Value: {:0.10f}", result);
-        //info("");
+        info("[Net PV]");
+        info("Net Present Value: {:0.10f}", result);
+        info("");
     }
     else {
-        //info("[Spread Over Yield]");
-        //info("Spread Over Yield: {:0.10f}", result);
-        //info("");
+        info("[Spread Over Yield]");
+        info("Spread Over Yield: {:0.10f}", result);
+        info("");
     }
 
     // Basel 2
-    //info("[Basel 2]");
-    //info("INDEX 0. Basel 2 Delta: {:0.10f}", resultBasel2[0]);
-    //info("INDEX 1. Basel 2 Gamma: {:0.10f}", resultBasel2[1]);
-    //info("INDEX 2. Basel 2 Duration: {:0.10f}", resultBasel2[2]);
-    //info("INDEX 3. Basel 2 Convexity: {:0.10f}", resultBasel2[3]);
-    //info("INDEX 4. Basel 2 PV01: {:0.10f}", resultBasel2[4]);
-    //info("");
+    info("[Basel 2]");
+    info("INDEX 0. Basel 2 Delta: {:0.10f}", resultBasel2[0]);
+    info("INDEX 1. Basel 2 Gamma: {:0.10f}", resultBasel2[1]);
+    info("INDEX 2. Basel 2 Duration: {:0.10f}", resultBasel2[2]);
+    info("INDEX 3. Basel 2 Convexity: {:0.10f}", resultBasel2[3]);
+    info("INDEX 4. Basel 2 PV01: {:0.10f}", resultBasel2[4]);
+    info("");
 
     // GIRR Delta
     int girrSize = static_cast<int>(resultGirrDelta[0]);
-    //info("[Result GIRR Delta Size]");
-    //info("INDEX 0. Size: {}", girrSize);
-    //info("");
+    info("[Result GIRR Delta Size]");
+    info("INDEX 0. Size: {}", girrSize);
+    info("");
 
-    //info("[Result GIRR Delta Tenor]");
+    info("[Result GIRR Delta Tenor]");
     for (int i = 0; i < girrSize; ++i) {
-        //info("INDEX {}. Tenor: {:0.2f}", i + 1, static_cast<double>(resultGirrDelta[i + 1]));
+        info("INDEX {}. Tenor: {:0.2f}", i + 1, static_cast<double>(resultGirrDelta[i + 1]));
     }
-    //info("");
+    info("");
 
-    //info("[Result GIRR Delta Sensitivity]");
+    info("[Result GIRR Delta Sensitivity]");
     for (int i = 0; i < girrSize; ++i) {
-        //info("INDEX {}. Sensitivity: {:0.10f}", i + 1 + girrSize, resultGirrDelta[i + 1 + girrSize]);
+        info("INDEX {}. Sensitivity: {:0.10f}", i + 1 + girrSize, resultGirrDelta[i + 1 + girrSize]);
     }
-    //for (int i = girrSize * 2 + 1; i < 50; ++i) {
-    //    //info("INDEX {}. Empty: {}", i, resultGirrDelta[i]);
-    //}
-    //info("");
+    for (int i = girrSize * 2 + 1; i < 50; ++i) {
+        info("INDEX {}. Empty: {}", i, resultGirrDelta[i]);
+    }
+    info("");
 
     // CSR Delta
     int csrSize = static_cast<int>(resultCsrDelta[0]);
-    //info("[Result CSR Delta Size]");
-    //info("INDEX 0. Size: {}", csrSize);
-    //info("");
+    info("[Result CSR Delta Size]");
+    info("INDEX 0. Size: {}", csrSize);
+    info("");
 
-    //info("[Result CSR Delta Tenor]");
+    info("[Result CSR Delta Tenor]");
     for (int i = 0; i < csrSize; ++i) {
-        //info("INDEX {}. Tenor: {:0.2f}", i + 1, static_cast<double>(resultCsrDelta[i + 1]));
+        info("INDEX {}. Tenor: {:0.2f}", i + 1, static_cast<double>(resultCsrDelta[i + 1]));
     }
-    //info("");
+    info("");
 
-    //info("[Result CSR Delta Sensitivity]");
+    info("[Result CSR Delta Sensitivity]");
     for (int i = 0; i < csrSize; ++i) {
-        //info("INDEX {}. Sensitivity: {:0.10f}", i + 1 + csrSize, resultCsrDelta[i + 1 + csrSize]);
+        info("INDEX {}. Sensitivity: {:0.10f}", i + 1 + csrSize, resultCsrDelta[i + 1 + csrSize]);
     }
-    //for (int i = csrSize * 2 + 1; i < 50; ++i) {
-    //    //info("{}. Empty: {}", i, resultCsrDelta[i]);
-    //}
-    //info("");
+    for (int i = csrSize * 2 + 1; i < 50; ++i) {
+        info("{}. Empty: {}", i, resultCsrDelta[i]);
+    }
+    info("");
 
-    //info("[Result GIRR CVR]");
-    //info("INDEX 0. BUMPUP CVR: {:0.10f}", resultGirrCvr[0]);
-    //info("INDEX 1. BUMPDOWN CVR: {:0.10f}", resultGirrCvr[1]);
-    //info("");
+    info("[Result GIRR CVR]");
+    info("INDEX 0. BUMPUP CVR: {:0.10f}", resultGirrCvr[0]);
+    info("INDEX 1. BUMPDOWN CVR: {:0.10f}", resultGirrCvr[1]);
+    info("");
 
-    //info("[Result CSR CVR]");
-    //info("INDEX 0. BUMPUP CVR: {:0.10f}", resultCsrCvr[0]);
-    //info("INDEX 1. BUMPDOWN CVR: {:0.10f}", resultCsrCvr[1]);
+    info("[Result CSR CVR]");
+    info("INDEX 0. BUMPUP CVR: {:0.10f}", resultCsrCvr[0]);
+    info("INDEX 1. BUMPDOWN CVR: {:0.10f}", resultCsrCvr[1]);
 
-    //info("------------------------------------------------------------");
-    //info("");
+    info("------------------------------------------------------------");
+    info("");
 }
 
 void printAllInputDataFRN(
@@ -2358,9 +2365,9 @@ void printAllInputDataFRN(
     //info("");
 
     //info("numberOfCoupons: {}", numberOfCoupons);
-    logArrayLine("paymentDates", paymentDates, numberOfCoupons);
-    logArrayLine("realStartDates", realStartDates, numberOfCoupons);
-    logArrayLine("realEndDates", realEndDates, numberOfCoupons);
+    //logArrayLine("paymentDates", paymentDates, numberOfCoupons);
+    //logArrayLine("realStartDates", realStartDates, numberOfCoupons);
+    //logArrayLine("realEndDates", realEndDates, numberOfCoupons);
     //info("");
 
     //info("spreadOverYield: {:0.5f}", spreadOverYield);
@@ -2369,8 +2376,8 @@ void printAllInputDataFRN(
     //info("");
 
     //info("numberOfGirrTenors: {}", numberOfGirrTenors);
-    logArrayLine("girrTenorDays", girrTenorDays, numberOfGirrTenors);
-    logArrayLine("girrRates", girrRates, numberOfGirrTenors, 10);
+    //logArrayLine("girrTenorDays", girrTenorDays, numberOfGirrTenors);
+    //logArrayLine("girrRates", girrRates, numberOfGirrTenors, 10);
     //info("");
 
     //info("girrDayCounter: {}", girrDayCounter);
@@ -2380,13 +2387,13 @@ void printAllInputDataFRN(
     //info("");
 
     //info("numberOfCsrTenors: {}", numberOfCsrTenors);
-    logArrayLine("csrTenorDays", csrTenorDays, numberOfCsrTenors);
-    logArrayLine("csrRates", csrRates, numberOfCsrTenors, 10);
+    //logArrayLine("csrTenorDays", csrTenorDays, numberOfCsrTenors);
+    //logArrayLine("csrRates", csrRates, numberOfCsrTenors, 10);
     //info("");
 
     //info("numberOfIndexGirrTenors: {}", numberOfIndexGirrTenors);
-    logArrayLine("indexGirrTenorDays", indexGirrTenorDays, numberOfIndexGirrTenors);
-    logArrayLine("indexGirrRates", indexGirrRates, numberOfIndexGirrTenors, 10);
+    //logArrayLine("indexGirrTenorDays", indexGirrTenorDays, numberOfIndexGirrTenors);
+    //logArrayLine("indexGirrRates", indexGirrRates, numberOfIndexGirrTenors, 10);
     //info("");
 
     //info("indexGirrDayCounter: {}", indexGirrDayCounter);
@@ -2493,7 +2500,7 @@ void printAllOutputDataFRN(
 /* FOR DEBUG */
 void printAllData(const Schedule& schedule) {
 
-    //info("[Print All - Coupon Schedule]");
+    info("[Print All - Coupon Schedule]");
 
     // Coupon Schedule 로깅용 벡터 생성
     std::vector<std::string> logStartDatesStr, logEndDatesStr, logPaymentDatesStr;
@@ -2511,6 +2518,6 @@ void printAllData(const Schedule& schedule) {
     logArrayLine("End Dates", logEndDatesStr);
     logArrayLine("Payment Dates", logPaymentDatesStr);
 
-    //info("------------------------------------------------------------");
-    //info("");
+    info("------------------------------------------------------------");
+    info("");
 }
