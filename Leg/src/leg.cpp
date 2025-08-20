@@ -33,12 +33,19 @@ extern "C" double EXPORT pricingZCL(
 // ===================================================================================================
 
 ) {
+    /* 로거 종료 */
+    FINALLY(
+        info("==============[Leg: pricingZCL Logging Ended!]==============");
+        closeLogger();
+    );
+
     try {
         /* 로거 초기화 */
         disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
         if (logYn == 1) {
             initLogger("leg.log"); // 생성 파일명 지정
         }
+        info("==============[Leg: pricingZCL Logging Started!]==============");
 
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4) {
             error("[pricingZCL]: Invalid calculation type. Only 1, 2, 3, 4 are supported.");
@@ -108,7 +115,7 @@ extern "C" double EXPORT pricingZCL(
         // GIRR 커브를 RelinkableHandle에 연결
         RelinkableHandle<YieldTermStructure> girrCurve;
         girrCurve.linkTo(girrTermstructure);
-		girrCurve->enableExtrapolation(); // 외삽 허용
+        girrCurve->enableExtrapolation();
 
         // Discounting 엔진 생성 (채권 가격 계산용)
         auto bondEngine = ext::make_shared<DiscountingBondEngine>(girrCurve, includeSettlementDateFlows_);
@@ -175,9 +182,12 @@ extern "C" double EXPORT pricingZCL(
             const DayCounter& ytmDayCounter = Actual365Fixed();
             Compounding ytmCompounding = Compounded;//Continuous;
             Frequency ytmFrequency = Semiannual;//Annual;
-            Rate ytmValue = CashFlows::yield(zeroCouponBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
-                couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
-                1.0e-15, 100, 0.005);
+            Rate ytmValue = 0.00000000000001;
+            if (asOfDate_ < maturityDate_) {
+                ytmValue = CashFlows::yield(zeroCouponBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
+                    couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
+                    1.0e-15, 100, 0.005);
+            }
             InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
 
             // Duration 계산
@@ -348,6 +358,7 @@ extern "C" double EXPORT pricingZCL(
 
 
 
+
 /* Fixed Rate Leg */
 extern "C" double EXPORT pricingFDL(
     // ===================================================================================================
@@ -388,6 +399,11 @@ extern "C" double EXPORT pricingFDL(
 // ===================================================================================================
 )
 {
+    FINALLY(
+        info("==============[Leg: pricingFDL Logging Ended!]==============");
+    closeLogger();
+        );
+
     try {
         /* 로거 초기화 */
         disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 비활성화
@@ -395,6 +411,7 @@ extern "C" double EXPORT pricingFDL(
             initLogger("leg.log"); // 생성 파일명 지정
         }
 
+        info("==============[Leg: pricingFDL Logging Started!]==============");
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
             error("[pricingFDL]: Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return -1; // Invalid calculation type
@@ -426,6 +443,7 @@ extern "C" double EXPORT pricingFDL(
         // revaluationDateSerial -> revaluationDate
         Date asOfDate_ = Date(evaluationDate);
         const Date issueDate_ = Date(issueDate);
+        const Date maturityDate_ = Date(maturityDate);
 
         // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
         Settings::instance().evaluationDate() = asOfDate_;
@@ -469,7 +487,7 @@ extern "C" double EXPORT pricingFDL(
         // GIRR 커브를 RelinkableHandle에 연결
         RelinkableHandle<YieldTermStructure> girrCurve;
         girrCurve.linkTo(girrTermstructure);
-		girrCurve->enableExtrapolation(); // 외삽 허용
+        girrCurve->enableExtrapolation();
 
         // Discounting 엔진 생성 (채권 가격 계산용)
         auto bondEngine = ext::make_shared<DiscountingBondEngine>(girrCurve, includeSettlementDateFlows_);
@@ -482,7 +500,37 @@ extern "C" double EXPORT pricingFDL(
 
         // Coupon Schedule 생성
         if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
-            //        info("[Coupon Schedule]: PARAMETER INPUT");
+            info("[Coupon Schedule]: PARAMETER INPUT");
+
+            // Schedule Data 유효성 점검(1. 발행일 & 만기일 유효성 점검. 2. 개별 Coupon Data의 유효성 점검)
+            if (realStartDates[0] < issueDate   // 첫 번째 시작일이 발행일보다 이전인 경우(종료일 정보는 개별 Coupon 유효성 로직에서 점검)
+                || paymentDates[0] < issueDate  // 첫 번째 지급일이 발행일보다 이전인 경우
+                || paymentDates[numberOfCoupons - 1] > maturityDate  // 마지막 지급일이 만기일보다 이후인 경우
+                ) {
+                error("[pricingFDL]: Invalid Coupon Schedule Data. Check the schedule period is in the trading period.");
+                return -1;
+            }
+
+            for (int i = 0; i < numberOfCoupons; i++) {
+                // 개별 Coupon의 시작일, 종료일, 지급일 유효성(종료일 > 지급일은 가능)
+                if (realEndDates[i] < realStartDates[i] // 쿠폰 종료일이 시작일보다 이전인 경우
+                    || paymentDates[i] < realStartDates[i]  // 지급일이 시작일보다 이전인 경우
+                        ) {
+                    error("[pricingFDL]: Invalid Coupon Schedule Data. Check the start date, end date, and payment date.");
+                    return -1;
+                }
+
+                // 스케쥴 배열의 Sorting 여부
+                if (i != numberOfCoupons - 1) {
+                    if (realStartDates[i + 1] < realStartDates[i]   // StartDates의 정렬 여부 점검
+                        || realEndDates[i + 1] < realEndDates[i]    // EndDates의 정렬 여부 점검
+                            || paymentDates[i + 1] < paymentDates[i]    // PaymentDates의 정렬 여부 점검
+                                ) {
+                        error("[pricingFDL]: Invalid Coupon Schedule Data. Check the schedule is sorted.");
+                        return -1;
+                    }
+                }
+            }
 
             std::vector<Date> couponSch_;
             couponSch_.emplace_back(realStartDates[0]);
@@ -493,7 +541,7 @@ extern "C" double EXPORT pricingFDL(
         }
 
         else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
-            //        info("[Coupon Schedule]: GENERATED BY MODULE");
+            info("[Coupon Schedule]: GENERATED BY MODULE");
 
             //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
             Date effectiveDate = Date(issueDate); // 기존 코드
@@ -501,7 +549,7 @@ extern "C" double EXPORT pricingFDL(
             DateGeneration::Rule genRule = makeScheduleGenRuleFromInt(scheduleGenRule); // Forward, Backward 등
 
             fixedBondSchedule_ = MakeSchedule().from(effectiveDate)
-                .to(Date(maturityDate))
+                .to(maturityDate_)
                 .withFrequency(couponFrequency_)
                 .withCalendar(couponCalendar_)
                 .withConvention(couponBDC)
@@ -585,9 +633,12 @@ extern "C" double EXPORT pricingFDL(
             const DayCounter& ytmDayCounter = Actual365Fixed();
             Compounding ytmCompounding = Compounded;//Continuous;
             Frequency ytmFrequency = Semiannual;//Annual
-            Rate ytmValue = CashFlows::yield(fixedRateBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
-                couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
-                1.0e-15, 100, 0.005);
+            Rate ytmValue = 0.00000000000001;
+            if (asOfDate_ < maturityDate_) {
+                ytmValue = CashFlows::yield(fixedRateBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
+                    couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
+                    1.0e-15, 100, 0.005);
+            }
             InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
 
             // Duration 계산
@@ -761,6 +812,7 @@ extern "C" double EXPORT pricingFDL(
 }
 
 
+
 extern "C" double EXPORT pricingFLL(
     // ===================================================================================================
     const int evaluationDate                // INPUT 1. 평가일 (serial number)
@@ -822,6 +874,11 @@ extern "C" double EXPORT pricingFLL(
 // ===================================================================================================
 )
 {
+    FINALLY(
+        info("==============[Leg: pricingFLL Logging Ended!]==============");
+    closeLogger();
+        );
+
     try {
         /* 로거 초기화 */
         disableConsoleLogging();    // 로깅여부 N일시 콘촐 입출력 
@@ -829,6 +886,7 @@ extern "C" double EXPORT pricingFLL(
             initLogger("leg.log"); // 생성 파일명 지정
         }
 
+        info("==============[Leg: pricingFLL Logging Started!]==============");
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4) {
             error("[pricingFLL]: Invalid calculation type. Only 1, 2, 3, 4 are supported.");
             return -1; // Invalid calculation type
@@ -862,6 +920,7 @@ extern "C" double EXPORT pricingFLL(
 
         // revaluationDateSerial -> revaluationDate
         Date asOfDate_ = Date(evaluationDate);
+        const Date maturityDate_ = Date(maturityDate);
 
         // 전역 Settings에 평가일을 설정 (이후 모든 계산에 이 날짜 기준 적용)
         Settings::instance().evaluationDate() = asOfDate_;
@@ -967,7 +1026,37 @@ extern "C" double EXPORT pricingFLL(
 
         // Coupon Schedule 생성
         if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
-            //        info("[Coupon Schedule]: PARAMETER INPUT");
+            info("[Coupon Schedule]: PARAMETER INPUT");
+
+            // Schedule Data 유효성 점검(1. 발행일 & 만기일 유효성 점검. 2. 개별 Coupon Data의 유효성 점검)
+            if (realStartDates[0] < issueDate   // 첫 번째 시작일이 발행일보다 이전인 경우(종료일 정보는 개별 Coupon 유효성 로직에서 점검)
+                || paymentDates[0] < issueDate  // 첫 번째 지급일이 발행일보다 이전인 경우
+                || paymentDates[numberOfCoupons - 1] > maturityDate  // 마지막 지급일이 만기일보다 이후인 경우
+                ) {
+                error("[pricingFLL]: Invalid Coupon Schedule Data. Check the schedule period is in the trading period.");
+                return -1;
+            }
+
+            for (int i = 0; i < numberOfCoupons; i++) {
+                // 개별 Coupon의 시작일, 종료일, 지급일 유효성(종료일 > 지급일은 가능)
+                if (realEndDates[i] < realStartDates[i] // 쿠폰 종료일이 시작일보다 이전인 경우
+                    || paymentDates[i] < realStartDates[i]  // 지급일이 시작일보다 이전인 경우
+                        ) {
+                    error("[pricingFLL]: Invalid Coupon Schedule Data. Check the start date, end date, and payment date.");
+                    return -1;
+                }
+
+                // 스케쥴 배열의 Sorting 여부
+                if (i != numberOfCoupons - 1) {
+                    if (realStartDates[i + 1] < realStartDates[i]   // StartDates의 정렬 여부 점검
+                        || realEndDates[i + 1] < realEndDates[i]    // EndDates의 정렬 여부 점검
+                            || paymentDates[i + 1] < paymentDates[i]    // PaymentDates의 정렬 여부 점검
+                                ) {
+                        error("[pricingFLL]: Invalid Coupon Schedule Data. Check the schedule is sorted.");
+                        return -1;
+                    }
+                }
+            }
 
             std::vector<Date> couponSch_;
             couponSch_.emplace_back(realStartDates[0]);
@@ -977,14 +1066,14 @@ extern "C" double EXPORT pricingFLL(
             FRNSchedule_ = Schedule(couponSch_);
         }
         else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
-            //        info("[Coupon Schedule]: GENERATED BY MODULE");
+            info("[Coupon Schedule]: GENERATED BY MODULE");
 
                     //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
             Date effectiveDate = Date(issueDate); // 기존 코드
             DateGeneration::Rule genRule = makeScheduleGenRuleFromInt(scheduleGenRule); // Forward, Backward 등
 
             FRNSchedule_ = MakeSchedule().from(effectiveDate)
-                .to(Date(maturityDate))
+                .to(maturityDate_)
                 .withFrequency(couponFrequency_)
                 .withCalendar(couponCalendar_)
                 .withConvention(couponBDC_)
