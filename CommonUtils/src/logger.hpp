@@ -14,6 +14,7 @@ namespace logger {
 
     void disableConsoleLogging();
     void initLogger(const std::string& filename);
+    void closeLogger();
 
     // 기존 포맷팅 지원 템플릿
     template <typename... Args>
@@ -76,6 +77,5 @@ namespace logger {
     void logArrayLine(const std::string& label, const std::vector<T>& data, int precision = -1) {
         logArrayLine(label, data.data(), data.size(), precision);
     }
-
 }
 

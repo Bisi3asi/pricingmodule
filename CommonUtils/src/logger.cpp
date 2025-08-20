@@ -38,4 +38,14 @@ namespace logger {
         }
     }
 
+    /* 로거 종료 및 해제 */
+    void closeLogger() {
+        try {
+            spdlog::shutdown();  // 모든 로거 정리 및 해제
+        }
+        catch (const spdlog::spdlog_ex& ex) {
+            std::cerr << "Failed to close logger: " << ex.what() << std::endl;
+        }
+    }
+
 } // namespace logger

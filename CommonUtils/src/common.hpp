@@ -63,3 +63,23 @@ void initResult(double* result, const int size);
 void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib::Real> sensitivities, QuantLib::Size originalSize, double* resultArray);
 void freeArray(double* arr);
 std::string qDateToString(const QuantLib::Date& date);
+
+// System
+
+#include <functional>
+
+class ScopeGuard {
+public:
+    explicit ScopeGuard(std::function<void()> f) : func_(std::move(f)), active_(true) {}
+    ~ScopeGuard() { if (active_) func_(); }
+    void dismiss() { active_ = false; }
+
+private:
+    std::function<void()> func_;
+    bool active_;
+};
+
+#define CONCAT_INNER(x,y) x##y
+#define CONCAT(x,y) CONCAT_INNER(x,y)
+#define FINALLY(code) ScopeGuard CONCAT(_guard_, __LINE__)([&](){code;})
+
