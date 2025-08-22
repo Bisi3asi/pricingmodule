@@ -299,7 +299,7 @@ extern "C" double EXPORT pricingFRB(
             fixedRateBond.setPricingEngine(tmpBondEngine);
             // SettlementDays 관행 무시(Algo
             Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
-                false, asOfDate_, couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), 1.0e-10, 100, 0.005);
+                includeSettlementDateFlows_, asOfDate_, asOfDate_, 1.0e-10, 100, 0.005);  // settlementDate 산출 로직 제거(20250822, jwlee)
             //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
 
@@ -1150,7 +1150,7 @@ extern "C" double EXPORT pricingFRN(
             floatingRateBond.setPricingEngine(tmpBondEngine);
             // SettlementDays 관행 무시
             Real soy = CashFlows::zSpread(floatingRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
-                false, asOfDate_, couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), 1.0e-10, 100, 0.005);
+                includeSettlementDateFlows_, asOfDate_, asOfDate_, 1.0e-10, 100, 0.005);  // settlementDate 산출 로직 제거(20250822, jwlee)            
             //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
             return soy;
@@ -1856,7 +1856,7 @@ extern "C" double EXPORT pricingZCB(
             zeroCouponBond.setPricingEngine(tmpBondEngine);
             // SettlementDays 관행 무시(Algo
             Real soy = CashFlows::zSpread(zeroCouponBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
-                false, asOfDate_, couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), 1.0e-10, 100, 0.005);
+                includeSettlementDateFlows_, asOfDate_, asOfDate_, 1.0e-10, 100, 0.005);  // settlementDate 산출 로직 제거(20250822, jwlee)
             //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
 
