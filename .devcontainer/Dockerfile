@@ -7,7 +7,7 @@ RUN dnf -y update && \
 
 # Development Tools 그룹 및 필수 패키지 설치
 RUN dnf -y groupinstall "Development Tools" && \
-    dnf -y install wget tar gzip unzip bzip2 python3 && \
+    dnf -y install wget tar gzip unzip bzip2 && \
     dnf clean all -y
 
 # Ninja 설치 (v1.11.1)
@@ -49,7 +49,8 @@ RUN BOOST_VERSION_UNDERSCORE=$(echo ${BOOST_VERSION} | tr . _) && \
     curl -fL https://github.com/lballabio/QuantLib/releases/download/v${QL_VERSION}/QuantLib-${QL_VERSION}.tar.gz -o quantlib.tar.gz && \
     tar -xzf quantlib.tar.gz && \
     cd QuantLib-${QL_VERSION} && \
-    mkdir build && cd build && \
+    # build 디렉토리가 남아있는 경우를 대비하여 삭제 후 생성
+    rm -rf build && mkdir build && cd build && \
     cmake .. \
         -DCMAKE_INSTALL_PREFIX=${QL_INSTALL_PREFIX} \
         -DBOOST_ROOT=${BOOST_INSTALL_PREFIX} \

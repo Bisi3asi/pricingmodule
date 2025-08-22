@@ -9,7 +9,7 @@
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
         "cmake.generator": "Ninja",
-        "cmake.buildDirectory": "/workspaces/pricingmodule/rocky-linux8/build/${buildType}/${cmake.targetName}",
+        "cmake.buildDirectory": "/workspaces/pricingmodule/rocky-linux8/${buildType}",
         "cmake.sourceDirectory": "/workspaces/pricingmodule",
         "cmake.configureOnOpen": true
       },
