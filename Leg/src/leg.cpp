@@ -323,8 +323,12 @@ extern "C" double EXPORT pricingZCL(
                     resultCashFlow[couponNum * numberOfFields + n_rateField] = -1.0;
                     resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(redemption->date().serialNumber());
                     resultCashFlow[couponNum * numberOfFields + n_CFField] = redemption->amount();
-                    resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(redemption->date());
-
+					if (redemption->date() < asOfDate_) {
+						resultCashFlow[couponNum * numberOfFields + n_DFField] = 0.0;
+					}
+					else {
+						resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(redemption->date());
+					}
                 }
                 else {
                     QL_FAIL("[pricingZCL]Coupon is not a Redemption");
@@ -556,6 +560,11 @@ extern "C" double EXPORT pricingFDL(
                 .withRule(genRule); // payment Lag는 Bond 스케쥴 생성 시 적용
         }
 
+		// 평가일 기준 유효한 현금흐름만 포함하는 Schedule 생성
+		Date schStartDate = fixedBondSchedule_.previousDate(asOfDate_);
+		std::vector<Date> futureScheduleDates = fixedBondSchedule_.after(schStartDate).dates();
+		Schedule futureFixedBondSchedule_ = Schedule(futureScheduleDates);
+
         /* FOR DEBUG */
         //    printAllData(fixedBondSchedule_);
 
@@ -572,7 +581,7 @@ extern "C" double EXPORT pricingFDL(
         FixedRateBondCustom fixedRateBond(
             settlementDays_,
             notional_,
-            fixedBondSchedule_,
+            futureFixedBondSchedule_,
             couponRate_,
             couponDayCounter_,
             paymentBDC_, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
@@ -770,8 +779,12 @@ extern "C" double EXPORT pricingFDL(
                     resultCashFlow[couponNum * numberOfFields + n_rateField] = cp->rate();
                     resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(cp->date().serialNumber());
                     resultCashFlow[couponNum * numberOfFields + n_CFField] = cp->amount();
-                    resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(cp->date());
-
+					Real tmpDF = 0.0;
+					if (!cp->hasOccurred(asOfDate_, includeSettlementDateFlows_) &&
+						!cp->tradingExCoupon(asOfDate_)) {
+						tmpDF = girrCurve->discount(cp->date());
+					}
+					resultCashFlow[couponNum * numberOfFields + n_DFField] = tmpDF;
                 }
                 else {
                     const auto& redemption = ext::dynamic_pointer_cast<Redemption>(bondCFs[couponNum]);
@@ -782,8 +795,12 @@ extern "C" double EXPORT pricingFDL(
                         resultCashFlow[couponNum * numberOfFields + n_rateField] = -1.0;
                         resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(redemption->date().serialNumber());
                         resultCashFlow[couponNum * numberOfFields + n_CFField] = redemption->amount();
-                        resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(redemption->date());
-
+						if (redemption->date() < asOfDate_) {
+							resultCashFlow[couponNum * numberOfFields + n_DFField] = 0.0;
+						}
+						else {
+							resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(redemption->date());
+						}
                     }
                     else {
                         QL_FAIL("[pricingFDL]Coupon is not a FixedRateCoupon");
@@ -1080,11 +1097,16 @@ extern "C" double EXPORT pricingFLL(
                 .withRule(genRule);
         }
 
+		// 평가일 기준 유효한 현금흐름만 포함하는 Schedule 생성
+		Date schStartDate = FRNSchedule_.previousDate(asOfDate_);
+		std::vector<Date> futureScheduleDates = FRNSchedule_.after(schStartDate).dates();
+		Schedule futureFRNSchedule_ = Schedule(futureScheduleDates);
+
         // fixing data 입력
-        Date lastRefDate = FRNSchedule_.previousDate(asOfDate_);
+        Date lastRefDate = futureFRNSchedule_.previousDate(asOfDate_);
         Date lastFixingDate1 = refIndex->fixingCalendar().advance(lastRefDate, -static_cast<Integer>(fixingDays)
             , Days, Preceding);
-        Date nextRefDate = FRNSchedule_.nextDate(asOfDate_);
+        Date nextRefDate = futureFRNSchedule_.nextDate(asOfDate_);
         Date nextFixingDate1 = refIndex->fixingCalendar().advance(nextRefDate, -static_cast<Integer>(fixingDays)
             , Days, Preceding);
         // Date lastFixingDate1 = refIndex->fixingDate(FRNSchedule_.previousDate(asOfDate_));
@@ -1105,7 +1127,7 @@ extern "C" double EXPORT pricingFLL(
         FloatingRateBondCustom floatingRateBond(
             settlementDays_,
             notional_,
-            FRNSchedule_,
+			futureFRNSchedule_,
             refIndex,
             couponDayCounter_,
             couponBDC_, // Business Day Convention, TODO 변환 함수 적용 (DayConvention)
@@ -1439,8 +1461,12 @@ extern "C" double EXPORT pricingFLL(
                     resultCashFlow[couponNum * numberOfFields + n_rateField] = cp->rate();
                     resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(cp->date().serialNumber());
                     resultCashFlow[couponNum * numberOfFields + n_CFField] = cp->amount();
-                    resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(cp->date());
-
+					Real tmpDF = 0.0;
+					if (!cp->hasOccurred(asOfDate_, includeSettlementDateFlows_) &&
+						!cp->tradingExCoupon(asOfDate_)) {
+						tmpDF = girrCurve->discount(cp->date());
+					}
+					resultCashFlow[couponNum * numberOfFields + n_DFField] = tmpDF;
                 }
                 else {
                     const auto& redemption = ext::dynamic_pointer_cast<Redemption>(bondCFs[couponNum]);
@@ -1451,8 +1477,12 @@ extern "C" double EXPORT pricingFLL(
                         resultCashFlow[couponNum * numberOfFields + n_rateField] = -1.0;
                         resultCashFlow[couponNum * numberOfFields + n_payDateField] = static_cast<double>(redemption->date().serialNumber());
                         resultCashFlow[couponNum * numberOfFields + n_CFField] = redemption->amount();
-                        resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(redemption->date());
-
+						if (redemption->date() < asOfDate_) {
+							resultCashFlow[couponNum * numberOfFields + n_DFField] = 0.0;
+						}
+						else {
+							resultCashFlow[couponNum * numberOfFields + n_DFField] = girrCurve->discount(redemption->date());
+						}
                     }
                     else {
                         QL_FAIL("[pricingFLL]Coupon is not a FloatingRateCoupon");
