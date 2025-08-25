@@ -1,1 +1,0 @@
-powershell -Command "$pids = (Get-WmiObject Win32_Process | Where-Object { $_.Name -match 'java' -and $_.CommandLine -match 'rpvmds' }).ProcessId; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force } } else { Write-Host 'No matching process found.' }"
