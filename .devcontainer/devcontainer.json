@@ -8,14 +8,13 @@
     "vscode": {
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "cmake.generator": "Ninja",
-        "cmake.buildDirectory": "/workspaces/pricingmodule/rocky-linux8/${buildType}",
         "cmake.sourceDirectory": "/workspaces/pricingmodule",
         "cmake.configureOnOpen": true
       },
       "extensions": [
         "ms-vscode.cmake-tools",
-        "ms-vscode.cpptools"        
+        "ms-vscode.cpptools",
+        "GoogleCloudTools.cloudcode"
       ]
     }
   }
