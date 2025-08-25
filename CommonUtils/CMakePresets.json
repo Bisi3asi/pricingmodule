@@ -1,63 +1,26 @@
 ﻿{
-    "version": 3,
+    "version": 4,
+    "include": [
+        "../CMakePresets.json"
+    ],
     "configurePresets": [
         {
-            "name": "x64-base",
-            "hidden": true,
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "installDir": "${sourceDir}/out/install/${presetName}",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe",
-                "CMAKE_CXX_STANDARD": "17",
-                "CMAKE_CXX_EXTENSIONS": "OFF"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            }
-        },
-        {
             "name": "x64-release",
-            "displayName": "x64-Release",
-            "inherits": "x64-base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
+            "displayName": "CommonUtils Windows Release",
+            "inherits": "windows-release",
+            "binaryDir": "${sourceDir}../out/windows-x64/x64-release/commonUtils"
         },
         {
             "name": "x64-debug",
-            "displayName": "x64-Debug",
-            "inherits": "x64-base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
+            "displayName": "CommonUtils Windows Debug",
+            "inherits": "windows-debug",
+            "binaryDir": "${sourceDir}../out/windows-x64/x64-debug/commonUtils"
         },
         {
             "name": "linux-release",
-            "displayName": "Linux Release",
-            "generator": "Ninja",
-            "binaryDir": "/home/ireoplus/shared_library/CommonUtils", /* Path to your project */
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_STANDARD": "17",
-                "CMAKE_CXX_EXTENSIONS": "OFF",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-                    "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}",
-                    "cmakeExecutable": "/usr/local/bin/cmake"
-                }
-            }
+            "displayName": "CommonUtils Linux Release",
+            "inherits": "linux-release",
+            "binaryDir": "${sourceDir}/../out/rocky-linux8/linux-release/commonUtils"
         }
     ]
 }

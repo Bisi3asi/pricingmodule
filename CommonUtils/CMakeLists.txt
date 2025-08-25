@@ -24,8 +24,8 @@ elseif (UNIX)
     add_link_options(-Wl,--gc-sections)
 
     # src, include 소스 원격지 복사 (향후 개별 모듈 컴파일 간 필요)
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/include" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # spdlog 헤더 파일 복사
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/src" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # 유틸 헤더 파일 복사
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/include" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # spdlog 헤더 파일 복사
+    file(COPY "${CMAKE_CURRENT_LIST_DIR}/src" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}) # 유틸 헤더 파일 복사
 endif()
 
 # 1. 플랫폼별 Boost, QuantLib 설정
@@ -44,36 +44,36 @@ if (WIN32)
 elseif (UNIX)
     message(STATUS "Configuring for Linux")
     add_compile_options(-static-libgcc -static-libstdc++)
-    set(Boost_INCLUDE_DIR "/usr/lib/boost_1_87_0") # Boost 로컬 설치 경로
-    set(QUANTLIB_ROOT "/usr/lib/QuantLib") # QuantLib 로컬 설치 경로
+    set(Boost_INCLUDE_DIR "/usr/lib/boost_1_87_0/include") # Boost 헤더 경로 수정
+    set(QUANTLIB_ROOT "/usr/lib/QuantLib_1.37") # QuantLib 로컬 설치 경로 (CMakePresets.json 기반으로 수정)
     set(QUANTLIB_LIB_NAME "QuantLib.a") # QuantLib .a 파일 (for linux)
 endif()
 
 # 2. Boost, spdlog, QuantLib 헤더 파일 경로 설정
 include_directories(${Boost_INCLUDE_DIR}) # Boost                         
-include_directories(${CMAKE_SOURCE_DIR}/include) # spdlog 
-include_directories(${QUANTLIB_ROOT}) # QuantLib
+include_directories(${CMAKE_CURRENT_LIST_DIR}/include) # spdlog 
+include_directories(${QUANTLIB_ROOT}/include) # QuantLib 헤더 경로 수정
 
 # 3. 소스 수집 및 정적 라이브러리 생성
 file(GLOB SOURCE_FILES "src/*.cpp")                               
-add_library(${CMAKE_PROJECT_NAME} STATIC ${SOURCE_FILES})
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES 
+add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
+set_target_properties(${PROJECT_NAME} PROPERTIES 
     OUTPUT_NAME ${OUTPUT_FILE_NAME}
     VERSION ${MODULE_VERSION}
     POSITION_INDEPENDENT_CODE ON # Linux -fPIC 설정, Windows에서는 영향 없음
 )
 
 # 4. spdlog 라이브러리 연결
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include) #include할 타겟이 헤더 탐색 가능
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include) #include할 타겟이 헤더 탐색 가능
 
 # 5. Boost, QuantLib 라이브러리 연결
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 link_directories("${QUANTLIB_ROOT}/lib")
-target_link_libraries(${CMAKE_PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME} 
     PRIVATE ${QUANTLIB_LIB_NAME} Boost::system Boost::filesystem
 )
 
 # 6. 출력 디렉토리 설정
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES 
+set_target_properties(${PROJECT_NAME} PROPERTIES 
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR} 
 )

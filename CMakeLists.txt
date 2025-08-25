@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(Root)
 
+# BOOST_ROOT find_package 관련 경고 생략
+cmake_policy(SET CMP0144 NEW)
+
 # 각 모듈별 서브디렉토리 루트 추가
 add_subdirectory(CommonUtils)
 add_subdirectory(Bond)
