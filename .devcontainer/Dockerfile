@@ -63,7 +63,14 @@ RUN BOOST_VERSION_UNDERSCORE=$(echo ${BOOST_VERSION} | tr . _) && \
     rm -rf /tmp/QuantLib*
 
 # Custom config
-RUN echo "alias ll='ls -l'" >> /etc/bashrc
+RUN { \
+        echo ""; \
+        echo "# Custom aliases"; \
+        echo "alias ls='ls --color=auto'"; \
+        echo "alias ll='ls -l --color=auto'"; \
+        echo "alias goso='cd /workspaces/pricingmodule/out/rocky-linux8/linux-release'"; \
+        echo "alias godll='cd /workspaces/pricingmodule/out/windows-x64/x64-debug'"; \
+    } >> /etc/bashrc
 
 WORKDIR /workspace
 
