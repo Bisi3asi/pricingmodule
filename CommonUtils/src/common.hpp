@@ -82,4 +82,3 @@ private:
 #define CONCAT_INNER(x,y) x##y
 #define CONCAT(x,y) CONCAT_INNER(x,y)
 #define FINALLY(code) ScopeGuard CONCAT(_guard_, __LINE__)([&](){code;})
-

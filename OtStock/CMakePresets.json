@@ -8,19 +8,19 @@
             "name": "x64-release",
             "displayName": "OtStock Windows Release",
             "inherits": "windows-release",
-            "binaryDir": "${sourceDir}../out/windows-x64/x64-release/otstock"
+            "binaryDir": "${sourceDir}../out/windows-x64/x64-release/otStock"
         },
         {
             "name": "x64-debug",
             "displayName": "OtStock Windows Debug",
             "inherits": "windows-debug",
-            "binaryDir": "${sourceDir}../out/windows-x64/x64-debug/otstock"
+            "binaryDir": "${sourceDir}../out/windows-x64/x64-debug/otStock"
         },
         {
             "name": "linux-release",
             "displayName": "OtStock Linux Release",
             "inherits": "linux-release",
-            "binaryDir": "${sourceDir}/../out/rocky-linux8/linux-release/otstock"
+            "binaryDir": "${sourceDir}/../out/rocky-linux8/linux-release/otStock"
         }
     ]
 }
