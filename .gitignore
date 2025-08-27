@@ -1,10 +1,13 @@
 **/.vs/
+**/.vscode/
 **/build/
 **/out/
 **/bin/
 **/logs/
 **/.idea/
 **/.gradle/
-**/.iml
+**/.svn/
+*.iml
+*.svnignore
 *.so
 *.dll
