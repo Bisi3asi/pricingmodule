@@ -2,15 +2,16 @@ cmake_minimum_required(VERSION 3.20)
 project(Root LANGUAGES CXX)
 
 # Cmake 기본 설정
+cmake_policy(SET CMP0144 NEW) # find_package가 <PackageName>_ROOT 변수를 사용하도록 설정
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # 의존성 라이브러리 탐색 및 설정 (from CMakePresets.json)
+set(Boost_USE_STATIC_LIBS ON) # Boost 정적 링크 강제
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 find_package(QuantLib REQUIRED)
-set(Boost_USE_STATIC_LIBS ON) # Boost 정적 링크 강제
 
 message(STATUS "Found Boost version: ${Boost_VERSION_STRING}")
 message(STATUS "Found QuantLib version: ${QuantLib_VERSION}")
