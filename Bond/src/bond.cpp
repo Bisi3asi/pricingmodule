@@ -373,7 +373,8 @@ extern "C" double EXPORT pricingFRB(
 
             const DayCounter& ytmDayCounter = Actual365Fixed();
             Compounding ytmCompounding = Compounded;//Continuous;
-            Frequency ytmFrequency = Semiannual;//Annual;
+            Frequency couponFrequency_ = makeFrequencyFromInt(couponFrequency); // Period(Tenor)형태도 가능
+            Frequency ytmFrequency = couponFrequency_; //Semiannual;//Annual;
             Rate ytmValue = 0.00000000000001;
             if (asOfDate_ < maturityDate_) {
                 ytmValue = CashFlows::yield(fixedRateBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
@@ -1186,9 +1187,11 @@ extern "C" double EXPORT pricingFRN(
 
             for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
                 std::vector<Rate> bumpGirrRates = girrRates_;
+                std::vector<Rate> bumpIndexGirrRates = indexGirrRates_;
                 for (Size bumpTenorNum = 0; bumpTenorNum < girrRates_.size(); ++bumpTenorNum) {
                     // GIRR 커브의 금리를 bumping (1bp 상승)
                     bumpGirrRates[bumpTenorNum] += bumpGearings[bumpNo] * bumpSize;
+                    bumpIndexGirrRates[bumpTenorNum] += bumpGearings[bumpNo] * bumpSize;
                 }
 
                 // bump된 금리로 새로운 ZeroCurve 생성
@@ -1208,8 +1211,13 @@ extern "C" double EXPORT pricingFRN(
                 bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
+                // Index 커브와 할인커브가 달라도 동시에 bump된 금리커브적용
+                ext::shared_ptr<YieldTermStructure> bumpIndexGirrTermstructure = ext::make_shared<ZeroCurve>(indexGirrDates_, bumpIndexGirrRates,
+                    indexGirrDayCounter_, indexGirrInterpolator_,
+                    indexGirrCompounding_, indexGirrFrequency_);
+
                 if (isSameCurve_) {
-                    indexGirrCurve.linkTo(bumpGirrTermstructure);
+                    indexGirrCurve.linkTo(bumpIndexGirrTermstructure); // indexGirrCurve.linkTo(bumpGirrTermstructure);
                 }
 
                 // discountingCurve로 새로운 pricing engine 생성
@@ -1220,7 +1228,10 @@ extern "C" double EXPORT pricingFRN(
 
                 // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
                 bumpedNpv[bumpNo] = floatingRateBond.NPV();
+
+                // 방어 코드 추가
                 indexGirrCurve.linkTo(indexGirrTermstructure);
+                floatingRateBond.setPricingEngine(bondEngine);
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
@@ -1229,7 +1240,7 @@ extern "C" double EXPORT pricingFRN(
 
             //        const DayCounter& ytmDayCounter = Actual365Fixed();
             //        Compounding ytmCompounding = Continuous;
-            //        Frequency ytmFrequency = Annual;
+            //        Frequency ytmFrequency = couponFrequency_;
             //        Rate ytmValue = CashFlows::yield(floatingRateBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
             //                                         couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_,
             //                                         1.0e-15, 100, 0.005);
@@ -1378,7 +1389,7 @@ extern "C" double EXPORT pricingFRN(
                     // RelinkableHandle에 bump된 커브 연결
                     RelinkableHandle<YieldTermStructure> bumpGirrCurve; // 미사용 변수 확인 필요
                     indexGirrCurve.linkTo(bumpGirrTermstructure);
-
+                    
                     // 기존 Net PV - bump된 Net PV 계산 (GIRR Delta)
                     Real tmpGirr = (floatingRateBond.NPV() - npv) * 10000;
 
@@ -1945,7 +1956,7 @@ extern "C" double EXPORT pricingZCB(
 
             const DayCounter& ytmDayCounter = Actual365Fixed();
             Compounding ytmCompounding = Compounded;//Continuous;
-            Frequency ytmFrequency = Semiannual;//Annual;
+            Frequency ytmFrequency = Annual;
             Rate ytmValue = 0.00000000000001;
             if (asOfDate_ < maturityDate_) {
                 ytmValue = CashFlows::yield(zeroCouponBond.cashflows(), npv, ytmDayCounter, ytmCompounding, ytmFrequency, false,
