@@ -27,6 +27,9 @@ RUN CMAKE_VERSION=3.27.7 && \
 ARG BOOST_VERSION=1.87.0
 ARG QL_VERSION=1.37
 
+# devcontainer에서 전달받을 워크스페이스 폴더 이름
+ARG WORKSPACE_FOLDER_NAME
+
 # Boost (v.${BOOST_VERSION}) 소스 빌드 및 설치
 RUN BOOST_VERSION_UNDERSCORE=$(echo ${BOOST_VERSION} | tr . _) && \
     BOOST_INSTALL_PREFIX=/usr/lib/boost_${BOOST_VERSION_UNDERSCORE} && \
@@ -68,8 +71,8 @@ RUN { \
         echo "# Custom aliases"; \
         echo "alias ls='ls --color=auto'"; \
         echo "alias ll='ls -l --color=auto'"; \
-        echo "alias goso='cd /workspaces/pricingmodule/out/rocky-linux8/linux-release'"; \
-        echo "alias godll='cd /workspaces/pricingmodule/out/windows-x64/x64-debug'"; \
+        echo "alias goso='cd /workspaces/${WORKSPACE_FOLDER_NAME}/out/rocky-linux8/linux-release'"; \
+        echo "alias godll='cd /workspaces/${WORKSPACE_FOLDER_NAME}/out/windows-x64/windows-debug'"; \
     } >> /etc/bashrc
 
 WORKDIR /workspace

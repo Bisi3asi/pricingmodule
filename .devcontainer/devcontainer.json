@@ -8,7 +8,7 @@
     "vscode": {
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
-        "cmake.sourceDirectory": "/workspaces/pricingmodule",
+        "cmake.sourceDirectory": "${containerWorkspaceFolder}",
         "cmake.configureOnOpen": true
       },
       "extensions": [
