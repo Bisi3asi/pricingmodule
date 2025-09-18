@@ -416,6 +416,9 @@ extern "C" double EXPORT pricingFRB(
             for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
                 // GIRR 커브의 금리를 bumping (1bp 상승)
                 std::vector<Rate> bumpGirrRates = girrRates_;
+                if (bumpNum == 1) {
+                    bumpGirrRates[0] += girrBump; // 0번째 tenor도 같이 bump 적용
+                }
                 bumpGirrRates[bumpNum] += girrBump;
 
                 // bump된 금리로 새로운 ZeroCurve 생성
@@ -1322,6 +1325,9 @@ extern "C" double EXPORT pricingFRN(
             for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
                 // GIRR 커브의 금리를 bumping (1bp 상승)
                 std::vector<Rate> bumpGirrRates = girrRates_;
+                if (bumpNum == 1) {
+                    bumpGirrRates[0] += girrBump; // 0번째 tenor도 같이 bump 적용
+                }
                 bumpGirrRates[bumpNum] += girrBump;
 
                 // bump된 금리로 새로운 ZeroCurve 생성
@@ -1380,6 +1386,9 @@ extern "C" double EXPORT pricingFRN(
                 for (Size bumpNum = 1; bumpNum < indexGirrRates_.size(); ++bumpNum) {
                     // GIRR 커브의 금리를 bumping (1bp 상승)
                     std::vector<Rate> bumpGirrRates = indexGirrRates_;
+                    if (bumpNum == 1) {
+                        bumpGirrRates[0] += girrBump; // 0번째 tenor도 같이 bump 적용
+                    }
                     bumpGirrRates[bumpNum] += girrBump;
 
                     // bump된 금리로 새로운 ZeroCurve 생성
@@ -1996,6 +2005,9 @@ extern "C" double EXPORT pricingZCB(
             for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
                 // GIRR 커브의 금리를 bumping (1bp 상승)
                 std::vector<Rate> bumpGirrRates = girrRates_;
+                if (bumpNum == 1) {
+                    bumpGirrRates[0] += girrBump; // 0번째 tenor도 같이 bump 적용
+                }
                 bumpGirrRates[bumpNum] += girrBump;
 
                 // bump된 금리로 새로운 ZeroCurve 생성
