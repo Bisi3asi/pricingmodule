@@ -44,8 +44,8 @@ int main() {
     const double csrRiskWeight = 0.05;
 	const double girrRiskWeight = 0.017;
 
-    const int calType = 3; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
-    const int logYn = 0; // 로그 파일 생성 (0: No, 1: Yes)
+    const int calType = 9; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 9.Spread Over Yield)
+    const int logYn = 1; // 로그 파일 생성 (0: No, 1: Yes)
 
     double resultBasel2[5] = { 0 };
     double resultGirrDelta[23] = { 0 };

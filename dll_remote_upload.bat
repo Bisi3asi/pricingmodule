@@ -58,15 +58,27 @@ echo quit >> %SFTP_COMMAND_FILE%
 
 echo.
 echo [INFO] Starting File Transfer.
+echo [INFO] Please enter your password when prompted.
+
+:: execute psftp with the command file (interactive mode)
+psftp.exe %USERNAME%@%SERVER_IP% -b %SFTP_COMMAND_FILE%
 
 if %errorlevel% neq 0 (
     echo.
-    echo [ERROR] Invalid Password or Connection Failed.
+    echo [ERROR] SFTP transfer failed. This could be due to:
+    echo [ERROR] - Invalid credentials
+    echo [ERROR] - Network connection issues
+    echo [ERROR] - Server configuration problems
+    echo [ERROR] - Host key verification issues
+    echo.
+    echo [GUIDE] Try running this command manually to troubleshoot:
+    echo [GUIDE] psftp.exe %USERNAME%@%SERVER_IP%
     goto :cleanup
 )
 
 :success
-echo [INFO] File Transfer Completed.
+echo [INFO] File Transfer Completed Successfully.
+
 :cleanup
 if exist %SFTP_COMMAND_FILE% del %SFTP_COMMAND_FILE%
 

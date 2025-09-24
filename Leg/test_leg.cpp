@@ -171,8 +171,8 @@ int main() {
 
     const double girrRiskWeight = 0.017;
 
-    const int calType = 3;
-    const int logYn = 0;
+    const int calType = 1;
+    const int logYn = 1;
 
     double resultGirrBasel2[5] = { 0 };
     double resultIndexGirrBasel2[5] = { 0 };
