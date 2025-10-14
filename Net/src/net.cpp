@@ -2,7 +2,6 @@
 #include "logger.hpp"
 #include "common.hpp"
 
-// namespace
 using namespace QuantLib;
 using namespace std;
 using namespace logger;
@@ -14,17 +13,21 @@ extern "C" double EXPORT pricingNET(
 ) {
     /* 로거 종료 */
     FINALLY(
-        info("==============[Net: pricingNET Logging Ended!]==============");
-        closeLogger();
+        LOG_END();
     );
 
     try {
         /* 로거 초기화 */
-        disableConsoleLogging(); // 로깅여부 N일시 콘촐 입출력 비활성화
+        disableConsoleLogging(); // 기본 콘촐 입출력 비활성화
         if (logYn == 1) {
-            initLogger("net.log"); // 생성 파일명 지정
+            LOG_START("net.log");
         }
-		info("==============[Net: pricingNET Logging Started!]==============");
+        
+        /* 입력 파라미터 로깅 */
+        logNetInput(evaluationDate, notional);
+        /* 산출 결과 로깅 */
+        logNetOutput(notional);
+        
         return notional;
     }
     catch (...) {
@@ -36,8 +39,25 @@ extern "C" double EXPORT pricingNET(
             return -1;
         }
         catch (...) {
-            error("[pricingNet]: Unknown exception occurred.");
+            error("[pricingNET]: Unknown exception occurred.");
             return -1;
         }
     }
+}
+
+/* 디버깅 관련 */
+static void logNetInput(
+      const int evaluationDate
+    , const double notional
+) {
+    info("[pricingNET] - Input Parameters");
+    LOG_VAR(evaluationDate);
+    LOG_VAR(notional);
+}
+
+static void logNetOutput(
+      const double result
+) {
+    info("[pricingNET] - Output Results");
+    LOG_VAR(result);
 }

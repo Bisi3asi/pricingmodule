@@ -11,9 +11,9 @@ namespace logger {
     }
 
     /* 로거 생성 */
-    void initLogger(const std::string& filename) {
+    void initLogger(const std::string& filename, const char* funcName = nullptr) {
         try {
-            std::filesystem::path log_dir = "../logs"; // 로깅 디렉토리 지정
+            std::filesystem::path log_dir = "./logs"; // 로깅 디렉토리 지정
             if (!std::filesystem::exists(log_dir)) {
                 std::filesystem::create_directories(log_dir); // 해당 디렉토리 없을 시 생성
             }
@@ -32,6 +32,10 @@ namespace logger {
                 spdlog::set_level(spdlog::level::info);
                 spdlog::set_pattern("[%l][%Y-%m-%d %H:%M:%S] %v");
             }
+
+            if (funcName) {
+                info("[{}] - Logging Start.", funcName);
+            }
         }
         catch (const spdlog::spdlog_ex& ex) {
             std::cerr << "Failed to create logger: " << ex.what() << std::endl;
@@ -39,8 +43,11 @@ namespace logger {
     }
 
     /* 로거 종료 및 해제 */
-    void closeLogger() {
+    void closeLogger(const char* funcName = nullptr) {
         try {
+            if (funcName) {
+                info("[{}] - Logging End.", funcName);
+            }
             spdlog::shutdown();  // 모든 로거 정리 및 해제
         }
         catch (const spdlog::spdlog_ex& ex) {

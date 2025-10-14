@@ -13,8 +13,8 @@
 namespace logger {
 
     void disableConsoleLogging();
-    void initLogger(const std::string& filename);
-    void closeLogger();
+    void initLogger(const std::string& filename, const char* funcName = nullptr);
+    void closeLogger(const char* funcName = nullptr);
 
     // 기존 포맷팅 지원 템플릿
     template <typename... Args>
@@ -79,3 +79,7 @@ namespace logger {
     }
 }
 
+// 로깅용 매크로 정의
+#define LOG_START(fileName) logger::initLogger(fileName, __func__)
+#define LOG_END() logger::closeLogger(__func__)
+#define LOG_VAR(x) logger::info("{} = {}", #x, x) // 변수명 = 값
