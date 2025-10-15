@@ -11,53 +11,58 @@ extern "C" double EXPORT pricingNET(
     , const double notional                   // INPUT 2. 채권 원금
 	, const int logYn 					      // INPUT 3. 로깅 여부 (0: No, 1: Yes)
 ) {
-    /* 로거 종료 */
+    double result = -1.0; // 결과값 리턴 함수
+
     FINALLY(
-        LOG_END();
+        logPricingNETOutput(result);
+        LOG_END(result);
     );
 
     try {
-        /* 로거 초기화 */
-        disableConsoleLogging(); // 기본 콘촐 입출력 비활성화
+        disableConsoleLogging();
         if (logYn == 1) {
-            LOG_START("net.log");
+            LOG_START("net");
         }
-        
-        /* 입력 파라미터 로깅 */
-        logNetInput(evaluationDate, notional);
-        /* 산출 결과 로깅 */
-        logNetOutput(notional);
-        
-        return notional;
+        logPricingNETInput(evaluationDate, notional, logYn);
+        LOG_ENTER_PRICING();
+        return result = notional;
     }
     catch (...) {
         try {
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            error("Exception occurred: {}", string(e.what()));
-            return -1;
+            LOG_KNOWN_EXCEPTION_ERROR(std::string(e.what()));
+            return result = -1.0;
         }
         catch (...) {
-            error("[pricingNET]: Unknown exception occurred.");
-            return -1;
+            LOG_UNKNOWN_EXCEPTION_ERROR();
+            return result = -1.0;
         }
     }
 }
 
-/* 디버깅 관련 */
-static void logNetInput(
+/* for logging */
+static void logPricingNETInput(
       const int evaluationDate
     , const double notional
+    , const int logYn
 ) {
-    info("[pricingNET] - Input Parameters");
+    info("| Input Parameters |");
+    info("---------------------------------------------");
     LOG_VAR(evaluationDate);
     LOG_VAR(notional);
+    LOG_VAR(logYn);
+    info("---------------------------------------------");
+    info("");
 }
 
-static void logNetOutput(
+static void logPricingNETOutput(
       const double result
 ) {
-    info("[pricingNET] - Output Results");
+    info("| Output Results |");
+    info("---------------------------------------------");
     LOG_VAR(result);
+    info("---------------------------------------------");
+    info("");
 }

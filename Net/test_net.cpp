@@ -14,7 +14,7 @@ int main() {
     /* Net 테스트 */
     const int evaluationDate = 45107;   // 2023-06-30
     const double notional = 3600000000;
-	const int logYn = 0; // 로깅 여부 (0: No, 1: Yes)
+	const int logYn = 1; // 로깅 여부 (0: No, 1: Yes)
 
     double result = pricingNET(evaluationDate, notional, logYn);
 

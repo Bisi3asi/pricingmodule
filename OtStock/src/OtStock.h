@@ -14,7 +14,16 @@
 
 #pragma once
 
-// extern "C" 처리하여 C 스타일로 외부에서 함수가 호출될 수 있도록 처리
+/* include */
+#include <iostream> 
+#include <vector>
+#include <string>
+#include <stdlib.h>  
+#include <string.h>
+#include <time.h>
+#include <math.h>
+
+/* dll export method(extern "C", EXPORT 명시 필요) */
 extern "C" double EXPORT pricing(
 	const double amount				// 현재가치금액 - SPOT_PRICE
 	, const double price            // 종가 (시나리오 분석시 시나리오 적용가 )  - 커브적용 분석시 종가  CURVE_EQ_SPOT        : IC-KOSPI200
@@ -28,5 +37,22 @@ extern "C" double EXPORT pricing(
 	, double* resultCashflow		// (Cashflow)  -
 );
 
+/* for logging */
+static void logPricingInput(
+	const double amount
+	, const double price
+	, const double basePrice
+	, const double beta
+	, const int calType
+	, const int scenCalcu
+	, const int logYn
+);
+
+static void logPricingOutput(
+	const double result
+	, const double* resultBasel2
+	, const double* resultBasel3
+	, const double* resultCashflow
+);
 
 #endif

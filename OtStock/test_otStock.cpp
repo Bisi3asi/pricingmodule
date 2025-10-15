@@ -20,7 +20,7 @@ int main() {
 	const double beta = 1.2;
 	const int calType = 1; // 1: pric
 	const int scenCalcu = 1;
-	const int logYn = 0; // 0: No, 1: Yes
+	const int logYn = 1; // 0: No, 1: Yes
     double resultBasel2[6] = { 0 };
     double resultBasel3[1] = { 0 };
 	double resultCashflow[1] = { 0 }; // Cashflow array, size 1 for simplicity

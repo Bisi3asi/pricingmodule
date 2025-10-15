@@ -1,5 +1,5 @@
-﻿#ifndef BOND_H
-#define BOND_H
+﻿#ifndef NET_H
+#define NET_H
 
 // function 외부 인터페이스 export 정의
 #ifdef _WIN32
@@ -24,7 +24,18 @@
 extern "C" double EXPORT pricingNET(
     const int evaluationDate                // INPUT 1. 평가일 (serial number)
   , const double notional                   // INPUT 2. 채권 원금
-  , const int logYn 					    // INPUT 3. 로깅 여부 (0: No, 1: Yes)
+  , const int logYn 					              // INPUT 3. 로깅 여부 (0: No, 1: Yes)
+);
+
+/* for logging */
+static void logPricingNETInput(
+      const int evaluationDate
+    , const double notional
+    , const int logYn
+);
+
+static void logPricingNETOutput(
+      const double result
 );
 
 #endif

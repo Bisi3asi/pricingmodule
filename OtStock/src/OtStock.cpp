@@ -4,17 +4,12 @@
 //---------------------------------------------------------------
 
 #include "otStock.h"
-#include "common.cpp"
+#include "logger.hpp"
+#include "common.hpp"
 
-#include <iostream> 
-#include <vector>
-#include <string>
-#include <stdlib.h>  
-#include <string.h>
-#include <time.h>
-#include <math.h>
-
+using namespace QuantLib;
 using namespace std;
+using namespace logger;
 
 //----------------------------------------------------------------
 // stockPricing
@@ -41,21 +36,31 @@ extern "C" double EXPORT pricing(
 )
 {
 	/* TODO */
-	// 1. 로깅 로직 도입
-	// 2. INPUT 데이터 로깅
-	// 3. 수수료, 세금, 2영업일지급등 검토
+	// 1. 수수료, 세금, 2영업일지급등 검토
+	double result = -1.0; // 결과값 리턴 변수
 	
-	initResult(resultBasel2, 6);
-	initResult(resultBasel3, 1);
-	initResult(resultCashflow, 1);
-
-	long		retNo		= 0 ;		// return cole
-	double      npv			= 0 ;		// 평가 금액
-	double      retDeta     = 0 ;		
-	// amt * ( price / basePrice ) ^ beta
-
+	FINALLY(
+		logPricingOutput(result, resultBasel2, resultBasel3, resultCashflow);
+        LOG_END(result);
+    );
 	try {
+		disableConsoleLogging();
+		if (logYn == 1) {
+			LOG_START("otStock");
+		}
+		logPricingInput(amount, price, basePrice, beta, calType, scenCalcu, logYn);
 
+		initResult(resultBasel2, 6);
+		initResult(resultBasel3, 1);
+		initResult(resultCashflow, 1);
+
+		long		retNo		= 0 ;		// return cole
+		double      npv			= 0 ;		// 평가 금액
+		double      retDeta     = 0 ;		
+		// amt * ( price / basePrice ) ^ beta
+
+		LOG_ENTER_PRICING();
+		
 		if (scenCalcu == 1 ) {
 			npv =  amount * pow( (price / basePrice) , beta );
 		}
@@ -66,34 +71,86 @@ extern "C" double EXPORT pricing(
 		    npv = amount;
 		}
 
+		// basel2 sensitivity
+		if (calType == 2) {
+			resultBasel2[0] = npv;	// Delta
+			resultBasel2[1] = 0;	// Gamma
+			resultBasel2[2] = 0;	// Vega
+			resultBasel2[3] = 0;	// Theta
+			resultBasel2[4] = 0;	// Rho
+			resultBasel2[5] = 0;	// PV01 (TODO)
+		}
+
+		// basel3 sensitivity
+		if (calType == 3) {
+			resultBasel3[0] = npv;
+		}
+
+		if (calType == 4) {
+		}
+
+		if (retNo != 0) {
+			return result = retNo;
+		}
+		else {
+			return result = npv;
+		}
+
 	}
 	catch (...) {
-		cout << "";
-		retNo = -999;
-	}
-
-	// basel2 sensitivity
-	if (calType == 2) {
-		resultBasel2[0] = npv;	// Delta
-		resultBasel2[1] = 0;	// Gamma
-		resultBasel2[2] = 0;	// Vega
-		resultBasel2[3] = 0;	// Theta
-		resultBasel2[4] = 0;	// Rho
-		resultBasel2[5] = 0;	// PV01 (TODO)
-	}
-
-	// basel3 sensitivity
-	if (calType == 3) {
-		resultBasel3[0] = npv;
-	}
-
-	if (calType == 4) {
-	}
-
-	if (retNo != 0) {
-		return retNo;
-	}
-	else {
-		return npv;
+		try {
+			std::rethrow_exception(std::current_exception());
+		}
+		catch (const std::exception& e) {
+			LOG_KNOWN_EXCEPTION_ERROR(std::string(e.what()));
+			return result = -1.0;
+		}
+		catch (...) {
+			LOG_UNKNOWN_EXCEPTION_ERROR();
+			return result = -1.0;
+		}
 	}
 }
+
+/* for logging */
+static void logPricingInput(
+	const double amount
+	, const double price
+	, const double basePrice
+	, const double beta
+	, const int calType
+	, const int scenCalcu
+	, const int logYn
+) {
+	info("| Input Parameters |");
+	info("---------------------------------------------");
+	LOG_VAR(amount);
+	LOG_VAR(price);
+	LOG_VAR(basePrice);
+	LOG_VAR(beta);
+	LOG_VAR(calType);
+	LOG_VAR(scenCalcu);
+	info("---------------------------------------------");
+	info("");
+}
+
+static void logPricingOutput(
+	const double result,
+	const double* resultBasel2,
+	const double* resultBasel3,
+	const double* resultCashflow
+) {
+	info("| Output Results |");
+	info("---------------------------------------------");
+	LOG_VAR(result);
+	// resultBasel2 is an array of 6 elements (precision 6)
+	LOG_ARRAY(resultBasel2, 6, 6);
+	// resultBasel3 is an array of 1 element
+	LOG_ARRAY(resultBasel3, 1);
+	// resultCashflow is an array of 1 element
+	LOG_ARRAY(resultCashflow, 1);
+	info("---------------------------------------------");
+	info("");
+}
+
+
