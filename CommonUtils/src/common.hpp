@@ -1,9 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <cstring>
 #include <memory>
+#include <functional>
+
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <ql/time/daycounter.hpp>
@@ -54,20 +57,10 @@ ext::shared_ptr<StrikedTypePayoff> makeStrikeTypePayoff(int strikeType, int opti
                                                         ext::optional<Real> cashPayoff = ext::nullopt);
 Barrier::Type makeBarrierTypeFromInt(int code);
 Period makePeriodFromDays(int days);
-std::vector<Period> makePeriodArrayFromTenorDaysArray(
-    const int* girrTenorDays, const int numberOfGirrTenors);
-
+std::vector<Period> makePeriodArrayFromTenorDaysArray(const int* girrTenorDays, const int numberOfGirrTenors);
 DateGeneration::Rule makeScheduleGenRuleFromInt(int code);
 
-void initResult(double* result, const int size);
-void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib::Real> sensitivities, QuantLib::Size originalSize, double* resultArray);
-void freeArray(double* arr);
-std::string qDateToString(const QuantLib::Date& date);
-
-// System
-
-#include <functional>
-
+/* System, Utility */
 class ScopeGuard {
 public:
     explicit ScopeGuard(std::function<void()> f) : func_(std::move(f)), active_(true) {}
@@ -79,6 +72,15 @@ private:
     bool active_;
 };
 
+void initResult(double* result, const int size);
+void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib::Real> sensitivities, QuantLib::Size originalSize, double* resultArray);
+void freeArray(double* arr);
+bool isAllZero(const double* data, size_t size, double eps = 1e-12);
+bool isAllZero(const float* data, size_t size, float eps = 1e-6f);
+// bool isAllZero(const int* data, size_t size); // int형 배열에 대해서는 체크하지 않도록 임시 비활성화 처리
+// std::string qDateToString(const QuantLib::Date& date);
+
+// Finally 블록 관련 매크로
 #define CONCAT_INNER(x,y) x##y
 #define CONCAT(x,y) CONCAT_INNER(x,y)
-#define FINALLY(code) ScopeGuard CONCAT(_guard_, __LINE__)([&](){code;})
+#define FINALLY(block) ScopeGuard CONCAT(_guard_, __LINE__)([&] block)

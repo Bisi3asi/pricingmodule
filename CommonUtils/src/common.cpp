@@ -213,8 +213,6 @@ QuantLib::Period makePeriodFromIntParts(int numberPart, int letterPart) {
     }
 }
 
-
-
 std::vector<Date> makeDatesVectorFromIntArray(int arrSize, int intDates[]) {
     std::vector<Date> dates(arrSize);
     for (size_t i = 0; i < static_cast<Size>(arrSize); ++i)
@@ -333,11 +331,14 @@ DateGeneration::Rule makeScheduleGenRuleFromInt(int code) {
     }
 }
 
+/* System, Utility */
+// result 배열을 0으로 초기화
 void initResult(double* result, const int size) {
 
     std::fill_n(result, size, 0.0);
 }
 
+// tenors와 sensitivities 벡터를 받아서, sensitivities가 0이 아닌 것만 필터링해 resultArray에 저장
 void processResultArray(std::vector<Real> tenors, std::vector<Real> sensitivities, Size originalSize, double* resultArray) {
     std::vector<double> filteredTenor;
     std::vector<double> filteredSensitivity;
@@ -366,16 +367,50 @@ void processResultArray(std::vector<Real> tenors, std::vector<Real> sensitivitie
     }
 }
 
+// 동적 할당된 배열 해제
 void freeArray(double* arr) {
     if (arr != nullptr) {
         free(arr);
     }
 }
 
-/* FOR DEBUG */
-std::string qDateToString(const Date& date) {
-
-    std::ostringstream oss;
-    oss << date;
-    return oss.str();
+// 모든 값이 0인지 평가값 산출여부 확인 (double)
+bool isAllZero(const double* data, size_t size, double eps) {
+    if (data == nullptr || size == 0) return true;
+    for (size_t i = 0; i < size; ++i) {
+        double v = data[i];
+        if (!std::isfinite(v) || std::fabs(v) > eps) return false;
+    }
+    return true;
 }
+
+// 모든 값이 0인지 평가값 산출여부 확인 (float)
+bool isAllZero(const float* data, size_t size, float eps) {
+    if (data == nullptr || size == 0) return true;
+    for (size_t i = 0; i < size; ++i) {
+        float v = data[i];
+        if (!std::isfinite(v) || std::fabs(v) > eps) return false;
+    }
+    return true;
+}
+
+// // 모든 값이 0인지 평가값 산출여부 확인 (int)
+// bool isAllZero(const int* data, size_t size) { // int형 배열에 대해서는 체크하지 않도록 임시 비활성화 처리
+//     if (data == nullptr || size == 0) return true;
+//     for (size_t i = 0; i < size; ++i) {
+//         if (data[i] != 0) return false;
+//     }
+//     return true;
+// }
+
+// // QuantLib::Date를 "YYYYMMDD" 형식의 문자열로 변환하는 함수
+// std::string qDateToString(const Date& date) { // Linux 환경 링킹 에러로 임시 비활성화 처리, logger_data.hpp에 동일 구현부 추가
+//     std::ostringstream oss;
+//     oss << std::setw(4) << std::setfill('0') << date.year()
+//         << std::setw(2) << std::setfill('0') << static_cast<int>(date.month())
+//         << std::setw(2) << std::setfill('0') << date.dayOfMonth();
+//     return oss.str();
+// }
+
+
+
