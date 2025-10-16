@@ -3,6 +3,11 @@
 #include <spdlog/sinks/null_sink.h>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
+#include <vector>
 
 namespace logger {
 
@@ -16,12 +21,15 @@ namespace logger {
     /* 로거 생성 */
     void initLogger(const std::string& filename, const char* funcName) {
         try {
-            std::filesystem::path log_dir = "./logs"; // 로깅 디렉토리 지정
-            if (!std::filesystem::exists(log_dir)) {
-                std::filesystem::create_directories(log_dir); // 해당 디렉토리 없을 시 생성
+            namespace fs = std::filesystem;
+
+            // 로깅 디렉토리 지정 및 생성
+            fs::path log_dir = "./logs";
+            if (!fs::exists(log_dir)) {
+                fs::create_directories(log_dir); // 해당 디렉토리 없을 시 생성
             }
-        
-            // 로깅 파일에 타임스탬프 추가
+
+            // 로깅 파일에 타임스탬프 추가 (밀리초 포함)
             auto now = std::chrono::system_clock::now();
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
             std::time_t tnow = std::chrono::system_clock::to_time_t(now);
@@ -34,17 +42,33 @@ namespace logger {
             #endif
 
             std::ostringstream tsoss;
-            // 타임스탬프 형식 ex) 20251015.123045.123
+            // 타임스탬프 형식: YYYYMMDD.HHMMSS.mmm
             tsoss << std::put_time(&local_tm, "%Y%m%d") << '.'
-                << std::put_time(&local_tm, "%H%M%S") << '.'
-                << std::setw(3) << std::setfill('0') << ms.count();
+                  << std::put_time(&local_tm, "%H%M%S") << '.'
+                  << std::setw(3) << std::setfill('0') << ms.count();
 
-            std::filesystem::path in_path = filename;
+            fs::path in_path = filename;
             std::string base = in_path.filename().string();
-            std::string out_name = base + "_" + tsoss.str() + ".log";
+            std::string base_with_ts = base + "_" + tsoss.str();
 
-            std::string full_path = std::filesystem::weakly_canonical(log_dir / out_name).string();
+            // 기본 파일명은 ...-1.log 로 시작
+            // 만약 동일한 파일이 존재하면 -2, -3 ... 식으로 증가시켜 사용
+            // 밀리초가 바뀌면 base_with_ts가 달라지므로 다시 -1로 시작
+            int idx = 1;
+            fs::path chosen_path;
+            while (true) {
+                std::string candidate = base_with_ts + "-" + std::to_string(idx) + ".log";
+                fs::path candidate_path = log_dir / candidate;
+                if (!fs::exists(candidate_path)) {
+                    chosen_path = candidate_path;
+                    break;
+                }
+                ++idx;
+            }
+
+            std::string full_path = fs::weakly_canonical(chosen_path).string();
             std::cout << "Log file will be created at: " << full_path << std::endl;
+            std::cout << "If Log file is not created, please check the permissions of the 'logs' directory." << std::endl;
             std::cout << std::endl;
 
             if (!spdlog::get("logger")) {
@@ -76,7 +100,7 @@ namespace logger {
                 info("Pricing Process Success.");
             }
             else {
-                error("Pricing Process Fail with Errors: {}.", result);
+                error("Pricing Process Fail, Exit with Error Code: {}.", result);
             }
             info("Logging End.");
             spdlog::shutdown();  // 모든 로거 정리 및 해제
