@@ -13,18 +13,29 @@ extern "C" double EXPORT pricingNET(
 ) {
     double result = -1.0; // 결과값 리턴 함수
 
-    FINALLY(
-        logPricingNETOutput(result);
+    FINALLY({
+        /* Output Result 로그 출력 */
+        LOG_OUTPUT(
+            FIELD_VAR(result)
+        );
+        /* 로그 종료 */
         LOG_END(result);
-    );
+    });
 
     try {
+        /* 로거 초기화 */
         disableConsoleLogging();
         if (logYn == 1) {
             LOG_START("net");
         }
-        logPricingNETInput(evaluationDate, notional, logYn);
-        LOG_ENTER_PRICING();
+
+        /* Input Parameter 로그 출력 */
+        LOG_INPUT(
+            FIELD_VAR(evaluationDate), FIELD_VAR(notional), FIELD_VAR(logYn)
+        );
+        
+        /* 평가 로직 시작 */
+        LOG_MESSAGE_ENTER_PRICING();
         return result = notional;
     }
     catch (...) {
@@ -32,37 +43,12 @@ extern "C" double EXPORT pricingNET(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            LOG_KNOWN_EXCEPTION_ERROR(std::string(e.what()));
+            LOG_ERROR_KNOWN_EXCEPTION(std::string(e.what()));
             return result = -1.0;
         }
         catch (...) {
-            LOG_UNKNOWN_EXCEPTION_ERROR();
+            LOG_ERROR_UNKNOWN_EXCEPTION();
             return result = -1.0;
         }
     }
-}
-
-/* for logging */
-static void logPricingNETInput(
-      const int evaluationDate
-    , const double notional
-    , const int logYn
-) {
-    info("| Input Parameters |");
-    info("---------------------------------------------");
-    LOG_VAR(evaluationDate);
-    LOG_VAR(notional);
-    LOG_VAR(logYn);
-    info("---------------------------------------------");
-    info("");
-}
-
-static void logPricingNETOutput(
-      const double result
-) {
-    info("| Output Results |");
-    info("---------------------------------------------");
-    LOG_VAR(result);
-    info("---------------------------------------------");
-    info("");
 }

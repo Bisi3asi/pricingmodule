@@ -36,19 +36,30 @@ extern "C" double EXPORT pricing(
 )
 {
 	/* TODO */
-	// 1. 수수료, 세금, 2영업일지급등 검토
+	// 1. 수수료, 세금, 2영업일 지급 등 검토
 	double result = -1.0; // 결과값 리턴 변수
 	
-	FINALLY(
-		logPricingOutput(result, resultBasel2, resultBasel3, resultCashflow);
-        LOG_END(result);
-    );
+	FINALLY({
+		/* Output Result 로그 출력 */
+		LOG_OUTPUT(
+			FIELD_VAR(result), 
+			FIELD_ARR(resultBasel2, 6), FIELD_ARR(resultBasel3, 1), FIELD_ARR(resultCashflow, 1)
+		);
+		/* 로그 종료 */
+		LOG_END(result);
+	});
 	try {
+		/* 로거 초기화 */
 		disableConsoleLogging();
 		if (logYn == 1) {
 			LOG_START("otStock");
 		}
-		logPricingInput(amount, price, basePrice, beta, calType, scenCalcu, logYn);
+
+		/* Input Parameter 로그 출력 */
+		LOG_INPUT(
+			FIELD_VAR(amount), FIELD_VAR(price), FIELD_VAR(basePrice), FIELD_VAR(beta), 
+			FIELD_VAR(calType), FIELD_VAR(scenCalcu), FIELD_VAR(logYn)
+		);
 
 		initResult(resultBasel2, 6);
 		initResult(resultBasel3, 1);
@@ -59,7 +70,8 @@ extern "C" double EXPORT pricing(
 		double      retDeta     = 0 ;		
 		// amt * ( price / basePrice ) ^ beta
 
-		LOG_ENTER_PRICING();
+		/* 평가 로직 시작 */
+		LOG_MESSAGE_ENTER_PRICING();
 		
 		if (scenCalcu == 1 ) {
 			npv =  amount * pow( (price / basePrice) , beta );
@@ -102,55 +114,14 @@ extern "C" double EXPORT pricing(
 			std::rethrow_exception(std::current_exception());
 		}
 		catch (const std::exception& e) {
-			LOG_KNOWN_EXCEPTION_ERROR(std::string(e.what()));
+			LOG_ERROR_KNOWN_EXCEPTION(std::string(e.what()));
 			return result = -1.0;
 		}
 		catch (...) {
-			LOG_UNKNOWN_EXCEPTION_ERROR();
+			LOG_ERROR_UNKNOWN_EXCEPTION();
 			return result = -1.0;
 		}
 	}
-}
-
-/* for logging */
-static void logPricingInput(
-	const double amount
-	, const double price
-	, const double basePrice
-	, const double beta
-	, const int calType
-	, const int scenCalcu
-	, const int logYn
-) {
-	info("| Input Parameters |");
-	info("---------------------------------------------");
-	LOG_VAR(amount);
-	LOG_VAR(price);
-	LOG_VAR(basePrice);
-	LOG_VAR(beta);
-	LOG_VAR(calType);
-	LOG_VAR(scenCalcu);
-	info("---------------------------------------------");
-	info("");
-}
-
-static void logPricingOutput(
-	const double result,
-	const double* resultBasel2,
-	const double* resultBasel3,
-	const double* resultCashflow
-) {
-	info("| Output Results |");
-	info("---------------------------------------------");
-	LOG_VAR(result);
-	// resultBasel2 is an array of 6 elements (precision 6)
-	LOG_ARRAY(resultBasel2, 6, 6);
-	// resultBasel3 is an array of 1 element
-	LOG_ARRAY(resultBasel3, 1);
-	// resultCashflow is an array of 1 element
-	LOG_ARRAY(resultCashflow, 1);
-	info("---------------------------------------------");
-	info("");
 }
 
 

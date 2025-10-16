@@ -37,22 +37,4 @@ extern "C" double EXPORT pricing(
 	, double* resultCashflow		// (Cashflow)  -
 );
 
-/* for logging */
-static void logPricingInput(
-	const double amount
-	, const double price
-	, const double basePrice
-	, const double beta
-	, const int calType
-	, const int scenCalcu
-	, const int logYn
-);
-
-static void logPricingOutput(
-	const double result
-	, const double* resultBasel2
-	, const double* resultBasel3
-	, const double* resultCashflow
-);
-
 #endif

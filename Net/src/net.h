@@ -26,16 +26,4 @@ extern "C" double EXPORT pricingNET(
   , const double notional                   // INPUT 2. 채권 원금
   , const int logYn 					              // INPUT 3. 로깅 여부 (0: No, 1: Yes)
 );
-
-/* for logging */
-static void logPricingNETInput(
-      const int evaluationDate
-    , const double notional
-    , const int logYn
-);
-
-static void logPricingNETOutput(
-      const double result
-);
-
 #endif
