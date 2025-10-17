@@ -76,14 +76,14 @@ extern "C" double EXPORT pricingFRB(
     , const int calType			            // INPUT 27. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 28. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-    //              startDate, endDate, notional, rate, payDate, CF, DF)
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 );
 
@@ -143,7 +143,7 @@ extern "C" double EXPORT pricingFRN(
     , const int calType			            // INPUT 43. 계산 타입 (1: Price, 2. BASEL 2 Delta, 3. BASEL 3 GIRR / CSR, 9. SOY)
     , const int logYn                       // INPUT 44. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1.  Net PV (리턴값)
+                                            // OUTPUT 1.  Net PV (리턴값)
     , double* resultGirrBasel2              // OUTPUT 2.  Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultIndexGirrBasel2         // OUTPUT 3.  Basel 2 Result [index 0 ~ 4: Delta, Gamma, Duration, Convexity, PV01]
     , double* resultGirrDelta               // OUTPUT 4.  GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
@@ -153,7 +153,7 @@ extern "C" double EXPORT pricingFRN(
     , double* resultIndexGirrCvr			// OUTPUT 8.  GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 9.  CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 10. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-    //              startDate, endDate, notional, rate, payDate, CF, DF)
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 );
 
@@ -182,18 +182,18 @@ extern "C" double EXPORT pricingZCB(
     , const int calType			            // INPUT 16. 계산 타입 (1: Price, 2. BASEL 2 민감도, 3. BASEL 3 민감도, 9: SOY)
     , const int logYn                       // INPUT 17. 로그 파일 생성 여부 (0: No, 1: Yes)
 
-    // OUTPUT 1. Net PV (리턴값)
+                                            // OUTPUT 1. Net PV (리턴값)
     , double* resultBasel2                  // OUTPUT 2. (추가)Basel 2 Result(Delta, Gamma, Duration, Convexity, PV01)
     , double* resultGirrDelta               // OUTPUT 3. GIRR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultCsrDelta			    // OUTPUT 4. CSR Delta [index 0: size, index 1 ~ size + 1: tenor, index size + 2 ~ 2 * size + 1: sensitivity]
     , double* resultGirrCvr			        // OUTPUT 5. (추가)GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. (추가)CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-    //              startDate, endDate, notional, rate, payDate, CF, DF)
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 );
 
-// /* Wrapper class */
+/* Wrapper class */
  class FixedRateBondCustom : public QuantLib::Bond {
  public:
      FixedRateBondCustom(QuantLib::Natural settlementDays,

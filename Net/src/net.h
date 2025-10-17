@@ -25,5 +25,6 @@ extern "C" double EXPORT pricingNET(
     const int evaluationDate                // INPUT 1. 평가일 (serial number)
   , const double notional                   // INPUT 2. 채권 원금
   , const int logYn 					              // INPUT 3. 로깅 여부 (0: No, 1: Yes)
+                                            // OUTPUT 1. Net PV (리턴값)
 );
 #endif
