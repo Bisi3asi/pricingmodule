@@ -328,10 +328,11 @@ extern "C" double EXPORT pricingZCL(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
-            LOG_MSG_LOAD_RESULT("Net PV, Basel 3 Sensitivity");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Curvature");
             resultGirrCvr[0] = (bumpedNpv[0] - npv);
             resultGirrCvr[1] = (bumpedNpv[1] - npv);
-
+            
+            LOG_MSG_LOAD_RESULT("Net PV");
             return result = npv;
         }
 
@@ -825,10 +826,11 @@ extern "C" double EXPORT pricingFDL(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
-            LOG_MSG_LOAD_RESULT("Net PV, Basel 3 Sensitivity");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Curvature");
             resultGirrCvr[0] = (bumpedNpv[0] - npv);
             resultGirrCvr[1] = (bumpedNpv[1] - npv);
-
+            
+            LOG_MSG_LOAD_RESULT("Net PV");
             return result = npv;
         }
 
