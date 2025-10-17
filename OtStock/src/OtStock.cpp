@@ -4,37 +4,27 @@
 //---------------------------------------------------------------
 
 #include "otStock.h"
-#include "logger.hpp"
+#include "logger_data.hpp"
+#include "logger_messages.hpp"
 #include "common.hpp"
 
 using namespace QuantLib;
 using namespace std;
 using namespace logger;
 
-//----------------------------------------------------------------
-// stockPricing
-// amt          : 주식 시가
-// price        : 가격         ( 종목 위험요인 관리 O : 주식가격 ,      종목 위험요인 관리 X : 주가 지수          ) - 시나리오 적용된 가격 
-// basePrice	: 기준가격     ( 종목 위험요인 관리 O : 주식 기준가격 , 종목 위험요인 관리 X : 주가지수 기준 가격 ) - 시나리오 적용전 가격 
-// beta         : 주식베타     ( 종목 위험요인 관리 O : 1 ,             종목 위험요인 관리 X : 주식 베타          ) 
-// price        : 종목가격     ( 일반분석 - 금일가격, 사후검증 : 금일가격 ) - 커브에서 얻어옴
-// prodPrice	: 종목기준가격 ( 일반분석 - 금일가격, 사후검증 : 전일가격 ) - 사후검증의 경우는 전일 인스트루먼트정보를 일자만 변경해서 그대로 이용함.
-// resultBasel2 : 0:Delta , 1:Gamma, 2:Vega, 3:Theta, 4:Rho, 5:PV01 
-// return		: 평가가격(이론가), -999: ERROR
-//----------------------------------------------------------------
 extern "C" double EXPORT pricing(
-	const double amount				// 현재가치금액 - SPOT_PRICE
-	, const double price            // 종가 (시나리오 분석시 시나리오 적용가 )  - 커브적용 분석시 종가  CURVE_EQ_SPOT        : IC-KOSPI200
-	, const double basePrice        // 기준가		- BOOK_PRIC
-	, const double beta             // 지수기준 이용시 종목 Beta값
-	, const int calType             // (1:pric, 2:basel2 sensitivity, 3:basel3 sensitivity, 4:cashflow)
-	, const int scenCalcu           // 일반(이론가) : 0 , 일반시나리오분석작업 : 1 , RM시나리오분석 : 2
-	, const int logYn               // (0:No, 1:Yes)
-	, double* resultBasel2          // (basel2 sensitivity, Delta, Gamma, Vega, duration, convexitym pv01 )
-	, double* resultBasel3			// (basel3 sensitivity, GIRR, CSR-nSec, CSR-nCTP, CSR-CTP, EQ, CM, FX ) 
-	, double* resultCashflow		// (Cashflow)  -
-)
-{
+	const double amount				// INPUT 1. 현재가치금액 - SPOT_PRICE
+	, const double price            // INPUT 2. 종가 (시나리오 분석시 시나리오 적용가 )  - 커브적용 분석시 종가  CURVE_EQ_SPOT        : IC-KOSPI200
+	, const double basePrice        // INPUT 3. 기준가		- BOOK_PRICE
+	, const double beta             // INPUT 4. 지수기준 이용시 종목 Beta값
+	, const int calType             // INPUT 5. (1:pric, 2:basel2 sensitivity, 3:basel3 sensitivity, 4:cashflow)
+	, const int scenCalcu           // INPUT 6. 일반(이론가) : 0 , 일반시나리오분석작업 : 1 , RM시나리오분석 : 2
+	, const int logYn               // INPUT 7. (0:No, 1:Yes)
+									// OUTPUT 1. 이론가
+	, double* resultBasel2          // OUTPUT 2. (basel2 sensitivity, Delta, Gamma, Vega, duration, convexitym pv01 )
+	, double* resultBasel3			// OUTPUT 3. (basel3 sensitivity, GIRR, CSR-nSec, CSR-nCTP, CSR-CTP, EQ, CM, FX ) 
+	, double* resultCashflow		// OUTPUT 4. (Cashflow)  -
+) {
 	/* TODO */
 	// 1. 수수료, 세금, 2영업일 지급 등 검토
 	double result = -1.0; // 결과값 리턴 변수
@@ -71,20 +61,30 @@ extern "C" double EXPORT pricing(
 		// amt * ( price / basePrice ) ^ beta
 
 		/* 평가 로직 시작 */
-		LOG_MESSAGE_ENTER_PRICING();
-		
+		LOG_MSG_PRICING_START();
+
 		if (scenCalcu == 1 ) {
+			LOG_MSG_PRICING("Net PV - Normal Scenario Analysis");
 			npv =  amount * pow( (price / basePrice) , beta );
 		}
 		else if (scenCalcu == 2) {
+			LOG_MSG_PRICING("Net PV - RM Scenario Analysis");
 			npv = amount * (price / basePrice);
 		}
 		else {
+			LOG_MSG_PRICING("Net PV - No Scenario Analysis");
 		    npv = amount;
 		}
 
+		/* 결과 로드 */
+		LOG_MSG_LOAD_RESULT("Net PV");
+
 		// basel2 sensitivity
 		if (calType == 2) {
+			LOG_MSG_PRICING("Basel 2 Sensitivity")
+			LOG_MSG_PRICING("Basel 2 Sensitivity - Delta");
+			LOG_MSG_LOAD_RESULT("Basel 2 Sensitivity - Delta");
+
 			resultBasel2[0] = npv;	// Delta
 			resultBasel2[1] = 0;	// Gamma
 			resultBasel2[2] = 0;	// Vega
@@ -95,6 +95,10 @@ extern "C" double EXPORT pricing(
 
 		// basel3 sensitivity
 		if (calType == 3) {
+			LOG_MSG_PRICING("Basel 3 Sensitivity");
+			LOG_MSG_PRICING("Basel 2 Sensitivity - EQ Delta");
+			LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - EQ Delta");
+
 			resultBasel3[0] = npv;
 		}
 
@@ -114,11 +118,11 @@ extern "C" double EXPORT pricing(
 			std::rethrow_exception(std::current_exception());
 		}
 		catch (const std::exception& e) {
-			LOG_ERROR_KNOWN_EXCEPTION(std::string(e.what()));
+			LOG_ERR_KNOWN_EXCEPTION(std::string(e.what()));
 			return result = -1.0;
 		}
 		catch (...) {
-			LOG_ERROR_UNKNOWN_EXCEPTION();
+			LOG_ERR_UNKNOWN_EXCEPTION();
 			return result = -1.0;
 		}
 	}

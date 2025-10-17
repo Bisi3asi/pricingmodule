@@ -91,12 +91,13 @@ extern "C" double EXPORT pricingFRB(
             FIELD_VAR(calType), FIELD_VAR(logYn)
         );
 
+        /* 입력 데이터 체크 */
+        LOG_MSG_INPUT_VALIDATION();
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
             error("Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return result = -1.0; // Invalid calculation type
         }
 
-        // Input Data Check
         // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
             error("Maturity Date is less than evaluation Date.");
@@ -113,7 +114,7 @@ extern "C" double EXPORT pricingFRB(
             return result = -1.0;
         }
 
-        // 결과 데이터 초기화
+        /* 결과 동적 배열 초기화 */
         initResult(resultBasel2, 5);
         initResult(resultGirrDelta, 23);
         initResult(resultCsrDelta, 13);
@@ -122,7 +123,7 @@ extern "C" double EXPORT pricingFRB(
         initResult(resultCashFlow, 1000);
 
         /* 평가 로직 시작 */
-        LOG_MESSAGE_ENTER_PRICING();
+        LOG_MSG_PRICING_START();
 
         // revaluationDateSerial -> revaluationDate
         Date asOfDate_ = Date(evaluationDate);
@@ -162,7 +163,6 @@ extern "C" double EXPORT pricingFRB(
         Linear girrInterpolator_ = Linear(); // 보간 방식, TODO 변환 함수 적용 (Interpolator)
         Compounding girrCompounding_ = makeCompoundingFromInt(girrConvention[2]); // 이자 계산 방식(Compounding)
         Frequency girrFrequency_ = makeFrequencyFromInt(girrConvention[3]); // 이자 지급 빈도(Frequency)
-
 
         // GIRR 커브 생성
         ext::shared_ptr<YieldTermStructure> girrTermstructure = ext::make_shared<ZeroCurve>(girrDates_, girrRates_,
@@ -222,7 +222,7 @@ extern "C" double EXPORT pricingFRB(
 
         // Coupon Schedule 생성
         if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
-            LOG_MESSAGE_COUPON_SCHEDULE_INPUT();
+            LOG_MSG_COUPON_SCHEDULE_INPUT();
 
             // Schedule Data 유효성 점검(1. 발행일 & 만기일 유효성 점검. 2. 개별 Coupon Data의 유효성 점검)
             if (realStartDates[0] < issueDate   // 첫 번째 시작일이 발행일보다 이전인 경우(종료일 정보는 개별 Coupon 유효성 로직에서 점검)
@@ -262,7 +262,7 @@ extern "C" double EXPORT pricingFRB(
             fixedBondSchedule_ = Schedule(couponSch_);
         }
         else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
-            LOG_MESSAGE_COUPON_SCHEDULE_GENERATE();
+            LOG_MSG_COUPON_SCHEDULE_GENERATE();
 
             //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
             Date effectiveDate = Date(issueDate); // 기존 코드
@@ -283,8 +283,8 @@ extern "C" double EXPORT pricingFRB(
 		std::vector<Date> futureScheduleDates = fixedBondSchedule_.after(schStartDate).dates();
 		Schedule futureFixedBondSchedule_ = Schedule(futureScheduleDates);
 
-        /* 스케쥴 로그 */
-        LOG_COUPON_SCHEDULE(fixedBondSchedule_);
+        /* 쿠폰 스케쥴 로그 */
+        LOG_COUPON_SCHEDULE(futureFixedBondSchedule_);
 
         Integer paymentLag_ = paymentLag;
 
@@ -303,6 +303,8 @@ extern "C" double EXPORT pricingFRB(
             couponCalendar_);
 
         if (calType == 9) {
+            LOG_MSG_PRICING("Spread Over Yield");
+            
             // Calc Spread Over Yield
             std::vector<Handle<Quote>> tmpCsrSpreads_;
             tmpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(0.0));
@@ -323,23 +325,28 @@ extern "C" double EXPORT pricingFRB(
             //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
 
-            /* OUTPUT SpreadOverYield 리턴 */
+            LOG_MSG_LOAD_RESULT("Spread Over Yield");
             return result = soy;
         }
         // Fixed Rate Bond에 Discounting 엔진 연결
         fixedRateBond.setPricingEngine(bondEngine);
 
         // 채권 가격 Net PV 계산
+        LOG_MSG_PRICING("Net PV");
         Real npv = fixedRateBond.NPV();
 
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
-            /* OUTPUT 1. Net PV 리턴 */
+            LOG_MSG_LOAD_RESULT("Net PV");
+            
             return result = npv;
         }
 
         if (calType == 2) {
+            LOG_MSG_PRICING("Basel 2 Sensitivity");
+            
             // Delta 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Delta");
             Real bumpSize = 0.0001; // bumpSize를 0.0001 이외의 값으로 적용 시, PV01 산출을 독립적으로 구현해줘야 함
             std::vector<Real> bumpGearings{ 1.0, -1.0 };
             std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
@@ -379,6 +386,8 @@ extern "C" double EXPORT pricingFRB(
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
             Real delta = (bumpedNpv[0] - npv) / bumpSize;
+
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Gamma");
             Real gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
             const DayCounter& ytmDayCounter = Actual365Fixed();
@@ -394,26 +403,33 @@ extern "C" double EXPORT pricingFRB(
             InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
 
             // Duration 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Duration");
             Duration::Type durationType = Duration::Macaulay;//Duration::Modified;
             Real duration = CashFlows::duration(fixedRateBond.cashflows(), ytm, durationType, false,
                 couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
+            // Convexity 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Convexity");
             Real convexity = CashFlows::convexity(fixedRateBond.cashflows(), ytm, false,
                 couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
+            // PV01 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - PV01");
             Real PV01 = delta * bumpSize;
 
+            LOG_MSG_LOAD_RESULT("Net PV, Basel 2 Sensitivity");
             resultBasel2[0] = delta;
             resultBasel2[1] = gamma;
             resultBasel2[2] = duration;
             resultBasel2[3] = convexity;
             resultBasel2[4] = PV01;
 
-            /* OUTPUT 1. Net PV 리턴 */
             return result = npv;
         }
 
         if (calType == 3) {
+            LOG_MSG_PRICING("Basel 3 Sensitivity");
+
             // GIRR Bump Rate 설정
             Real girrBump = 0.0001;
 
@@ -421,6 +437,7 @@ extern "C" double EXPORT pricingFRB(
             std::vector<Real> disCountingGirr;
 
             // GIRR Delta 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - GIRR Delta");
             for (Size bumpNum = 1; bumpNum < girrRates_.size(); ++bumpNum) {
                 // GIRR 커브의 금리를 bumping (1bp 상승)
                 std::vector<Rate> bumpGirrRates = girrRates_;
@@ -458,7 +475,6 @@ extern "C" double EXPORT pricingFRB(
                 disCountingGirr.emplace_back(tmpGirr);
             }
 
-            /* OUTPUT 2. GIRR Delta 결과 적재 */
             std::vector<Real> girrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
             Size girrDataSize = girrTenor.size();
 
@@ -468,6 +484,7 @@ extern "C" double EXPORT pricingFRB(
             QL_REQUIRE(girrDataSize == disCountingGirr.size(), "Girr result Size mismatch.");
 
             // 0인 민감도를 제외하고 적재
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Delta");
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
             // CSR Bump Rate 설정
@@ -477,6 +494,7 @@ extern "C" double EXPORT pricingFRB(
             std::vector<Real> disCountingCsr;
 
             // CSR Delta 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - CSR Delta");
             for (Size bumpNum = 1; bumpNum < csrSpreads_.size(); ++bumpNum) {
                 // bump된 CSR Spread 벡터 초기화
                 std::vector<Handle<Quote>> bumpCsrSpreads_;
@@ -516,10 +534,11 @@ extern "C" double EXPORT pricingFRB(
                 disCountingCsr.emplace_back(tmpCsr);
             }
 
-            /* OUTPUT 3. CSR Delta 결과 적재 */
             std::vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
             Size csrDataSize = csrTenor.size();
+            
             // 0인 민감도를 제외하고 적재
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - CSR Delta");
             processResultArray(csrTenor, disCountingCsr, csrDataSize, resultCsrDelta);
 
             Real totalGirr = 0;
@@ -527,7 +546,8 @@ extern "C" double EXPORT pricingFRB(
                 totalGirr += girr;
             }
 
-            // Curvature 계산
+            // GIRR Curvature 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - GIRR Curvature");
             Real curvatureRW = girrRiskWeight; // bumpSize를 FRTB 기준서의 Girr Curvature RiskWeight로 설정
             std::vector<Real> bumpGearings{ 1.0, -1.0 };
             std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
@@ -566,6 +586,7 @@ extern "C" double EXPORT pricingFRB(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Curvature");
             resultGirrCvr[0] = (bumpedNpv[0] - npv);
             resultGirrCvr[1] = (bumpedNpv[1] - npv);
 
@@ -574,7 +595,8 @@ extern "C" double EXPORT pricingFRB(
                 totalCsr += csr;
             }
 
-            // Curvature 계산
+            // CSR Curvature 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - CSR Curvature");
             curvatureRW = csrRiskWeight; // bumpSize를 FRTB 기준서의 CSR Bucket의 Curvature RiskWeight로 설정
             for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
                 std::vector<Handle<Quote>> bumpCsrSpreads_;
@@ -604,14 +626,17 @@ extern "C" double EXPORT pricingFRB(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - CSR Curvature");
             resultCsrCvr[0] = (bumpedNpv[0] - npv);
             resultCsrCvr[1] = (bumpedNpv[1] - npv);
 
-            /* OUTPUT 1. Net PV 리턴 */
+            LOG_MSG_LOAD_RESULT("Net PV");
             return result = npv;
         }
 
         if (calType == 4) {
+            LOG_MSG_PRICING("Cashflow");
+
             const Leg& bondCFs = fixedRateBond.cashflows();
             Size numberOfCoupons = bondCFs.size();
             Size numberOfFields = 7;
@@ -661,6 +686,7 @@ extern "C" double EXPORT pricingFRB(
                     }
                 }
             }
+            LOG_MSG_LOAD_RESULT("Net PV, Cashflow");
             return result = npv;
         }
 
@@ -669,7 +695,7 @@ extern "C" double EXPORT pricingFRB(
         Real dirtyPrice = fixedRateBond.dirtyPrice() / 100.0 * notional;
         Real accruedInterest = fixedRateBond.accruedAmount() / 100.0 * notional;
 
-        /* OUTPUT 1. Net PV 리턴 */
+        LOG_MSG_LOAD_RESULT("Net PV");
         return result = npv;
     }
     catch (...) {
@@ -677,17 +703,16 @@ extern "C" double EXPORT pricingFRB(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-			LOG_ERROR_KNOWN_EXCEPTION(std::string(e.what()));
+			LOG_ERR_KNOWN_EXCEPTION(std::string(e.what()));
 			return result = -1.0;
         }
         catch (...) {
-			LOG_ERROR_UNKNOWN_EXCEPTION();
+			LOG_ERR_UNKNOWN_EXCEPTION();
 			return result = -1.0;
         }
     }
 }
 
- /* FRB Custom Class */
  FixedRateBondCustom::FixedRateBondCustom(Natural settlementDays,
      Real faceAmount,
      Schedule schedule,
@@ -841,12 +866,13 @@ extern "C" double EXPORT pricingFRN(
             FIELD_VAR(calType), FIELD_VAR(logYn)
         );
 
+        /* 입력 데이터 체크 */
+        LOG_MSG_INPUT_VALIDATION();
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
             error("Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return result = -1.0; // Invalid calculation type
         }
 
-        // Input Data Check
         // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
             error("Maturity Date is less than evaluation Date.");
@@ -863,7 +889,7 @@ extern "C" double EXPORT pricingFRN(
             return result = -1.0;
         }
 
-        // 결과 데이터 초기화
+        /* 결과 동적 배열 초기화 */
         initResult(resultGirrBasel2, 5);
         initResult(resultIndexGirrBasel2, 5);
         initResult(resultGirrDelta, 23);
@@ -873,6 +899,9 @@ extern "C" double EXPORT pricingFRN(
         initResult(resultIndexGirrCvr, 2);
         initResult(resultCsrCvr, 2);
         initResult(resultCashFlow, 1000);
+
+        /* 평가 로직 시작 */
+        LOG_MSG_PRICING_START();
 
         // revaluationDateSerial -> revaluationDate
         Date asOfDate_ = Date(evaluationDate);
@@ -1022,7 +1051,7 @@ extern "C" double EXPORT pricingFRN(
 
         // Coupon Schedule 생성
         if (numberOfCoupons > 0) { // 쿠폰 스케줄이 인자로 들어오는 경우
-            LOG_MESSAGE_COUPON_SCHEDULE_INPUT();
+            LOG_MSG_COUPON_SCHEDULE_INPUT();
 
             // Schedule Data 유효성 점검(1. 발행일 & 만기일 유효성 점검. 2. 개별 Coupon Data의 유효성 점검)
             if (realStartDates[0] < issueDate   // 첫 번째 시작일이 발행일보다 이전인 경우(종료일 정보는 개별 Coupon 유효성 로직에서 점검)
@@ -1030,7 +1059,7 @@ extern "C" double EXPORT pricingFRN(
                 || paymentDates[numberOfCoupons - 1] > maturityDate  // 마지막 지급일이 만기일보다 이후인 경우
                 ) {
                 error("Invalid Coupon Schedule Data. Check the schedule period is in the trading period.");
-                return -1;
+                return result = -1.0;
             }
 
             for (int i = 0; i < numberOfCoupons; i++) {
@@ -1039,7 +1068,7 @@ extern "C" double EXPORT pricingFRN(
                     || paymentDates[i] < realStartDates[i]  // 지급일이 시작일보다 이전인 경우
                         ) {
                     error("Invalid Coupon Schedule Data. Check the start date, end date, and payment date.");
-                    return -1;
+                    return result = -1.0;
                 }
 
                 // 스케쥴 배열의 Sorting 여부
@@ -1049,7 +1078,7 @@ extern "C" double EXPORT pricingFRN(
                             || paymentDates[i + 1] < paymentDates[i]    // PaymentDates의 정렬 여부 점검
                                 ) {
                         error("Invalid Coupon Schedule Data. Check the schedule is sorted.");
-                        return -1;
+                        return result = -1.0;
                     }
                 }
             }
@@ -1062,7 +1091,7 @@ extern "C" double EXPORT pricingFRN(
             FRNSchedule_ = Schedule(couponSch_);
         }
         else {  // 쿠폰 스케줄이 인자로 들어오지 않는 경우, 스케줄을 직접 생성
-            LOG_MESSAGE_COUPON_SCHEDULE_GENERATE();
+            LOG_MSG_COUPON_SCHEDULE_GENERATE();
 
             //Date effectiveDate = Date(realStartDates[0]); // 쿠폰 첫번째 시작일로 수정
             Date effectiveDate = Date(issueDate); // 기존 코드
@@ -1081,7 +1110,7 @@ extern "C" double EXPORT pricingFRN(
 		std::vector<Date> futureScheduleDates = FRNSchedule_.after(schStartDate).dates();
 		Schedule futureFRNSchedule_ = Schedule(futureScheduleDates);
 
-        /* 스케쥴 로그 */
+        /* 쿠폰 스케쥴 로그 */
         LOG_COUPON_SCHEDULE(futureFRNSchedule_);
 
         // fixing data 입력
@@ -1096,7 +1125,7 @@ extern "C" double EXPORT pricingFRN(
         refIndex->addFixing(lastFixingDate1, lastResetRate, true);
         refIndex->addFixing(nextFixingDate1, nextResetRate, true);
 
-        // FixedRateBond 객체 생성
+        // FloatingRateBond 객체 생성
         FloatingRateBondCustom floatingRateBond(
             settlementDays_,
             notional_,
@@ -1109,19 +1138,23 @@ extern "C" double EXPORT pricingFRN(
             { gearing },
             { spread });
 
-        // Fixed Rate Bond에 Discounting 엔진 연결
+        // Floating Rate Bond에 Discounting 엔진 연결
         floatingRateBond.setPricingEngine(bondEngine);
 
         // 채권 가격 Net PV 계산
+        LOG_MSG_PRICING("Net PV");
         Real npv = floatingRateBond.NPV();
 
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
-            /* OUTPUT 1. Net PV 리턴 */
+            LOG_MSG_LOAD_RESULT("Net PV");
+            
             return result = npv;
         }
 
         if (calType == 9) {
+            LOG_MSG_PRICING("Spread Over Yield");
+            
             // Calc Spread Over Yield
             std::vector<Handle<Quote>> tmpCsrSpreads_;
             tmpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(0.0));
@@ -1141,11 +1174,16 @@ extern "C" double EXPORT pricingFRN(
                 includeSettlementDateFlows_, asOfDate_, asOfDate_, 1.0e-10, 100, 0.005);  // settlementDate 산출 로직 제거(20250822, jwlee)            
             //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
+
+            LOG_MSG_LOAD_RESULT("Spread Over Yield");
             return result = soy;
         }
 
         if (calType == 2) {
+            LOG_MSG_PRICING("Basel 2 Sensitivity");
+            
             // girrDelta 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Delta");
             Real bumpSize = 0.0001; // bumpSize를 0.0001 이외의 값으로 적용 시, PV01 산출을 독립적으로 구현해줘야 함
             std::vector<Real> bumpGearings{ 1.0, -1.0 };
             std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
@@ -1205,6 +1243,8 @@ extern "C" double EXPORT pricingFRN(
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
             Real delta = (bumpedNpv[0] - npv) / bumpSize;
+            
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Gamma");
             Real gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
             //        const DayCounter& ytmDayCounter = Actual365Fixed();
@@ -1224,10 +1264,12 @@ extern "C" double EXPORT pricingFRN(
             //                                              couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
             // Calculate Effective Duration
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Duration·Convexity·PV01");
             Real duration = (bumpedNpv[1] - bumpedNpv[0]) / (bumpSize * npv * 2.0);
             Real convexity = gamma / npv;
             Real PV01 = delta * bumpSize;
 
+            LOG_MSG_LOAD_RESULT("Basel 2 Sensitivity");
             resultGirrBasel2[0] = delta;
             resultGirrBasel2[1] = gamma;
             resultGirrBasel2[2] = duration;
@@ -1235,6 +1277,7 @@ extern "C" double EXPORT pricingFRN(
             resultGirrBasel2[4] = PV01;
 
             if (!isSameCurve_) {
+                LOG_MSG_PRICING("Basel 2 Sensitivity - Index Delta");
                 floatingRateBond.setPricingEngine(bondEngine);
                 for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
                     std::vector<Rate> bumpIndexGirrRates = indexGirrRates_;
@@ -1259,24 +1302,31 @@ extern "C" double EXPORT pricingFRN(
 
                 QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
                 delta = (bumpedNpv[0] - npv) / bumpSize;
+                
+                LOG_MSG_PRICING("Basel 2 Sensitivity - Index Gamma");
                 gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
                 // Calculate Effective Duration
+                LOG_MSG_PRICING("Basel 2 Sensitivity - Index Duration·Convexity·PV01");
                 duration = (bumpedNpv[1] - bumpedNpv[0]) / (bumpSize * npv * 2.0);
                 convexity = gamma / npv;
                 PV01 = delta * bumpSize;
 
+                LOG_MSG_LOAD_RESULT("Basel 2 Sensitivity - Index");
                 resultIndexGirrBasel2[0] = delta;
                 resultIndexGirrBasel2[1] = gamma;
                 resultIndexGirrBasel2[2] = duration;
                 resultIndexGirrBasel2[3] = convexity;
                 resultIndexGirrBasel2[4] = PV01;
             }
-            return npv;
-
+            LOG_MSG_LOAD_RESULT("Net PV");
+            return result = npv;
         }
 
         if (calType == 3) {
+            LOG_MSG_PRICING("Basel 3 Sensitivity");
+            
+            LOG_MSG_PRICING("Basel 3 Sensitivity - GIRR Delta");
             // GIRR Bump Rate 설정
             Real girrBump = 0.0001;
 
@@ -1330,8 +1380,6 @@ extern "C" double EXPORT pricingFRN(
                 indexGirrCurve.linkTo(indexGirrTermstructure);
             }
 
-
-            /* OUTPUT 2. (Discounting Curve) GIRR Delta 결과 적재 */
             std::vector<Real> girrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
             Size girrDataSize = girrTenor.size();
 
@@ -1339,11 +1387,14 @@ extern "C" double EXPORT pricingFRN(
             double tmpCcyDelta = std::accumulate(disCountingGirr.begin(), disCountingGirr.end(), 0.0);
             disCountingGirr.insert(disCountingGirr.begin(), tmpCcyDelta);
             QL_REQUIRE(girrDataSize == disCountingGirr.size(), "Girr result Size mismatch.");
+
             // 0인 민감도를 제외하고 적재
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Delta");
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
             // (Index Reference Curve) GIRR Delta 적재용 벡터 생성
             if (!isSameCurve_) {
+                LOG_MSG_PRICING("Basel 3 Sensitivity - Index GIRR Delta");
                 floatingRateBond.setPricingEngine(bondEngine);
                 std::vector<Real> indexGirr;
                 // (Index Reference Curve) GIRR Delta 계산
@@ -1381,9 +1432,11 @@ extern "C" double EXPORT pricingFRN(
                 QL_REQUIRE(indexGirrDataSize == indexGirr.size(), "Girr result Size mismatch.");
 
                 // 0인 민감도를 제외하고 적재
+                LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - Index GIRR Delta");
                 processResultArray(indexGirrTenor, indexGirr, indexGirrDataSize, resultIndexGirrDelta);
             }
 
+            LOG_MSG_PRICING("Basel 3 Sensitivity - CSR Delta");
             // CSR Bump Rate 설정
             Real csrBump = 0.0001;
 
@@ -1433,10 +1486,13 @@ extern "C" double EXPORT pricingFRN(
             /* OUTPUT 4. CSR Delta 결과 적재 */
             std::vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
             Size csrDataSize = csrTenor.size();
+            
             // 0인 민감도를 제외하고 적재
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - CSR Delta");
             processResultArray(csrTenor, disCountingCsr, csrDataSize, resultCsrDelta);
 
             // Girr Curvature 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - GIRR Curvature");
             Real curvatureRW = girrRiskWeight; // bumpSize를 FRTB 기준서의 Girr Curvature RiskWeight로 설정
             std::vector<Real> bumpGearings{ 1.0, -1.0 };
             std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
@@ -1480,11 +1536,13 @@ extern "C" double EXPORT pricingFRN(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Curvature");
             resultGirrCvr[0] = (bumpedNpv[0] - npv);
             resultGirrCvr[1] = (bumpedNpv[1] - npv);
 
             // Index Girr Curvature 계산
             if (!isSameCurve_) {
+                LOG_MSG_PRICING("Basel 3 Sensitivity - Index GIRR Curvature");
                 floatingRateBond.setPricingEngine(bondEngine);
                 for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
                     std::vector<Rate> bumpIndexGirrRates = indexGirrRates_;
@@ -1506,12 +1564,14 @@ extern "C" double EXPORT pricingFRN(
                 }
 
                 QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+                LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - Index GIRR Curvature");
                 resultIndexGirrCvr[0] = (bumpedNpv[0] - npv);
                 resultIndexGirrCvr[1] = (bumpedNpv[1] - npv);
                 indexGirrCurve.linkTo(indexGirrTermstructure);
             }
 
-            // Curvature 계산
+            // CSR Curvature 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - CSR Curvature");
             curvatureRW = csrRiskWeight; // bumpSize를 FRTB 기준서의 CSR Bucket의 Curvature RiskWeight로 설정
             for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
                 std::vector<Handle<Quote>> bumpCsrSpreads_;
@@ -1530,7 +1590,6 @@ extern "C" double EXPORT pricingFRN(
                 bumpDiscountingCurve.linkTo(bumpDiscountingTermStructure);
                 bumpDiscountingCurve->enableExtrapolation(); // 외삽 허용
 
-
                 // discountingCurve로 새로운 pricing engine 생성
                 auto bumpBondEngine = ext::make_shared<DiscountingBondEngine>(bumpDiscountingCurve, includeSettlementDateFlows_);
 
@@ -1542,6 +1601,7 @@ extern "C" double EXPORT pricingFRN(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - CSR Curvature");
             resultCsrCvr[0] = (bumpedNpv[0] - npv);
             resultCsrCvr[1] = (bumpedNpv[1] - npv);
 
@@ -1550,11 +1610,13 @@ extern "C" double EXPORT pricingFRN(
             Real dirtyPrice = floatingRateBond.dirtyPrice() / 100.0 * notional;
             Real accruedInterest = floatingRateBond.accruedAmount() / 100.0 * notional;
 
-            /* OUTPUT 1. Net PV 리턴 */
+            LOG_MSG_LOAD_RESULT("Net PV");
             return result = npv;
         }
 
         if (calType == 4) {
+            LOG_MSG_PRICING("Cashflow");
+            
             const Leg& bondCFs = floatingRateBond.cashflows();
             Size numberOfCoupons = bondCFs.size();
             Size numberOfFields = 7;
@@ -1604,9 +1666,10 @@ extern "C" double EXPORT pricingFRN(
                     }
                 }
             }
+            LOG_MSG_LOAD_RESULT("Net PV, Cashflow");
             return result = npv;
         }
-
+        LOG_MSG_LOAD_RESULT("Net PV");
         return result = npv;
     }
     catch (...) {
@@ -1614,11 +1677,11 @@ extern "C" double EXPORT pricingFRN(
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-            LOG_ERROR_KNOWN_EXCEPTION(std::string(e.what()));
+            LOG_ERR_KNOWN_EXCEPTION(std::string(e.what()));
             return result = -1.0;
         }
         catch (...) {
-			LOG_ERROR_UNKNOWN_EXCEPTION();
+			LOG_ERR_UNKNOWN_EXCEPTION();
             return result = -1.0;
         }
     }
@@ -1702,10 +1765,10 @@ extern "C" double EXPORT pricingZCB(
     , double* resultGirrCvr			        // OUTPUT 5. (추가)GIRR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCsrCvr			        // OUTPUT 6. (추가)CSR Curvature [BumpUp Curvature, BumpDownCurvature]
     , double* resultCashFlow                // OUTPUT 7. CF(index 0: size, index cfNum * 7 + 1 ~ cfNum * 7 + 7: 
-    //              startDate, endDate, notional, rate, payDate, CF, DF)
+                                            //              startDate, endDate, notional, rate, payDate, CF, DF)
 // ===================================================================================================
 ) {
-    double result = -1.0;
+    double result = -1.0; // 결과값 리턴 변수
 
     FINALLY({
         /* Output Result 로그 출력 */
@@ -1737,12 +1800,13 @@ extern "C" double EXPORT pricingZCB(
             FIELD_VAR(calType), FIELD_VAR(logYn)
         );
 
+        /* Input 데이터 검증 */
+        LOG_MSG_INPUT_VALIDATION();
         if (calType != 1 && calType != 2 && calType != 3 && calType != 4 && calType != 9) {
             error("Invalid calculation type. Only 1, 2, 3, 4, 9 are supported.");
             return result = -1.0; // Invalid calculation type
         }
 
-        // Input Data Check
         // Maturity Date >= evaluation Date
         if (maturityDate < evaluationDate) {
             error("Maturity Date is less than evaluation Date.");
@@ -1754,7 +1818,7 @@ extern "C" double EXPORT pricingZCB(
             return result = -1.0;
         }
 
-        // 결과 데이터 초기화
+        /* 결과 데이터 초기화 */
         initResult(resultBasel2, 5);
         initResult(resultGirrDelta, 23);
         initResult(resultCsrDelta, 13);
@@ -1762,7 +1826,8 @@ extern "C" double EXPORT pricingZCB(
         initResult(resultCsrCvr, 2);
         initResult(resultCashFlow, 1000);
 
-        LOG_MESSAGE_ENTER_PRICING();
+        /* 평가 로직 시작 */
+        LOG_MSG_PRICING_START();
 
         // revaluationDateSerial -> revaluationDate
         Date asOfDate_ = Date(evaluationDate);
@@ -1862,6 +1927,8 @@ extern "C" double EXPORT pricingZCB(
             issueDate_);
 
         if (calType == 9) {
+            LOG_MSG_PRICING("Spread Over Yield");
+            
             // Calc Spread Over Yield
             std::vector<Handle<Quote>> tmpCsrSpreads_;
             tmpCsrSpreads_.emplace_back(ext::make_shared<SimpleQuote>(0.0));
@@ -1881,21 +1948,29 @@ extern "C" double EXPORT pricingZCB(
                 includeSettlementDateFlows_, asOfDate_, asOfDate_, 1.0e-10, 100, 0.005);  // settlementDate 산출 로직 제거(20250822, jwlee)
             //        Real soy = CashFlows::zSpread(fixedRateBond.cashflows(), marketPrice, *tmpDiscountingCurve, Actual365Fixed(), Continuous, Annual,
             //                                      false, asOfDate_, couponCalendar.advance(asOfDate_, Period(settlementDays, Days)), 1.0e-10, 100, 0.005);
+            
+            LOG_MSG_LOAD_RESULT("Spread Over Yield");
             return result = soy;
         }
         // Fixed Rate Bond에 Discounting 엔진 연결
         zeroCouponBond.setPricingEngine(bondEngine);
 
         // 채권 가격 Net PV 계산
+        LOG_MSG_PRICING("Net PV");
         Real npv = zeroCouponBond.NPV();
 
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음
         if (calType == 1) {
+            LOG_MSG_LOAD_RESULT("Net PV");
+            
             return result = npv;
         }
 
         if (calType == 2) {
+            LOG_MSG_PRICING("Basel 2 Sensitivity");
+
             // Delta 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Delta");
             Real bumpSize = 0.0001; // bumpSize를 0.0001 이외의 값으로 적용 시, PV01 산출을 독립적으로 구현해줘야 함
             std::vector<Real> bumpGearings{ 1.0, -1.0 };
             std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
@@ -1936,6 +2011,8 @@ extern "C" double EXPORT pricingZCB(
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
             Real delta = (bumpedNpv[0] - npv) / bumpSize;
+            
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Gamma");
             Real gamma = (bumpedNpv[0] - 2.0 * npv + bumpedNpv[1]) / (bumpSize * bumpSize);
 
             const DayCounter& ytmDayCounter = Actual365Fixed();
@@ -1950,13 +2027,16 @@ extern "C" double EXPORT pricingZCB(
             InterestRate ytm = InterestRate(ytmValue, ytmDayCounter, ytmCompounding, ytmFrequency);
 
             // Duration 계산
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Duration");
             Duration::Type durationType = Duration::Macaulay;//Duration::Modified;
             Real duration = CashFlows::duration(zeroCouponBond.cashflows(), ytm, durationType, false,
                 couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
+            LOG_MSG_PRICING("Basel 2 Sensitivity - Convexity");    
             Real convexity = CashFlows::convexity(zeroCouponBond.cashflows(), ytm, false,
                 couponCalendar_.advance(asOfDate_, Period(settlementDays_, Days)), asOfDate_);
 
+            LOG_MSG_PRICING("Basel 2 Sensitivity - PV01");
             Real PV01 = delta * bumpSize;
 
             resultBasel2[0] = delta;
@@ -1965,10 +2045,14 @@ extern "C" double EXPORT pricingZCB(
             resultBasel2[3] = convexity;
             resultBasel2[4] = PV01;
 
+            LOG_MSG_LOAD_RESULT("Net PV, Basel 2 Sensitivity");
             return result = npv;
         }
 
         if (calType == 3) {
+            LOG_MSG_PRICING("Basel 3 Sensitivity");
+
+            LOG_MSG_PRICING("Basel 3 Sensitivity - GIRR Delta");
             // GIRR Bump Rate 설정
             Real girrBump = 0.0001;
 
@@ -2013,7 +2097,6 @@ extern "C" double EXPORT pricingZCB(
                 disCountingGirr.emplace_back(tmpGirr);
             }
 
-            /* OUTPUT 2. GIRR Delta 결과 적재 */
             std::vector<Real> girrTenor = { 0.0, 0.25, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 20.0, 30.0 };
             Size girrDataSize = girrTenor.size();
 
@@ -2023,8 +2106,10 @@ extern "C" double EXPORT pricingZCB(
             QL_REQUIRE(girrDataSize == disCountingGirr.size(), "Girr result Size mismatch.");
 
             // 0인 민감도를 제외하고 적재
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Delta");
             processResultArray(girrTenor, disCountingGirr, girrDataSize, resultGirrDelta);
 
+            LOG_MSG_PRICING("Basel 3 Sensitivity - CSR Delta");
             // CSR Bump Rate 설정
             Real csrBump = 0.0001;
 
@@ -2071,10 +2156,11 @@ extern "C" double EXPORT pricingZCB(
                 disCountingCsr.emplace_back(tmpCsr);
             }
 
-            /* OUTPUT 3. CSR Delta 결과 적재 */
             std::vector<Real> csrTenor = { 0.5, 1.0, 3.0, 5.0, 10.0 };
             Size csrDataSize = csrTenor.size();
+            
             // 0인 민감도를 제외하고 적재
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - CSR Delta");
             processResultArray(csrTenor, disCountingCsr, csrDataSize, resultCsrDelta);
 
             Real totalGirr = 0;
@@ -2082,7 +2168,8 @@ extern "C" double EXPORT pricingZCB(
                 totalGirr += girr;
             }
 
-            // Curvature 계산
+            // GIRR Curvature 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - GIRR Curvature");
             Real curvatureRW = girrRiskWeight; // bumpSize를 FRTB 기준서의 Girr Curvature RiskWeight로 설정
             std::vector<Real> bumpGearings{ 1.0, -1.0 };
             std::vector<Real> bumpedNpv(bumpGearings.size(), 0.0);
@@ -2121,6 +2208,7 @@ extern "C" double EXPORT pricingZCB(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - GIRR Curvature");
             resultGirrCvr[0] = (bumpedNpv[0] - npv);
             resultGirrCvr[1] = (bumpedNpv[1] - npv);
 
@@ -2129,7 +2217,8 @@ extern "C" double EXPORT pricingZCB(
                 totalCsr += csr;
             }
 
-            // Curvature 계산
+            // CSR Curvature 계산
+            LOG_MSG_PRICING("Basel 3 Sensitivity - CSR Curvature");
             curvatureRW = csrRiskWeight; // bumpSize를 FRTB 기준서의 CSR Bucket의 Curvature RiskWeight로 설정
             for (Size bumpNo = 0; bumpNo < bumpGearings.size(); ++bumpNo) {
                 std::vector<Handle<Quote>> bumpCsrSpreads_;
@@ -2160,14 +2249,18 @@ extern "C" double EXPORT pricingZCB(
             }
 
             QL_REQUIRE(bumpedNpv.size() > 1, "Failed to calculate bumpedNPV.");
+            LOG_MSG_LOAD_RESULT("Basel 3 Sensitivity - CSR Curvature");
             resultCsrCvr[0] = (bumpedNpv[0] - npv);
             resultCsrCvr[1] = (bumpedNpv[1] - npv);
 
             /* OUTPUT 1. Net PV 리턴 */
+            LOG_MSG_LOAD_RESULT("Net PV");
             return result = npv;
         }
 
         if (calType == 4) {
+            LOG_MSG_PRICING("Cashflow");
+            
             const Leg& bondCFs = zeroCouponBond.cashflows();
             Size numberOfCoupons = bondCFs.size();
             Size numberOfFields = 7;
@@ -2201,6 +2294,7 @@ extern "C" double EXPORT pricingZCB(
                     QL_FAIL("Coupon is not a Redemption.");
                 }
             }
+            LOG_MSG_LOAD_RESULT("Net PV, Cashflow");
             return result = npv;
         }
 
@@ -2209,19 +2303,19 @@ extern "C" double EXPORT pricingZCB(
         Real dirtyPrice = zeroCouponBond.dirtyPrice() / 100.0 * notional;
         Real accruedInterest = zeroCouponBond.accruedAmount() / 100.0 * notional;
 
-        /* OUTPUT 1. Net PV 리턴 */
-        return result = npv;
+        LOG_MSG_LOAD_RESULT("Net PV");
+        return result = npv;    
     }
     catch (...) {
         try {
             std::rethrow_exception(std::current_exception());
         }
         catch (const std::exception& e) {
-			LOG_ERROR_KNOWN_EXCEPTION(std::string(e.what()));
+			LOG_ERR_KNOWN_EXCEPTION(std::string(e.what()));
             return result = -1.0;
         }
         catch (...) {
-			LOG_ERROR_UNKNOWN_EXCEPTION();
+			LOG_ERR_UNKNOWN_EXCEPTION();
             return result = -1.0;
         }
     }
