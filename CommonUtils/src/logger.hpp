@@ -14,8 +14,7 @@
 #include <filesystem>
 #include <sstream>
 #include <type_traits>
-
-#include "common.hpp"
+#include <fmt/core.h>
 
 #define LOG_START(fileName) logger::initLogger(fileName, __func__)
 #define LOG_END(result) logger::closeLogger(result)
@@ -37,7 +36,7 @@ namespace logger {
     void initLogger(const std::string& filename, const char* funcName = nullptr);
     void closeLogger(const double result);
 
-    // 기존 포맷팅 지원 템플릿
+    // 기존 포맷팅 지원 템플릿 함수
     template <typename... Args>
     void info(fmt::format_string<Args...> fmt, Args&&... args) {
         if (auto logger = spdlog::default_logger()) {
@@ -45,11 +44,42 @@ namespace logger {
         }
     }
 
+    // 호출자 파일/라인을 붙여서 로그를 남기는 헬퍼
+    // Format: [<파일명>:<라인번호>] 메시지
+    template <typename... Args>
+    void infoWithLine(const char* file, int line, fmt::format_string<Args...> fmt, Args&&... args) {
+        std::string body = fmt::format(fmt, std::forward<Args>(args)...);
+        std::ostringstream oss;
+        try {
+            oss << "[" << std::filesystem::path(file).filename().string() << ":" << line << "] " << body;
+        } catch (...) {
+            oss.str(std::string());
+            oss << "[" << file << ":" << line << "] " << body;
+        }
+        info("{}", oss.str());
+    }
+
+    // 기존 포맷팅 지원 템플릿 함수
     template <typename... Args>
     void error(fmt::format_string<Args...> fmt, Args&&... args) {
         if (auto logger = spdlog::default_logger()) {
             logger->error(fmt, std::forward<Args>(args)...);
         }
+    }
+
+    // errorWithLine: 호출자 파일/라인을 붙여서 에러 로그를 남기는 헬퍼
+    // Format: [<파일명>:<라인번호>] 메시지
+    template <typename... Args>
+    void errorWithLine(const char* file, int line, fmt::format_string<Args...> fmt, Args&&... args) {
+        std::string body = fmt::format(fmt, std::forward<Args>(args)...);
+        std::ostringstream oss;
+        try {
+            oss << body << " (" << std::filesystem::path(file).filename().string() << ":" << line << ")";
+        } catch (...) {
+            oss.str(std::string());
+            oss << body << " (" <<" << file << ":" << line << ")";
+        }
+        error("{}", oss.str());
     }
 
     // 오버로드: 단순 문자열(const char*) 로그용
@@ -59,6 +89,7 @@ namespace logger {
         }
     }
 
+    // 오버로드: 단순 문자열(const char*) 로그용
     inline void error(const char* msg) {
         if (auto logger = spdlog::default_logger()) {
             logger->error(msg);
@@ -68,6 +99,11 @@ namespace logger {
     // 오버로드: 단순 문자열(std::string) 로그용
     inline void info(const std::string& msg) { info(msg.c_str()); }
     inline void error(const std::string& msg) { error(msg.c_str()); }
+
+    template <typename T>
+    void logArrayLine(const std::string& label, const std::vector<T>& data, int precision = 10) {
+        logArrayLine(label, data.data(), data.size(), precision);
+    }
 
     // 타입 이름 문자열 변환 헬퍼 (used by Loggable)
     template <typename T>
@@ -84,7 +120,7 @@ namespace logger {
     }
 
     // 타입 포함 단순 변수 출력 헬퍼 (used by LOG_VAR)
-    // Format: 타입 변수명 = 변수값; 
+    // Format: <타입 변수명> = <변수값>; 
     template<typename T>
     struct Loggable {
         static void log(const char* name, const T& value) {
@@ -92,9 +128,11 @@ namespace logger {
         }
     };
 
-    // 실제 구현은 _impl로 분리해 래퍼런스 래퍼에서 호출
+    // 타입 포함 배열 / 벡터 출력 헬퍼 (used by LOG_ARRAY)
+    // Format: <타입> <배열/벡터명>[] = {<변수값>};
+    // Format: (all-zero): <타입> <배열/벡터명>[] = N/A;
     template <typename T>
-    void logArrayLine_impl(const std::string& label, const T* data, size_t size, int precision = 10) {
+    void logArrayLine(const std::string& label, const T* data, size_t size, int precision = 10) {
         std::ostringstream oss;
         if (precision >= 0)
             oss.setf(std::ios::fixed), oss.precision(precision);
@@ -113,13 +151,14 @@ namespace logger {
                 info("{}", oss.str());
                 return;
             }
-        } else if constexpr (std::is_same_v<U, int>) { // int형 배열에 대해서는 체크하지 않도록 임시 비활성화 처리
-            // if (isAllZero(reinterpret_cast<const int*>(data), size)) {
-            //     oss << type_name<T>() << " " << label << " = N/A;";
-            //     info("{}", oss.str());
-            //     return;
-            // }
+        } else if constexpr (std::is_same_v<U, int>) {
+            if (isAllZero(reinterpret_cast<const int*>(data), size)) {
+                oss << type_name<T>() << " " << label << " = N/A;";
+                info("{}", oss.str());
+                return;
+            }
         }
+
         // string 계열은 타입명 생략
         if constexpr (std::is_same_v<U, std::string> || std::is_same_v<U, const char*> || std::is_same_v<U, char*>) {
             oss << label << " = {";
@@ -133,25 +172,6 @@ namespace logger {
         }
         oss << "};";
         info("{}", oss.str());
-    }
-
-    // 포인터(원시 포인터, 포인터 참조) 래퍼
-    template <typename Ptr, typename = std::enable_if_t<std::is_pointer_v<std::remove_reference_t<Ptr>>>>
-    void logArrayLine(const std::string& label, Ptr data, size_t size, int precision = 10) {
-        using Elem = std::remove_pointer_t<std::remove_reference_t<Ptr>>;
-        logArrayLine_impl<Elem>(label, static_cast<const Elem*>(data), size, precision);
-    }
-
-    // const T* 래퍼
-    template <typename T>
-    void logArrayLine(const std::string& label, const T* data, size_t size, int precision = 10) {
-        logArrayLine_impl<T>(label, data, size, precision);
-    }
-
-    // vector 래퍼
-    template <typename T>
-    void logArrayLine(const std::string& label, const std::vector<T>& data, int precision = 10) {
-        logArrayLine_impl<T>(label, data.data(), data.size(), precision);
     }
 
 } // namespace logger
