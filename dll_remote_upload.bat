@@ -44,9 +44,12 @@ echo [INFO] Searching .dll, .so Files and Preparing to Transfer...
 
 if exist %SFTP_COMMAND_FILE% del %SFTP_COMMAND_FILE%
 echo cd "%REMOTE_TARGET_DIR%" >> %SFTP_COMMAND_FILE%
+echo ls >> %SFTP_COMMAND_FILE%
 set found_files=0
 for /r "%LOCAL_SEARCH_DIR%" %%F in (*.dll, *.so) do (
+    echo rm "%REMOTE_TARGET_DIR%/%%~nxF" >> %SFTP_COMMAND_FILE%
     echo put "%%F" "%%~nxF" >> %SFTP_COMMAND_FILE%
+    echo chmod 755 "%REMOTE_TARGET_DIR%/%%~nxF" >> %SFTP_COMMAND_FILE%
     echo [INFO] File found: "%%F"
     set /a found_files+=1
 )
@@ -54,13 +57,14 @@ if %found_files% equ 0 (
     echo [INFO] No .dll, .so Files in Local Directory.
     goto :cleanup
 )
+echo ls >> %SFTP_COMMAND_FILE%
 echo quit >> %SFTP_COMMAND_FILE%
 
 echo.
 echo [INFO] Starting File Transfer.
 echo [INFO] Please enter your password when prompted.
 
-:: execute psftp with the command file (interactive mode)
+:: execute psftp with the command file (batch mode)
 psftp.exe %USERNAME%@%SERVER_IP% -b %SFTP_COMMAND_FILE%
 
 if %errorlevel% neq 0 (
