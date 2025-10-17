@@ -36,3 +36,7 @@ add_subdirectory(Bond)
 add_subdirectory(Leg)
 add_subdirectory(OtStock)
 add_subdirectory(Net)
+
+# 모든 서브프로젝트 일괄 빌드용 (의존성 관계에 따라 병렬 빌드됨)
+# 실제 서브프로젝트 타겟 명시 필요 (대소문자 구분)
+add_custom_target(build_all DEPENDS CommonUtils Bond Leg OtStock Net)
