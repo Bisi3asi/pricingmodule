@@ -3,12 +3,12 @@
 
 /* 메시지 출력 관련 로그 구현부 */
 /* Error Macro */
-#define LOG_ERR_KNOWN_EXCEPTION(msg) logger::messages::logKnownExceptionError(__FILE__, __LINE__, (msg))
-#define LOG_ERR_UNKNOWN_EXCEPTION() logger::messages::logUnknownExceptionError(__FILE__, __LINE__)
+#define LOG_ERR_KNOWN_EXCEPTION(msg) do { logger::messages::logKnownExceptionError((msg)); } while(0)
+#define LOG_ERR_UNKNOWN_EXCEPTION() do { logger::messages::logUnknownExceptionError(); } while(0)
 
 /* Message Macro */
 // 해당 로깅 문장을 파일명/라인번호와 함께 출력
-#define LOG_MSG(...) logger::infoWithLine(__FILE__, __LINE__, __VA_ARGS__)
+#define LOG_MSG(...) do { logger::infoWithLine(__FILE__, __LINE__, __VA_ARGS__); } while(0)
 // 평가 프로세스 이전 입력 파라미터 검증 시작
 #define LOG_MSG_INPUT_VALIDATION() LOG_MSG("Validating Input Parameters.")
 // 전체 평가 프로세스 시작

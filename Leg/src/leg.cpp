@@ -469,7 +469,7 @@ extern "C" double EXPORT pricingFDL(
             FIELD_VAR(numberOfGirrTenors), FIELD_ARR(girrTenorDays, numberOfGirrTenors), FIELD_ARR(girrRates, numberOfGirrTenors), FIELD_ARR(girrConvention, 4),
             FIELD_VAR(girrRiskWeight),
             FIELD_VAR(calType), FIELD_VAR(logYn)
-        )
+        );
 
         /* 입력 데이터 체크 */
         LOG_MSG_INPUT_VALIDATION();
@@ -979,7 +979,7 @@ extern "C" double EXPORT pricingFLL(
             FIELD_ARR(resultGirrCvr, 2),
             FIELD_ARR(resultIndexGirrCvr, 2),
             FIELD_ARR(resultCashFlow, 1000)
-        )
+        );
         /* 로그 종료 */
         LOG_END(result);
     });
@@ -1206,7 +1206,7 @@ extern "C" double EXPORT pricingFLL(
 		Schedule futureFRNSchedule_ = Schedule(futureScheduleDates);
 
         /* 쿠폰 스케줄 로그 */
-        LOG_MSG_COUPON_SCHEDULE(futureFRNSchedule_);
+        LOG_COUPON_SCHEDULE(futureFRNSchedule_);
 
         // fixing data 입력
         Date lastRefDate = futureFRNSchedule_.previousDate(asOfDate_);
@@ -1250,7 +1250,7 @@ extern "C" double EXPORT pricingFLL(
         floatingRateBond.setPricingEngine(bondEngine);
 
         // 채권 가격 Net PV 계산
-        LOG_MSG_PRICE("Net PV");
+        LOG_MSG_PRICING("Net PV");
         Real npv = floatingRateBond.NPV();
 
         // 이론가 산출의 경우 GIRR Delta 산출을 하지 않음

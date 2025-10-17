@@ -81,7 +81,7 @@ extern "C" double EXPORT pricing(
 
 		// basel2 sensitivity
 		if (calType == 2) {
-			LOG_MSG_PRICING("Basel 2 Sensitivity")
+			LOG_MSG_PRICING("Basel 2 Sensitivity");
 			LOG_MSG_PRICING("Basel 2 Sensitivity - Delta");
 			LOG_MSG_LOAD_RESULT("Basel 2 Sensitivity - Delta");
 

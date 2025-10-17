@@ -6,6 +6,7 @@
 /* Data Macro */
 #define LOG_OUTPUT(...) \
     do { \
+        logger::info(""); \
         logger::info("| Output Results |"); \
         logger::info("---------------------------------------------"); \
         LOG_FIELDS(__VA_ARGS__); \

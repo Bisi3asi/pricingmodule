@@ -1,7 +1,10 @@
 ﻿#pragma once
+
+#include "common.hpp"
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/fmt/bundled/core.h>
 #include <boost/preprocessor/variadic/to_seq.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
@@ -14,7 +17,6 @@
 #include <filesystem>
 #include <sstream>
 #include <type_traits>
-#include <fmt/core.h>
 
 #define LOG_START(fileName) logger::initLogger(fileName, __func__)
 #define LOG_END(result) logger::closeLogger(result)
@@ -77,7 +79,7 @@ namespace logger {
             oss << body << " (" << std::filesystem::path(file).filename().string() << ":" << line << ")";
         } catch (...) {
             oss.str(std::string());
-            oss << body << " (" <<" << file << ":" << line << ")";
+            oss << body << " (" << file << ":" << line << ")";
         }
         error("{}", oss.str());
     }
@@ -99,6 +101,9 @@ namespace logger {
     // 오버로드: 단순 문자열(std::string) 로그용
     inline void info(const std::string& msg) { info(msg.c_str()); }
     inline void error(const std::string& msg) { error(msg.c_str()); }
+
+    template <typename T>
+    void logArrayLine(const std::string& label, const T* data, size_t size, int precision = 10);
 
     template <typename T>
     void logArrayLine(const std::string& label, const std::vector<T>& data, int precision = 10) {
@@ -132,7 +137,7 @@ namespace logger {
     // Format: <타입> <배열/벡터명>[] = {<변수값>};
     // Format: (all-zero): <타입> <배열/벡터명>[] = N/A;
     template <typename T>
-    void logArrayLine(const std::string& label, const T* data, size_t size, int precision = 10) {
+    void logArrayLine(const std::string& label, const T* data, size_t size, int precision) {
         std::ostringstream oss;
         if (precision >= 0)
             oss.setf(std::ios::fixed), oss.precision(precision);
@@ -152,11 +157,11 @@ namespace logger {
                 return;
             }
         } else if constexpr (std::is_same_v<U, int>) {
-            if (isAllZero(reinterpret_cast<const int*>(data), size)) {
-                oss << type_name<T>() << " " << label << " = N/A;";
-                info("{}", oss.str());
-                return;
-            }
+            // if (isAllZero(reinterpret_cast<const int*>(data), size)) { // int형 배열에 대해서는 체크하지 않도록 임시 비활성화 처리
+            //     oss << type_name<T>() << " " << label << " = N/A;";
+            //     info("{}", oss.str());
+            //     return;
+            // }
         }
 
         // string 계열은 타입명 생략
