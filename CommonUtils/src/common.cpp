@@ -376,22 +376,32 @@ void freeArray(double* arr) {
 
 // 모든 값이 0인지 평가값 산출여부 확인 (double)
 bool isAllZero(const double* data, size_t size, double eps) {
-    if (data == nullptr || size == 0) return true;
-    for (size_t i = 0; i < size; ++i) {
-        double v = data[i];
-        if (!std::isfinite(v) || std::fabs(v) > eps) return false;
-    }
-    return true;
+    return find_last_nonzero(data, size, eps) == SIZE_MAX;
 }
 
 // 모든 값이 0인지 평가값 산출여부 확인 (float)
 bool isAllZero(const float* data, size_t size, float eps) {
-    if (data == nullptr || size == 0) return true;
-    for (size_t i = 0; i < size; ++i) {
-        float v = data[i];
-        if (!std::isfinite(v) || std::fabs(v) > eps) return false;
+    return find_last_nonzero(data, size, eps) == SIZE_MAX;
+}
+
+// 뒤에서부터 탐색해서 마지막 non-zero 인덱스를 찾음. 없으면 SIZE_MAX (double)
+size_t find_last_nonzero(const double* data, size_t size, double eps) {
+    if (data == nullptr || size == 0) return SIZE_MAX;
+    for (size_t i = size; i-- > 0;) {
+        double v = data[i];
+        if (!std::isfinite(v) || std::fabs(v) > eps) return i;
     }
-    return true;
+    return SIZE_MAX;
+}
+
+// 뒤에서부터 탐색해서 마지막 non-zero 인덱스를 찾음. 없으면 SIZE_MAX (float)
+size_t find_last_nonzero(const float* data, size_t size, float eps) {
+    if (data == nullptr || size == 0) return SIZE_MAX;
+    for (size_t i = size; i-- > 0;) {
+        float v = data[i];
+        if (!std::isfinite(v) || std::fabs(v) > eps) return i;
+    }
+    return SIZE_MAX;
 }
 
 // // 모든 값이 0인지 평가값 산출여부 확인 (int)

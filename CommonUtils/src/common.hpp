@@ -75,10 +75,10 @@ private:
 void initResult(double* result, const int size);
 void processResultArray(std::vector<QuantLib::Real> tenors, std::vector<QuantLib::Real> sensitivities, QuantLib::Size originalSize, double* resultArray);
 void freeArray(double* arr);
-bool isAllZero(const double* data, size_t size, double eps = 1e-12);
-bool isAllZero(const float* data, size_t size, float eps = 1e-6f);
-// bool isAllZero(const int* data, size_t size); // int형 배열에 대해서는 체크하지 않도록 임시 비활성화 처리
-// std::string qDateToString(const QuantLib::Date& date);
+bool isAllZero(const double* data, size_t size, double eps = 1e-10);
+bool isAllZero(const float* data, size_t size, float eps = 1e-10f);
+size_t find_last_nonzero(const double* data, size_t size, double eps = 1e-10);
+size_t find_last_nonzero(const float* data, size_t size, float eps = 1e-10f);
 
 // Finally 블록 관련 매크로
 #define CONCAT_INNER(x,y) x##y

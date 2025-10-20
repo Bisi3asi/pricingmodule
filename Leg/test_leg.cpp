@@ -171,7 +171,7 @@ int main() {
 
     const double girrRiskWeight = 0.017;
 
-    const int calType = 1;
+    const int calType = 1; // 계산 타입 (1: Theo Price, 2. BASEL 2 Sensitivity, 3. BASEL 3 Sensitivity, 4. Cashflow, 9.Spread Over Yield)
     const int logYn = 1;
 
     double resultGirrBasel2[5] = { 0 };

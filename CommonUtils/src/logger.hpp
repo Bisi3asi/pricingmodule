@@ -136,6 +136,7 @@ namespace logger {
     // 타입 포함 배열 / 벡터 출력 헬퍼 (used by LOG_ARRAY)
     // Format: <타입> <배열/벡터명>[] = {<변수값>};
     // Format: (all-zero): <타입> <배열/벡터명>[] = N/A;
+    // Format: (trailing-zero compressed): <타입> <배열/벡터명>[] = {val1, val2, ..., 0, ... , 0};
     template <typename T>
     void logArrayLine(const std::string& label, const T* data, size_t size, int precision) {
         std::ostringstream oss;
@@ -143,34 +144,59 @@ namespace logger {
             oss.setf(std::ios::fixed), oss.precision(precision);
         using U = std::remove_cv_t<std::remove_reference_t<T>>;
 
-        // 숫자형 배열이 모두 0인 경우 미평가로, 간단히 "N/A"로 출력
-        if constexpr (std::is_same_v<U, double>) {
-            if (isAllZero(reinterpret_cast<const double*>(data), size)) {
+        // case 1. 부동소수점 배열 처리: 모든 원소가 0이면 N/A로 출력.
+        // find_last_nonzero 헬퍼를 사용하여 trailing-zero 구간을 압축해서 표시.
+        if constexpr (std::is_floating_point_v<U>) { // 
+            size_t last_nonzero = find_last_nonzero(reinterpret_cast<const U*>(data), size);
+            if (last_nonzero == SIZE_MAX) {
                 oss << type_name<T>() << " " << label << " = N/A;";
                 info("{}", oss.str());
                 return;
             }
-        } else if constexpr (std::is_same_v<U, float>) {
-            if (isAllZero(reinterpret_cast<const float*>(data), size)) {
-                oss << type_name<T>() << " " << label << " = N/A;";
-                info("{}", oss.str());
-                return;
+            size_t trailing_start = last_nonzero + 1;
+
+            // 소수점 자리수 고정을 위한 람다 포맷터
+            auto format_val = [&](auto v) -> std::string {
+                if (precision >= 0) return fmt::format("{:.{}f}", v, precision);
+                return fmt::format("{}", v);
+            };
+            // 람다 포맷터로 소수점 자리수 고정된 0 문자열 미리 준비
+            std::string zeroStr = format_val(static_cast<U>(0));
+            // <type> <label> 헤더 준비
+            oss << type_name<T>() << " " << label << " = {";
+            // 처음부터 last_nonzero 까지 출력
+            for (size_t i = 0; i <= last_nonzero; ++i) {
+                oss << format_val(data[i]);
+                if (i < last_nonzero) oss << ", ";
             }
-        } else if constexpr (std::is_same_v<U, int>) {
-            // if (isAllZero(reinterpret_cast<const int*>(data), size)) { // int형 배열에 대해서는 체크하지 않도록 임시 비활성화 처리
-            //     oss << type_name<T>() << " " << label << " = N/A;";
-            //     info("{}", oss.str());
-            //     return;
-            // }
+
+            // trailing-zero 구간이 있으면 압축 출력
+            if (trailing_start < size) {
+                size_t trailing_count = size - trailing_start;
+                if (last_nonzero < size) oss << ", ";
+                if (trailing_count == 1) {
+                    oss << zeroStr;
+                } else {
+                    oss << zeroStr << ", ... , " << zeroStr;
+                }
+            }
+            oss << "};";
+            info("{}", oss.str());
+            return;
+
+        // case 2. 정수형 배열에 대해서는 전체가 0인 경우의 N/A 처리나 별도 0 ... 0 trailing 비활성화
+        } else if constexpr (std::is_integral_v<U>) {
+            // int, long, short
         }
 
-        // string 계열은 타입명 생략
+        // case 3. string 계열은 타입명 생략
         if constexpr (std::is_same_v<U, std::string> || std::is_same_v<U, const char*> || std::is_same_v<U, char*>) {
             oss << label << " = {";
         } else {
             oss << type_name<T>() << " " << label << " = {";
         }
 
+        // fallback. 모든 배열의 원소를 출력
         for (size_t i = 0; i < size; ++i) {
             oss << data[i];
             if (i + 1 < size) oss << ", ";
@@ -178,7 +204,6 @@ namespace logger {
         oss << "};";
         info("{}", oss.str());
     }
-
 } // namespace logger
 
 
