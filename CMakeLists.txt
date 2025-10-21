@@ -30,6 +30,12 @@ elseif(UNIX)
     add_link_options(-Wl,--gc-sections) # 사용하지 않는 함수/데이터 제거 설정(용량 최적화)
 endif()
 
+# build all 관련
+# 서브디렉토리에서 이 function을 호출하는 경우 해당 모듈의 실행 파일을 전역 목록에 등록
+function(register_for_build_all tgt)
+    set_property(GLOBAL APPEND PROPERTY PROJECT_BUILD_ALL_TARGETS "${tgt}")
+endfunction()
+
 # 하위 모듈 프로젝트 추가
 add_subdirectory(CommonUtils)
 add_subdirectory(Bond)
@@ -37,6 +43,16 @@ add_subdirectory(Leg)
 add_subdirectory(OtStock)
 add_subdirectory(Net)
 
-# 모든 서브프로젝트 일괄 빌드용 (의존성 관계에 따라 병렬 빌드됨)
-# 실제 서브프로젝트 타겟 명시 필요 (대소문자 구분)
-add_custom_target(build_all DEPENDS CommonUtils Bond Leg OtStock Net)
+# build all 관련
+# 앞서 전역 디렉토리로 모은 모든 서브 실행파일 목록을 읽어 build_all target에 연결
+get_property(_proj_targets GLOBAL PROPERTY PROJECT_BUILD_ALL_TARGETS)
+add_custom_target(build_all DEPENDS
+    CommonUtils
+    Bond
+    Leg
+    OtStock
+    Net
+)
+if(_proj_targets)
+        add_dependencies(build_all ${_proj_targets})
+endif()

@@ -39,6 +39,11 @@ endif()
 add_executable(${TEST_EXEC_NAME} "${TEST_EXEC_NAME}.cpp") # 실행 파일 생성 .cpp -> .exe
 target_link_libraries(${TEST_EXEC_NAME} PRIVATE ${PROJECT_NAME}) # 실행 파일 - 동적 라이브러리 링크
 
+# Register the test executable with root build_all (if the helper exists)
+if(COMMAND register_for_build_all)
+    register_for_build_all(${TEST_EXEC_NAME})
+endif()
+
 # 5. 출력 디렉토리 설정 (주석 해제 시 출력 디렉토리 변경됨)
 # set_target_properties(${PROJECT_NAME} PROPERTIES
 #     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
